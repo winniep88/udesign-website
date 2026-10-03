@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { AddToCart } from "@/components/AddToCart";
 
 export const metadata: Metadata = {
   title: "UDESIGN MOMENTS — Wedding, gifts, corporate, baby & kids",
@@ -26,7 +27,7 @@ export default function MomentsPage() {
           <div className="moments-hero__copy"><p className="eyebrow">02 / THE THOUGHTFUL ONE</p><span className="moments-hero__brand">UDESIGN MOMENTS</span><h1>For the moments<br /><em>you hold close.</em></h1><p>Beautifully personal pieces for the people and occasions that matter most.</p><a className="button button--outline" href="#moments-categories">Explore the moments <span aria-hidden="true">↓</span></a></div>
         </section>
 
-        <section className="moments-categories" id="moments-categories" aria-labelledby="moments-categories-title"><div className="shell"><div className="moments-section-heading"><p className="eyebrow">THE COLLECTIONS</p><h2 id="moments-categories-title">A detail for every story.</h2><p>Each one begins with a person, a feeling or a day worth remembering.</p></div><div className="moments-grid">{moments.map((item) => <article key={item.name} className={`moment-category ${item.className}`}><span>{item.number} / MOMENTS</span><div><h3>{item.name}</h3><p>{item.detail}</p></div></article>)}</div></div></section>
+        <section className="moments-categories" id="moments-categories" aria-labelledby="moments-categories-title"><div className="shell"><div className="moments-section-heading"><p className="eyebrow">THE COLLECTIONS</p><h2 id="moments-categories-title">A detail for every story.</h2><p>Each one begins with a person, a feeling or a day worth remembering.</p><p className="collection-note">Choose a collection to start a custom order. We&apos;ll confirm the details and price with you.</p></div><div className="moments-grid">{moments.map((item) => <article key={item.name} className={`moment-category ${item.className}`}><span>{item.number} / MOMENTS</span><div><h3>{item.name}</h3><p>{item.detail}</p></div><AddToCart brand="moments" product={item.name} /></article>)}</div></div></section>
 
         <section className="moments-quote shell"><span aria-hidden="true">✳</span><blockquote>It&apos;s the little things<br />that stay with us.</blockquote><p>Have a detail in mind? We&apos;d love to make it yours.</p><a className="button button--dark" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Share your idea <span aria-hidden="true">↗</span></a></section>
         <div className="shell back-worlds"><Link href="/">← Back to all UDESIGN worlds</Link></div>
