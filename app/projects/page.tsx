@@ -3,6 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ProductCatalog } from "@/components/ProductCatalog";
+import { CustomRequest } from "@/components/CustomRequest";
+import { productsForBrand } from "@/lib/catalog";
+import { whatsappLink } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "UDESIGN PROJECTS — Logos, acrylic, wood & PVC",
@@ -28,7 +32,7 @@ export default function ProjectsPage() {
               <p className="projects-hero__brand">UDESIGN <strong>PROJECTS</strong></p>
               <h1>Make your<br /><em>mark.</em></h1>
               <p>Signs and pieces that give your idea a place in the world. Custom made for your brand, business or space.</p>
-              <a className="button button--orange" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Tell us what you&apos;re making <span aria-hidden="true">↗</span></a>
+              <a className="button button--orange" href="#products">Shop Projects <span aria-hidden="true">↓</span></a>
             </div>
             <div className="projects-hero__image"><Image src="/images/projects.webp" alt="Concept image of a layered acrylic and wood sign" fill sizes="(max-width: 750px) 100vw, 50vw" priority /><span className="image-label">DESIGN CONCEPT / SIGNAGE</span></div>
           </div>
@@ -42,7 +46,9 @@ export default function ProjectsPage() {
           </div>
         </section>
 
-        <section className="projects-message"><div className="shell projects-message__inner"><span>YOUR IDEA HAS DIMENSION.</span><h2>Let&apos;s give it shape.</h2><a className="button button--dark" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Ask about a custom piece <span aria-hidden="true">↗</span></a></div></section>
+        <ProductCatalog brand="projects" products={productsForBrand("projects")} />
+        <CustomRequest brand="Projects" />
+        <section className="projects-message"><div className="shell projects-message__inner"><span>YOUR IDEA HAS DIMENSION.</span><h2>Let&apos;s give it shape.</h2><a className="button button--dark" href={whatsappLink("Hi UDESIGN, I'd like to discuss a custom Projects piece.")} target="_blank" rel="noopener noreferrer">Ask about a custom piece <span aria-hidden="true">↗</span></a></div></section>
         <div className="shell back-worlds"><Link href="/">← Back to all UDESIGN worlds</Link></div>
       </main>
       <SiteFooter />

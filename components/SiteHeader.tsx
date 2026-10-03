@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
+import { whatsappLink } from "@/lib/contact";
 
 type SiteHeaderProps = {
   active?: "home" | "projects" | "moments" | "winnie" | "cart";
@@ -38,7 +39,7 @@ export function SiteHeader({ active = "home", light = false }: SiteHeaderProps) 
         <Link className={`header-cart ${active === "cart" ? "is-active" : ""}`} href="/cart/" aria-label={`Cart, ${count} ${count === 1 ? "item" : "items"}`} aria-current={active === "cart" ? "page" : undefined}>
           Cart <span className="header-cart__count">{count}</span>
         </Link>
-        <a className="header-contact" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">
+        <a className="header-contact" href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">
           Let&apos;s talk <span aria-hidden="true">↗</span>
         </a>
         <details className="mobile-menu">
@@ -47,7 +48,7 @@ export function SiteHeader({ active = "home", light = false }: SiteHeaderProps) 
             <Link href="/">Home</Link>
             {links.map((link) => <Link key={link.key} href={link.href}>{link.label}</Link>)}
             <Link href="/cart/">Cart ({count})</Link>
-            <a href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Contact on Instagram ↗</a>
+            <a href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">Contact on WhatsApp ↗</a>
           </nav>
         </details>
       </div>

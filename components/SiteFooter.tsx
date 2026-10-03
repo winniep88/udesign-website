@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { whatsappLink } from "@/lib/contact";
 
 export function SiteFooter() {
   return (
@@ -18,6 +19,7 @@ export function SiteFooter() {
           </div>
           <div>
             <span className="footer-label">Find us</span>
+            <a href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>
             <a href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
             <a href="https://shopee.com.my/udesignprojectsstudio" target="_blank" rel="noopener noreferrer">Shopee ↗</a>
           </div>

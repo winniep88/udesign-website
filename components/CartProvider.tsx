@@ -1,18 +1,21 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { findProduct, findVariant, type Brand } from "@/lib/catalog";
 
-export type CartBrand = "moments" | "winnie";
+export type CartBrand = Brand;
 
 export type CartItem = {
   id: string;
   brand: CartBrand;
   product: string;
+  productId?: string;
+  variantId?: string;
   quantity: number;
   notes: string;
 };
 
-type NewCartItem = Pick<CartItem, "brand" | "product" | "quantity" | "notes">;
+type NewCartItem = Pick<CartItem, "brand" | "product" | "quantity" | "notes" | "productId" | "variantId">;
 
 type CartContextValue = {
   items: CartItem[];
@@ -41,17 +44,21 @@ function readStoredCart(value: string | null): CartItem[] {
     return parsed.slice(0, 50).flatMap((entry): CartItem[] => {
       if (!entry || typeof entry !== "object") return [];
       const item = entry as Partial<CartItem>;
-      if (
-        typeof item.id !== "string" ||
+      if (typeof item.id !== "string" || typeof item.quantity !== "number") return [];
+      const product = typeof item.productId === "string" ? findProduct(item.productId) : undefined;
+      const variant = product && typeof item.variantId === "string"
+        ? findVariant(product.id, item.variantId)
+        : undefined;
+      if (item.productId && (!product || !variant)) return [];
+      if (!product && (
         (item.brand !== "moments" && item.brand !== "winnie") ||
-        typeof item.product !== "string" ||
-        !item.product.trim() ||
-        typeof item.quantity !== "number"
-      ) return [];
+        typeof item.product !== "string" || !item.product.trim()
+      )) return [];
       return [{
         id: item.id,
-        brand: item.brand,
-        product: item.product.trim().slice(0, 100),
+        brand: product?.brand ?? item.brand as CartBrand,
+        product: product?.name ?? item.product!.trim().slice(0, 100),
+        ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
         quantity: normaliseQuantity(item.quantity),
         notes: typeof item.notes === "string" ? item.notes.slice(0, 500) : "",
       }];
@@ -99,13 +106,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     items,
     count: items.reduce((total, item) => total + item.quantity, 0),
     ready,
-    addItem: (item) => setItems((current) => [...current, {
-      id: makeId(),
-      brand: item.brand,
-      product: item.product.trim().slice(0, 100),
-      quantity: normaliseQuantity(item.quantity),
-      notes: item.notes.trim().slice(0, 500),
-    }]),
+    addItem: (item) => setItems((current) => {
+      const product = item.productId ? findProduct(item.productId) : undefined;
+      const variant = product && item.variantId ? findVariant(product.id, item.variantId) : undefined;
+      if (item.productId && (!product || !variant || !variant.available)) return current;
+      return [...current, {
+        id: makeId(),
+        brand: product?.brand ?? item.brand,
+        product: product?.name ?? item.product.trim().slice(0, 100),
+        ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
+        quantity: normaliseQuantity(item.quantity),
+        notes: item.notes.trim().slice(0, 500),
+      }];
+    }),
     setQuantity: (id, quantity) => setItems((current) => current.map((item) =>
       item.id === id ? { ...item, quantity: normaliseQuantity(quantity) } : item,
     )),
