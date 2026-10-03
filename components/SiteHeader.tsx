@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useCart } from "@/components/CartProvider";
 
 type SiteHeaderProps = {
-  active?: "home" | "projects" | "moments" | "winnie";
+  active?: "home" | "projects" | "moments" | "winnie" | "cart";
   light?: boolean;
 };
 
@@ -12,6 +15,7 @@ const links = [
 ] as const;
 
 export function SiteHeader({ active = "home", light = false }: SiteHeaderProps) {
+  const { count } = useCart();
   return (
     <header className={`site-header ${light ? "site-header--light" : ""}`}>
       <div className="site-header__inner shell">
@@ -31,6 +35,9 @@ export function SiteHeader({ active = "home", light = false }: SiteHeaderProps) 
             </Link>
           ))}
         </nav>
+        <Link className={`header-cart ${active === "cart" ? "is-active" : ""}`} href="/cart/" aria-label={`Cart, ${count} ${count === 1 ? "item" : "items"}`} aria-current={active === "cart" ? "page" : undefined}>
+          Cart <span className="header-cart__count">{count}</span>
+        </Link>
         <a className="header-contact" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">
           Let&apos;s talk <span aria-hidden="true">↗</span>
         </a>
@@ -39,6 +46,7 @@ export function SiteHeader({ active = "home", light = false }: SiteHeaderProps) 
           <nav aria-label="Mobile navigation">
             <Link href="/">Home</Link>
             {links.map((link) => <Link key={link.key} href={link.href}>{link.label}</Link>)}
+            <Link href="/cart/">Cart ({count})</Link>
             <a href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Contact on Instagram ↗</a>
           </nav>
         </details>
