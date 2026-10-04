@@ -7,6 +7,7 @@ import { whatsappLink } from "@/lib/contact";
 type SiteHeaderProps = {
   active?: "home" | "projects" | "moments" | "winnie" | "cart";
   light?: boolean;
+  sectionPage?: boolean;
 };
 
 const links = [
@@ -15,7 +16,7 @@ const links = [
   { href: "/winnie-cake-topper/", label: "Winnie Cake Topper", key: "winnie" },
 ] as const;
 
-export function SiteHeader({ active = "home", light = false }: SiteHeaderProps) {
+export function SiteHeader({ active = "home", light = false, sectionPage = true }: SiteHeaderProps) {
   const { count } = useCart();
   return (
     <header className={`site-header ${light ? "site-header--light" : ""}`}>
@@ -30,7 +31,7 @@ export function SiteHeader({ active = "home", light = false }: SiteHeaderProps) 
               key={link.key}
               className={active === link.key ? "is-active" : ""}
               href={link.href}
-              aria-current={active === link.key ? "page" : undefined}
+              aria-current={active === link.key && sectionPage ? "page" : undefined}
             >
               {link.label}
             </Link>

@@ -105,7 +105,9 @@ export function ProductCatalog({ brand, products }: { brand: Brand; products: Ca
                   <h3>{product.name}</h3>
                   <p className="catalog-card__options">{product.variants.filter((variant) => variant.available).length} {product.variants.filter((variant) => variant.available).length === 1 ? "option" : "options"}</p>
                   <p className="catalog-card__price">{min === max ? formatRinggit(min) : `From ${formatRinggit(min)}`}</p>
-                  <ProductAddButton product={product} />
+                  {brand === "winnie" ? (
+                    <Link className="catalog-card__add" href={`/winnie-cake-topper/${product.id}/`}>View details &amp; add to cart <span aria-hidden="true">→</span></Link>
+                  ) : <ProductAddButton product={product} />}
                 </article>;
               })}
             </div>

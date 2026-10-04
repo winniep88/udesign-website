@@ -17,7 +17,20 @@ export type CatalogProduct = {
   variants: CatalogVariant[];
 };
 
-export const catalog = catalogData as CatalogProduct[];
+const winnieDisplayNames: Record<string, string> = {
+  "4911844020": "Custom Acrylic Name Cake Topper",
+  "14941102410": "First Birthday Acrylic Cake Topper",
+  "15839023675": "Wedding Acrylic Cake Topper (13–20 cm)",
+  "14939532339": "Wedding Acrylic Cake Topper (15–20 cm)",
+  "4311872195": "Giant Personalised Acrylic Cake Topper",
+  "4306939371": "Custom Cardstock Name Cake Topper",
+  "7862577165": "Custom Theme Cake Topper",
+};
+
+export const catalog = (catalogData as CatalogProduct[]).map((product) => ({
+  ...product,
+  name: winnieDisplayNames[product.id] ?? product.name,
+}));
 
 export function productsForBrand(brand: Brand) {
   return catalog.filter((product) => product.brand === brand);

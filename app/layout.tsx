@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./cart.css";
 import "./catalog.css";
+import "./winnie-product.css";
 import { CartProvider } from "@/components/CartProvider";
 
 export const metadata: Metadata = {
