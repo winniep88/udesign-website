@@ -1,0 +1,2 @@
+:HL["/_next/static/chunks/3m2qirnsef8mb.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"winnie-cake-topper","param":null,"prefetchHints":4192,"slots":{"children":{"name":"id","param":{"type":"d","key":"4911844020","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"4DnYNBioZaVK408JbtKHC"}
