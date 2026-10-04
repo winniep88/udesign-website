@@ -72,7 +72,7 @@ export function WinnieProductForm({ product }: { product: CatalogProduct }) {
   if (!selected) return <p>This topper is temporarily unavailable. Please contact us for a custom request.</p>;
 
   return (
-    <form className="winnie-product-form" onSubmit={submit}>
+    <form className="winnie-product-form" id="customise" onSubmit={submit}>
       <div className="winnie-product-form__intro">
         <p className="eyebrow">MAKE IT YOURS</p>
         <h2>Choose your details.</h2>

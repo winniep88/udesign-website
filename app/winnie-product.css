@@ -5,6 +5,7 @@
 .winnie-product__visual { position:sticky; top:26px; }
 .winnie-product__image { position:relative; min-height:640px; background:#ffdbde; overflow:hidden; }
 .winnie-product__image img { object-fit:cover; }
+.winnie-product__image-label { position:absolute; left:17px; bottom:17px; z-index:1; max-width:calc(100% - 34px); padding:9px 11px; background:#fffdf9; color:#652640; font-size:11px; font-weight:900; letter-spacing:.08em; }
 .winnie-product__visual > p { margin:14px 0 0; color:#715d66; font-size:14px; line-height:1.55; }
 .winnie-product__visual > p strong { color:#652640; }
 .winnie-product__visual > p a,.winnie-instagram-link { color:#aa285c; font-weight:800; text-decoration:underline; text-underline-offset:3px; }
@@ -14,6 +15,8 @@
 .winnie-product__content h1 { margin:14px 0 20px; font-size:clamp(40px,4.1vw,66px); line-height:1.05; letter-spacing:-.075em; overflow-wrap:anywhere; }
 .winnie-product__price { margin:0 0 21px; font-size:clamp(24px,2.5vw,34px); font-weight:900; }
 .winnie-product__lead { max-width:650px; margin:0 0 25px; font-size:16px; line-height:1.65; }
+.winnie-product__jump { display:flex; align-items:center; justify-content:space-between; gap:20px; width:max-content; max-width:100%; margin:0 0 26px; padding:15px 19px; background:#e93f78; color:#fff; font-size:15px; font-weight:900; text-decoration:none; }
+.winnie-product__jump:hover { background:#bf2759; }
 .winnie-product__style-note { margin:0 0 24px; padding:13px 16px; background:#fff0e3; font-size:14px; line-height:1.55; }
 .winnie-product__facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; padding:19px 0 22px; border-top:1px solid #e5cbd3; border-bottom:1px solid #e5cbd3; }
 .winnie-product__facts p { display:grid; gap:6px; margin:0; }
