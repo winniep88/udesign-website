@@ -83,7 +83,7 @@ export function ProductCatalog({ brand, products }: { brand: Brand; products: Ca
   }), [products, category, query]);
   const visible = filtered.slice(0, visibleCount);
   const customTopperVisible = brand === "winnie" && (category === "all" || category === "Cake toppers")
-    && "custom 2 or 3 line cake topper cardstock acrylic wood".includes(query.trim().toLocaleLowerCase());
+    && "custom 1 2 3 one two three line cake topper cardstock acrylic wood birthday wedding baby shower bridal shower anniversary celebration".includes(query.trim().toLocaleLowerCase());
   const resultCount = filtered.length + (customTopperVisible ? 1 : 0);
 
   return (
@@ -91,7 +91,7 @@ export function ProductCatalog({ brand, products }: { brand: Brand; products: Ca
       <div className="shell">
         <div className="product-catalog__heading">
           <div><p className="eyebrow">SHOP THE COLLECTION</p><h2 id={`${brand}-products-title`}>Explore the pieces.</h2></div>
-          <p>{brand === "winnie" ? "Browse the toppers. We&apos;ll confirm the custom multi-material topper price and your final total before payment." : "Choose a listed size or option at its displayed price. We&apos;ll confirm availability and any delivery fee before payment."}</p>
+          <p>{brand === "winnie" ? "Browse the toppers. For a custom line topper, choose your event first. We&apos;ll confirm its price before payment." : "Choose a listed size or option at its displayed price. We&apos;ll confirm availability and any delivery fee before payment."}</p>
         </div>
         <div className="product-catalog__tools">
           <label>Find a product<input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(24); }} placeholder="Search products" /></label>
@@ -103,10 +103,10 @@ export function ProductCatalog({ brand, products }: { brand: Brand; products: Ca
             <div className="product-catalog__grid">
               {customTopperVisible && <article className="catalog-card catalog-card--custom-topper">
                 <p className="catalog-card__category">Cake toppers · Personalise</p>
-                <h3>Custom 2 or 3 Line Cake Topper</h3>
-                <p className="catalog-card__options">Cardstock · Acrylic · Wood</p>
+                <h3>Custom 1, 2 or 3 Line Cake Topper</h3>
+                <p className="catalog-card__options">Choose an event · Cardstock · Acrylic · Wood</p>
                 <p className="catalog-card__price">Price to confirm</p>
-                <Link className="catalog-card__add" href="/winnie-cake-topper/custom-topper/">Choose material &amp; size <span aria-hidden="true">→</span></Link>
+                <Link className="catalog-card__add" href="/winnie-cake-topper/#choose-event">Choose your event <span aria-hidden="true">→</span></Link>
               </article>}
               {visible.map((product) => {
                 const { min, max } = productPriceRange(product);

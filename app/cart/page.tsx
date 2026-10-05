@@ -142,7 +142,7 @@ export default function CartPage() {
                     {selectedOption(item) && <p className="cart-item__option"><span>Selected option</span><strong>{selectedOption(item)!.name}</strong></p>}
                     <div className="cart-item__fields">
                       <div className="cart-item__quantity"><span>Quantity</span><div><button type="button" aria-label={`Decrease ${item.product} quantity`} disabled={item.quantity <= 1} onClick={() => setQuantity(item.id, item.quantity - 1)}>−</button><output aria-label={`${item.product} quantity`}>{item.quantity}</output><button type="button" aria-label={`Increase ${item.product} quantity`} disabled={item.quantity >= 99} onClick={() => setQuantity(item.id, item.quantity + 1)}>+</button></div></div>
-                      <label className="cart-field">Personalisation or idea<textarea rows={3} maxLength={500} placeholder="Names, colours, theme, date, size or other details" value={item.notes} onChange={(event) => setNotes(item.id, event.target.value)} /></label>
+                      <label className="cart-field">Personalisation or idea<textarea rows={3} maxLength={1000} placeholder="Names, colours, theme, date, size or other details" value={item.notes} onChange={(event) => setNotes(item.id, event.target.value)} /></label>
                     </div>
                     <p className="cart-item__price"><span>{selectedOption(item) ? `Unit price ${formatRinggit(selectedOption(item)!.priceSen)}` : "Custom item price"}</span><strong>{selectedOption(item) ? formatRinggit(selectedOption(item)!.priceSen * item.quantity) : "To confirm"}</strong></p>
                   </article>

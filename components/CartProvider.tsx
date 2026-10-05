@@ -60,7 +60,7 @@ function readStoredCart(value: string | null): CartItem[] {
         product: product?.name ?? item.product!.trim().slice(0, 100),
         ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
         quantity: normaliseQuantity(item.quantity),
-        notes: typeof item.notes === "string" ? item.notes.slice(0, 500) : "",
+        notes: typeof item.notes === "string" ? item.notes.slice(0, 1000) : "",
       }];
     });
   } catch {
@@ -116,14 +116,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         product: product?.name ?? item.product.trim().slice(0, 100),
         ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
         quantity: normaliseQuantity(item.quantity),
-        notes: item.notes.trim().slice(0, 500),
+        notes: item.notes.trim().slice(0, 1000),
       }];
     }),
     setQuantity: (id, quantity) => setItems((current) => current.map((item) =>
       item.id === id ? { ...item, quantity: normaliseQuantity(quantity) } : item,
     )),
     setNotes: (id, notes) => setItems((current) => current.map((item) =>
-      item.id === id ? { ...item, notes: notes.slice(0, 500) } : item,
+      item.id === id ? { ...item, notes: notes.slice(0, 1000) } : item,
     )),
     removeItem: (id) => setItems((current) => current.filter((item) => item.id !== id)),
     clearCart: () => setItems([]),
