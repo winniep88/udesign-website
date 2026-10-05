@@ -3,6 +3,7 @@ import "./globals.css";
 import "./cart.css";
 import "./catalog.css";
 import "./winnie-product.css";
+import "./custom-topper.css";
 import { CartProvider } from "@/components/CartProvider";
 
 export const metadata: Metadata = {

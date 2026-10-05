@@ -34,6 +34,7 @@ export default async function WinnieProductPage({ params }: ProductPageProps) {
       <SiteHeader active="winnie" sectionPage={false} />
       <main className="shell">
         <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><Link href="/winnie-cake-topper/#products">Cake toppers</Link></nav>
+        {(id === "4911844020" || id === "4306939371") && <aside className="winnie-product__new-option"><div><strong>Now available in one custom topper page</strong><p>Choose two or three lines, cardstock, acrylic or wood, then the colour and size together.</p></div><Link href="/winnie-cake-topper/custom-topper/">Personalise one topper →</Link></aside>}
         <div className="winnie-product__layout">
           <div className="winnie-product__visual">
             <div className="winnie-product__image"><Image src="/images/winnie.webp" alt="Celebration cake topper style inspiration; the finished product is personalised for each order" fill sizes="(max-width: 800px) 100vw, 46vw" priority /><span className="winnie-product__image-label">STYLE INSPIRATION · NOT A PRODUCT PHOTO</span></div>

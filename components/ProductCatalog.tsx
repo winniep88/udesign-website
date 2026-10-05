@@ -82,22 +82,32 @@ export function ProductCatalog({ brand, products }: { brand: Brand; products: Ca
     return matchesCategory && text.includes(query.trim().toLocaleLowerCase());
   }), [products, category, query]);
   const visible = filtered.slice(0, visibleCount);
+  const customTopperVisible = brand === "winnie" && (category === "all" || category === "Cake toppers")
+    && "custom 2 or 3 line cake topper cardstock acrylic wood".includes(query.trim().toLocaleLowerCase());
+  const resultCount = filtered.length + (customTopperVisible ? 1 : 0);
 
   return (
     <section className={`product-catalog product-catalog--${brand}`} id="products" aria-labelledby={`${brand}-products-title`}>
       <div className="shell">
         <div className="product-catalog__heading">
           <div><p className="eyebrow">SHOP THE COLLECTION</p><h2 id={`${brand}-products-title`}>Explore the pieces.</h2></div>
-          <p>Choose a listed size or option at its displayed price. We&apos;ll confirm availability and any delivery fee before payment.</p>
+          <p>{brand === "winnie" ? "Browse the toppers. We&apos;ll confirm the custom multi-material topper price and your final total before payment." : "Choose a listed size or option at its displayed price. We&apos;ll confirm availability and any delivery fee before payment."}</p>
         </div>
         <div className="product-catalog__tools">
           <label>Find a product<input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(24); }} placeholder="Search products" /></label>
           <label>Category<select value={category} onChange={(event) => { setCategory(event.target.value); setVisibleCount(24); }}><option value="all">All categories</option>{categories.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-          <p role="status">{filtered.length} {filtered.length === 1 ? "product" : "products"}</p>
+          <p role="status">{resultCount} {resultCount === 1 ? "product" : "products"}</p>
         </div>
-        {filtered.length ? (
+        {resultCount ? (
           <>
             <div className="product-catalog__grid">
+              {customTopperVisible && <article className="catalog-card catalog-card--custom-topper">
+                <p className="catalog-card__category">Cake toppers · Personalise</p>
+                <h3>Custom 2 or 3 Line Cake Topper</h3>
+                <p className="catalog-card__options">Cardstock · Acrylic · Wood</p>
+                <p className="catalog-card__price">Price to confirm</p>
+                <Link className="catalog-card__add" href="/winnie-cake-topper/custom-topper/">Choose material &amp; size <span aria-hidden="true">→</span></Link>
+              </article>}
               {visible.map((product) => {
                 const { min, max } = productPriceRange(product);
                 return <article className="catalog-card" key={product.id}>
