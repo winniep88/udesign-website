@@ -156,6 +156,13 @@ export default {
       }
       if (url.pathname.startsWith("/api/")) return new Response("Not found", { status: 404 });
       if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: { allow: "GET, HEAD" } });
+      const oldProduct = /^\/winnie-cake-topper\/topper\/([123])-line\/?$/.exec(url.pathname);
+      if (oldProduct) {
+        const event = url.searchParams.get("event");
+        const eventProduct = `/winnie-cake-topper/event/${event}/${oldProduct[1]}-line/`;
+        const destination = event && ASSETS[`${eventProduct}index.html`] ? eventProduct : "/winnie-cake-topper/#choose-event";
+        return Response.redirect(new URL(destination, url), 308);
+      }
       return staticResponse(url, request.method);
     } catch {
       if (url.pathname.startsWith("/api/")) return errorJson("The image service is temporarily unavailable. Please try again.", 503);

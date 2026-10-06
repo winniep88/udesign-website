@@ -11,9 +11,9 @@ import { topperEvent, topperSelectionPriceSen, topperSizes } from "@/lib/topper"
 
 type Fulfilment = "pickup" | "delivery";
 const deliveryRegions = {
-  west: { label: "West Malaysia", feeSen: 800, transit: "2–3 days" },
-  east: { label: "East Malaysia", feeSen: 1500, transit: "about 8 days" },
-  singapore: { label: "Singapore", feeSen: 2000, transit: "about 5 days" },
+  west: { label: "West Malaysia", feeSen: 800, transit: "3 business days" },
+  east: { label: "East Malaysia", feeSen: 1500, transit: "8–10 business days" },
+  singapore: { label: "Singapore", feeSen: 2000, transit: "4 business days" },
 } as const;
 type DeliveryRegion = keyof typeof deliveryRegions;
 

@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CustomTopperForm } from "@/components/CustomTopperForm";
 import { formatRinggit } from "@/lib/catalog";
-import { topperChoicePriceSen, topperEvent, topperEvents, topperFinishes, topperLineCounts, topperLineLabel, topperProductHref, topperProductName, type TopperLineCount } from "@/lib/topper";
+import { topperChoicePriceSen, topperEvent, topperEvents, topperFinishes, topperLineCounts, topperLineLabel, topperProductName, type TopperLineCount } from "@/lib/topper";
 
 type Props = { params: Promise<{ event: string; lines: string }> };
 
@@ -45,23 +45,20 @@ export default async function TopperProductPage({ params }: Props) {
           <div className="custom-topper__content">
             <p className="eyebrow">WINNIE CAKE TOPPER BY UDESIGN / {chosen.name.toUpperCase()}</p>
             <h1>{topperProductName(lineCount)}</h1>
-            <p className="custom-topper__lead">Personalise your cake with wording made just for you. Choose one of three materials, its colour and the width that fits your cake.</p>
-            <nav className="topper-product-switch" aria-label="Choose number of lines">
-              {topperLineCounts.map((lines) => <Link key={lines} aria-current={lineCount === lines ? "page" : undefined} href={topperProductHref(chosen.slug, lines)}>{topperLineLabel(lines)}</Link>)}
-            </nav>
+            <p className="custom-topper__lead">A perfect addition to your {chosen.name.toLowerCase()} celebration. Our personalised cardstock, acrylic and wooden cake toppers come in a variety of colours. This topper has {topperLineLabel(lineCount)} for your wording.</p>
             <p className="custom-topper__price">From {formatRinggit(topperChoicePriceSen(lineCount, "cardstock", topperFinishes.cardstock[0].name, lineCount === 3 ? 13 : 10)!)}</p>
             <CustomTopperForm key={`${chosen.slug}-${lineCount}`} initialEventSlug={chosen.slug} lineCount={lineCount} />
           </div>
         </div>
         <section className="custom-topper__details" aria-labelledby="custom-topper-details-title">
-          <div><p className="eyebrow">THE MATERIALS</p><h2 id="custom-topper-details-title">Made for your cake.</h2></div>
+          <div><p className="eyebrow">THE MATERIALS</p><h2 id="custom-topper-details-title">Type of materials</h2></div>
           <div className="custom-topper__material-grid">
-            <article><h3>Cardstock</h3><p>300 gsm card, approximately 0.8 mm thick, with an acrylic stick. Glitter cardstock has glitter on the front and a white reverse.</p></article>
-            <article><h3>Acrylic</h3><p>3 mm acrylic with a matching acrylic stem. Mirror finishes have a reflective front and plain-colour back.</p></article>
-            <article><h3>Wood</h3><p>3 mm wood with a matching wooden stem. Ask us about the finish you have in mind.</p></article>
+            <article><h3>Cardstock</h3><p>250 gsm cardstock with a transparent acrylic stick. Glitter cardstock has glitter on the front and a white reverse.</p></article>
+            <article><h3>Acrylic</h3><p>Premium 2–3 mm acrylic with a matching acrylic stem. Mirror finishes have a reflective front and a plain-colour reverse.</p></article>
+            <article><h3>Wood</h3><p>Premium 3 mm wood with a matching wooden stem. Choose natural or brown wood.</p></article>
           </div>
         </section>
-        <section className="custom-topper__timeline" aria-labelledby="custom-topper-timeline-title"><div><p className="eyebrow">BEFORE WE MAKE IT</p><h2 id="custom-topper-timeline-title">A design you can approve.</h2></div><p>We aim to send a digital mock-up on WhatsApp within 1–2 working days. Once you approve it, production is estimated at one working day, excluding weekends and public holidays. We&apos;ll confirm your ready date for every order. You can choose Kuchai Lama pickup or delivery in your cart; delivery times are estimates after dispatch.</p></section>
+        <section className="custom-topper__timeline" aria-labelledby="custom-topper-timeline-title"><div><p className="eyebrow">BEFORE WE MAKE IT</p><h2 id="custom-topper-timeline-title">Lead time</h2></div><p>Design takes 1 working day. We aim to send a digital mock-up via WhatsApp, or by email if you give us your address, within 1–2 working days after your order is confirmed. Production takes 1 working day after you approve the mock-up, excluding weekends and public holidays. Courier transit after dispatch is estimated at 3 business days to West Malaysia, 8–10 business days to East Malaysia, and 4 business days to Singapore. You can also choose pickup in Kuchai Lama, Kuala Lumpur.</p></section>
         <Link className="winnie-product__back" href={`/winnie-cake-topper/event/${chosen.slug}/`}>← See all {chosen.name.toLowerCase()} toppers</Link>
       </main>
       <SiteFooter />

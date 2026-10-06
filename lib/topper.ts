@@ -99,12 +99,8 @@ export function topperEventHref(slug: string) {
   return `/winnie-cake-topper/event/${slug}/`;
 }
 
-export function topperCanonicalProductHref(lines: TopperLineCount) {
-  return `/winnie-cake-topper/topper/${lines}-line/`;
-}
-
 export function topperProductHref(slug: string, lines: TopperLineCount) {
-  return `${topperCanonicalProductHref(lines)}?event=${encodeURIComponent(slug)}`;
+  return `/winnie-cake-topper/event/${encodeURIComponent(slug)}/${lines}-line/`;
 }
 
 export function topperLineLabel(lines: TopperLineCount) {
@@ -112,7 +108,7 @@ export function topperLineLabel(lines: TopperLineCount) {
 }
 
 export function topperProductName(lines: TopperLineCount) {
-  return `Custom ${topperLineLabel(lines)} Cake Topper`;
+  return `Custom ${lines} ${lines === 1 ? "Line" : "Lines"} – Cake Topper`;
 }
 
 export function topperChoicePriceSen(lineCount: TopperLineCount, material: TopperMaterial, finish: string, sizeCm: number): number | undefined {
