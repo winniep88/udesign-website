@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useCart, type CartItem } from "@/components/CartProvider";
 import { findVariant, formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
+import { topperEvent, topperSelectionPriceSen, topperSizes } from "@/lib/topper";
 
 type Fulfilment = "pickup" | "delivery";
 const deliveryRegions = {
@@ -26,6 +27,26 @@ function selectedOption(item: CartItem) {
   return item.productId && item.variantId ? findVariant(item.productId, item.variantId) : undefined;
 }
 
+function itemUnitPriceSen(item: CartItem) {
+  if (item.topper) return topperSelectionPriceSen(item.topper);
+  return selectedOption(item)?.priceSen;
+}
+
+function topperDetails(item: CartItem) {
+  if (!item.topper) return [];
+  const choice = item.topper;
+  const inch = topperSizes.find((size) => size.cm === choice.sizeCm)?.inch;
+  return [
+    `Event: ${topperEvent(choice.eventSlug)?.name ?? choice.eventSlug}`,
+    `Wording: ${choice.wording.join(" / ")}`,
+    `Material: ${choice.material[0].toUpperCase()}${choice.material.slice(1)}`,
+    `Colour or finish: ${choice.finish}`,
+    `Width: ${choice.sizeCm} cm${inch ? ` / ${inch} inch` : ""}`,
+    ...(choice.eventDate ? [`Event date: ${choice.eventDate}`] : []),
+    ...(choice.details ? [`Design details: ${choice.details}`] : []),
+  ];
+}
+
 export default function CartPage() {
   const { items, count, ready, setQuantity, setNotes, removeItem, clearCart } = useCart();
   const [fulfilment, setFulfilment] = useState<Fulfilment>("pickup");
@@ -41,8 +62,8 @@ export default function CartPage() {
   const summaryRef = useRef<HTMLTextAreaElement>(null);
 
   const pricing = useMemo(() => items.reduce((result, item) => {
-    const option = selectedOption(item);
-    if (option) result.subtotalSen += option.priceSen * item.quantity;
+    const unitPriceSen = itemUnitPriceSen(item);
+    if (unitPriceSen !== undefined) result.subtotalSen += unitPriceSen * item.quantity;
     else result.needsQuote = true;
     return result;
   }, { subtotalSen: 0, needsQuote: false }), [items]);
@@ -59,9 +80,12 @@ export default function CartPage() {
     const lines = ["Hi UDESIGN, I'd like to request these items:", ""];
     items.forEach((item, index) => {
       const option = selectedOption(item);
+      const unitPriceSen = itemUnitPriceSen(item);
       lines.push(`${index + 1}. ${brandName(item)} — ${item.product}`);
       if (option) lines.push(`   Option: ${option.name}`);
-      lines.push(`   Quantity: ${item.quantity}${option ? ` × ${formatRinggit(option.priceSen)} = ${formatRinggit(option.priceSen * item.quantity)}` : " · Price to confirm"}`);
+      topperDetails(item).forEach((detail) => lines.push(`   ${detail}`));
+      lines.push(`   Quantity: ${item.quantity}${unitPriceSen !== undefined ? ` × ${formatRinggit(unitPriceSen)} = ${formatRinggit(unitPriceSen * item.quantity)}` : " · Price to confirm"}`);
+      if (item.referenceImage) lines.push(`   Reference image: ${window.location.origin}${item.referenceImage.url}`);
       if (item.notes.trim()) lines.push(`   Personalisation: ${item.notes.trim()}`);
     });
     lines.push("", `Item subtotal: ${itemSubtotalText}`);
@@ -140,11 +164,13 @@ export default function CartPage() {
                   <article className={`cart-item cart-item--${item.brand}`} key={item.id}>
                     <div className="cart-item__heading"><div><p>{brandName(item)}</p><h3>{item.product}</h3></div><button type="button" onClick={() => removeItem(item.id)} aria-label={`Remove ${item.product} from cart`}>Remove</button></div>
                     {selectedOption(item) && <p className="cart-item__option"><span>Selected option</span><strong>{selectedOption(item)!.name}</strong></p>}
+                    {item.topper && <div className="cart-item__topper-details">{topperDetails(item).map((detail) => <p key={detail}>{detail}</p>)}</div>}
+                    {item.referenceImage && <p className="cart-item__reference">Reference image: <a href={item.referenceImage.url} target="_blank" rel="noopener noreferrer">{item.referenceImage.name} ↗</a></p>}
                     <div className="cart-item__fields">
                       <div className="cart-item__quantity"><span>Quantity</span><div><button type="button" aria-label={`Decrease ${item.product} quantity`} disabled={item.quantity <= 1} onClick={() => setQuantity(item.id, item.quantity - 1)}>−</button><output aria-label={`${item.product} quantity`}>{item.quantity}</output><button type="button" aria-label={`Increase ${item.product} quantity`} disabled={item.quantity >= 99} onClick={() => setQuantity(item.id, item.quantity + 1)}>+</button></div></div>
                       <label className="cart-field">Personalisation or idea<textarea rows={3} maxLength={1000} placeholder="Names, colours, theme, date, size or other details" value={item.notes} onChange={(event) => setNotes(item.id, event.target.value)} /></label>
                     </div>
-                    <p className="cart-item__price"><span>{selectedOption(item) ? `Unit price ${formatRinggit(selectedOption(item)!.priceSen)}` : "Custom item price"}</span><strong>{selectedOption(item) ? formatRinggit(selectedOption(item)!.priceSen * item.quantity) : "To confirm"}</strong></p>
+                    <p className="cart-item__price"><span>{itemUnitPriceSen(item) !== undefined ? `Unit price ${formatRinggit(itemUnitPriceSen(item)!)}` : "Custom item price"}</span><strong>{itemUnitPriceSen(item) !== undefined ? formatRinggit(itemUnitPriceSen(item)! * item.quantity) : "To confirm"}</strong></p>
                   </article>
                 ))}
               </div>

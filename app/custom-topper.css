@@ -27,6 +27,9 @@
 .custom-topper-form__field textarea { min-height:92px; resize:vertical; }
 .custom-topper-form__field input:focus-visible,.custom-topper-form__field select:focus-visible,.custom-topper-form__field textarea:focus-visible,.custom-topper-form input[type=radio]:focus-visible { outline:3px solid #e93f78; outline-offset:2px; }
 .custom-topper-form__hint { margin:-14px 0 0; color:#78646e; font-size:13px; line-height:1.55; }
+.custom-topper-form__field input[type=file] { min-height:auto; padding:12px; font-size:13px; }
+.custom-topper-form__error { margin:-13px 0 0; padding:12px 14px; background:#fff0f1; color:#9f1e42; font-size:13px; line-height:1.5; }
+.custom-topper-form__remove-image { width:max-content; margin:-15px 0 0; padding:2px 0; border:0; border-bottom:1px solid currentColor; background:none; color:#9f1e42; cursor:pointer; font:700 12px Arial,Helvetica,sans-serif; }
 .custom-topper-form__size-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
 .custom-topper-form__size-grid label { display:grid; justify-items:start; align-content:start; min-height:82px; padding:15px; border:1px solid #d5bfc6; background:#fff; cursor:pointer; }
 .custom-topper-form__size-grid strong { margin-top:6px; font-size:14px; }
