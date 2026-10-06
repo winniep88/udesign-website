@@ -1,1 +1,0 @@
-self.__SSG_MANIFEST=new Set(["\u002Fwinnie-cake-topper\u002F[id]","\u002Fwinnie-cake-topper\u002Fevent\u002F[event]","\u002Fwinnie-cake-topper\u002Fevent\u002F[event]\u002F[lines]","\u002Fwinnie-cake-topper\u002Ftopper\u002F[lines]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
