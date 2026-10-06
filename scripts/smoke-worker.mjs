@@ -25,13 +25,15 @@ const env = { BUCKET: bucket };
 const context = { waitUntil() {} };
 const fetchSite = (path, options) => worker.fetch(new Request(`https://udesign.example${path}`, options), env, context);
 
-for (const path of ["/", "/winnie-cake-topper/event/wedding/", "/winnie-cake-topper/topper/3-line/", "/cart/"]) {
+for (const path of ["/", "/winnie-cake-topper/event/wedding/", "/winnie-cake-topper/event/wedding/3-line/", "/cart/"]) {
   const response = await fetchSite(path);
   assert.equal(response.status, 200, `${path} should load`);
   assert.match(await response.text(), /UDESIGN|Cake Topper|Your cart/i);
 }
 assert.equal((await fetchSite("/missing-page/")).status, 404);
-assert.equal((await fetchSite("/winnie-cake-topper/topper/3-line")).status, 308);
+const oldProduct = await fetchSite("/winnie-cake-topper/topper/3-line/?event=wedding");
+assert.equal(oldProduct.status, 308);
+assert.equal(oldProduct.headers.get("location"), "https://udesign.example/winnie-cake-topper/event/wedding/3-line/");
 
 const png = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/uQAAAABJRU5ErkJggg==", "base64"));
 const upload = (headers) => fetchSite("/api/reference/", { method: "POST", headers: { "content-type": "image/png", ...headers }, body: png });

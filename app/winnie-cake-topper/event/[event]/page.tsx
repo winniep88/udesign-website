@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { formatRinggit } from "@/lib/catalog";
-import { topperChoicePriceSen, topperEvent, topperEventDesigns, topperEvents, topperFinishes, topperLineCounts, topperLineLabel, topperProductHref } from "@/lib/topper";
+import { topperChoicePriceSen, topperEvent, topperEventDesigns, topperEvents, topperFinishes, topperLineCounts, topperLineLabel, topperProductHref, topperProductName } from "@/lib/topper";
 
 type Props = { params: Promise<{ event: string }> };
 
@@ -44,7 +44,7 @@ export default async function TopperEventPage({ params }: Props) {
               <p>{lines === 1 ? "One name or short phrase." : lines === 2 ? "Two lines for a name and message." : "Three lines for a fuller message."}</p>
               <small>{lines === 3 ? "13–20 cm / 5–8 inch" : "10–20 cm / 4–8 inch"}</small>
               <small>From {formatRinggit(topperChoicePriceSen(lines, "cardstock", topperFinishes.cardstock[0].name, lines === 3 ? 13 : 10)!)}</small>
-              <Link href={topperProductHref(chosen.slug, lines)}>Personalise this topper <span aria-hidden="true">→</span></Link>
+              <Link href={topperProductHref(chosen.slug, lines)}>{topperProductName(lines)} <span aria-hidden="true">→</span></Link>
             </article>)}
           </div>
           <p className="topper-line-products__price-note">Your exact item price appears as you choose material, finish and width. We&apos;ll confirm the design and ready date before payment.</p>
