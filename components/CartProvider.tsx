@@ -2,8 +2,10 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { findProduct, findVariant, type Brand } from "@/lib/catalog";
+import { normaliseTopperSelection, topperProductName, type TopperCartSelection } from "@/lib/topper";
 
 export type CartBrand = Brand;
+export type ReferenceImage = { id: string; url: string; name: string };
 
 export type CartItem = {
   id: string;
@@ -11,11 +13,13 @@ export type CartItem = {
   product: string;
   productId?: string;
   variantId?: string;
+  topper?: TopperCartSelection;
+  referenceImage?: ReferenceImage;
   quantity: number;
   notes: string;
 };
 
-type NewCartItem = Pick<CartItem, "brand" | "product" | "quantity" | "notes" | "productId" | "variantId">;
+type NewCartItem = Pick<CartItem, "brand" | "product" | "quantity" | "notes" | "productId" | "variantId" | "topper" | "referenceImage">;
 
 type CartContextValue = {
   items: CartItem[];
@@ -35,6 +39,21 @@ function normaliseQuantity(value: number) {
   return Number.isFinite(value) ? Math.min(99, Math.max(1, Math.trunc(value))) : 1;
 }
 
+function normaliseReferenceImage(value: unknown): ReferenceImage | undefined {
+  if (!value || typeof value !== "object" || typeof window === "undefined") return undefined;
+  const image = value as Partial<ReferenceImage>;
+  if (typeof image.id !== "string" || !/^\d{4}-\d{2}-\d{2}-[0-9a-f-]{36}$/.test(image.id)) return undefined;
+  if (typeof image.name !== "string" || !image.name.trim() || image.name.length > 150) return undefined;
+  if (typeof image.url !== "string" || image.url.length > 300) return undefined;
+  try {
+    const url = new URL(image.url, window.location.origin);
+    if (url.origin !== window.location.origin || url.search || url.hash || url.pathname !== `/api/reference/${image.id}/`) return undefined;
+    return { id: image.id, url: url.pathname, name: image.name.replace(/\s+/g, " ").trim() };
+  } catch {
+    return undefined;
+  }
+}
+
 function readStoredCart(value: string | null): CartItem[] {
   if (!value) return [];
 
@@ -49,16 +68,22 @@ function readStoredCart(value: string | null): CartItem[] {
       const variant = product && typeof item.variantId === "string"
         ? findVariant(product.id, item.variantId)
         : undefined;
+      const topper = item.topper === undefined ? undefined : normaliseTopperSelection(item.topper);
+      if (item.topper !== undefined && !topper) return [];
+      if (topper && item.productId) return [];
       if (item.productId && (!product || !variant)) return [];
-      if (!product && (
+      if (!product && !topper && (
         (item.brand !== "moments" && item.brand !== "winnie") ||
         typeof item.product !== "string" || !item.product.trim()
       )) return [];
+      const referenceImage = normaliseReferenceImage(item.referenceImage);
       return [{
         id: item.id,
-        brand: product?.brand ?? item.brand as CartBrand,
-        product: product?.name ?? item.product!.trim().slice(0, 100),
+        brand: topper ? "winnie" : product?.brand ?? item.brand as CartBrand,
+        product: topper ? topperProductName(topper.lineCount) : product?.name ?? item.product!.trim().slice(0, 100),
         ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
+        ...(topper ? { topper } : {}),
+        ...(referenceImage ? { referenceImage } : {}),
         quantity: normaliseQuantity(item.quantity),
         notes: typeof item.notes === "string" ? item.notes.slice(0, 1000) : "",
       }];
@@ -109,12 +134,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addItem: (item) => setItems((current) => {
       const product = item.productId ? findProduct(item.productId) : undefined;
       const variant = product && item.variantId ? findVariant(product.id, item.variantId) : undefined;
+      const topper = item.topper === undefined ? undefined : normaliseTopperSelection(item.topper);
+      if (item.topper !== undefined && !topper) return current;
+      if (topper && item.productId) return current;
       if (item.productId && (!product || !variant || !variant.available)) return current;
+      const referenceImage = normaliseReferenceImage(item.referenceImage);
       return [...current, {
         id: makeId(),
-        brand: product?.brand ?? item.brand,
-        product: product?.name ?? item.product.trim().slice(0, 100),
+        brand: topper ? "winnie" : product?.brand ?? item.brand,
+        product: topper ? topperProductName(topper.lineCount) : product?.name ?? item.product.trim().slice(0, 100),
         ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
+        ...(topper ? { topper } : {}),
+        ...(referenceImage ? { referenceImage } : {}),
         quantity: normaliseQuantity(item.quantity),
         notes: item.notes.trim().slice(0, 1000),
       }];
@@ -137,4 +168,3 @@ export function useCart() {
   if (!context) throw new Error("useCart must be used inside CartProvider");
   return context;
 }
-

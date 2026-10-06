@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { topperEvent, topperEvents, topperLineCounts, topperLineLabel, topperProductHref } from "@/lib/topper";
+import { formatRinggit } from "@/lib/catalog";
+import { topperChoicePriceSen, topperEvent, topperEventDesigns, topperEvents, topperFinishes, topperLineCounts, topperLineLabel, topperProductHref } from "@/lib/topper";
 
 type Props = { params: Promise<{ event: string }> };
 
@@ -35,21 +36,25 @@ export default async function TopperEventPage({ params }: Props) {
         <section className="topper-line-products shell" aria-labelledby="topper-line-products-title">
           <p className="eyebrow">STEP 2 / CHOOSE A PRODUCT</p>
           <h2 id="topper-line-products-title">How many lines?</h2>
-          <p>Each product lets you choose cardstock, acrylic or wood, then its colour and topper width.</p>
+          <p>These are the same three custom products for every event. Choose cardstock, acrylic or wood, then its colour and topper width.</p>
           <div className="topper-line-products__grid">
             {topperLineCounts.map((lines) => <article key={lines}>
               <span className="topper-line-products__number">0{lines}</span>
               <h3>{topperLineLabel(lines)}</h3>
               <p>{lines === 1 ? "One name or short phrase." : lines === 2 ? "Two lines for a name and message." : "Three lines for a fuller message."}</p>
               <small>{lines === 3 ? "13–20 cm / 5–8 inch" : "10–20 cm / 4–8 inch"}</small>
+              <small>From {formatRinggit(topperChoicePriceSen(lines, "cardstock", topperFinishes.cardstock[0].name, lines === 3 ? 13 : 10)!)}</small>
               <Link href={topperProductHref(chosen.slug, lines)}>Personalise this topper <span aria-hidden="true">→</span></Link>
             </article>)}
           </div>
-          <p className="topper-line-products__price-note">Item prices are being completed. We&apos;ll confirm your total on WhatsApp before payment.</p>
+          <p className="topper-line-products__price-note">Your exact item price appears as you choose material, finish and width. We&apos;ll confirm the design and ready date before payment.</p>
+          {topperEventDesigns[chosen.slug].length > 0 && <section aria-label={`${chosen.name} design ideas`}>
+            <h2>Design ideas for {chosen.name.toLowerCase()}</h2>
+            <p>Choose a design you like, then personalise it.</p>
+          </section>}
         </section>
       </main>
       <SiteFooter />
     </div>
   );
 }
-

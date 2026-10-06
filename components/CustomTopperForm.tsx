@@ -1,74 +1,117 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useCart } from "@/components/CartProvider";
-import { topperLineLabel, topperSizes, type TopperLineCount } from "@/lib/topper";
+import { formatRinggit } from "@/lib/catalog";
+import { topperChoicePriceSen, topperEvent, topperEvents, topperFinishes, topperLineLabel, topperProductName, topperSizes, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
-type Material = "cardstock" | "acrylic" | "wood";
-
-const colours: Record<Material, string[]> = {
-  cardstock: ["Glitter Black", "Glitter Dark Blue", "Glitter Gold", "Glitter Pink", "Glitter Purple", "Glitter Silver", "Matte Black", "Shiny Gold", "Shiny Rose Gold", "Shiny Silver"],
-  acrylic: ["Black", "Blue", "Green", "Grey", "Matte gold", "Mirror Gold", "Mirror Rose Gold", "Mirror Silver", "Pink", "Red", "Yellow"],
-  wood: ["Natural wood", "Other finish — confirm availability"],
-};
-
-export function CustomTopperForm({ eventName, lineCount }: { eventName: string; lineCount: TopperLineCount }) {
+export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: TopperLineCount; initialEventSlug?: TopperEventSlug }) {
   const { addItem, ready } = useCart();
-  const [material, setMaterial] = useState<Material>("cardstock");
-  const [colour, setColour] = useState(colours.cardstock[0]);
-  const [requestedWoodFinish, setRequestedWoodFinish] = useState("");
+  const [eventSlug, setEventSlug] = useState<string>(initialEventSlug ?? "");
+  const [material, setMaterial] = useState<TopperMaterial>("cardstock");
+  const [finish, setFinish] = useState(topperFinishes.cardstock[0].name);
   const [sizeCm, setSizeCm] = useState(lineCount === 3 ? 13 : 10);
-  const [lines, setLines] = useState(["", "", ""]);
+  const [wording, setWording] = useState(["", "", ""]);
   const [eventDate, setEventDate] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [details, setDetails] = useState("");
+  const [referenceFile, setReferenceFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [added, setAdded] = useState(false);
+  const referenceInput = useRef<HTMLInputElement>(null);
   const availableSizes = topperSizes.filter((size) => lineCount !== 3 || size.cm >= 13);
+  const unitPriceSen = topperChoicePriceSen(lineCount, material, finish, sizeCm);
 
-  function chooseMaterial(value: Material) {
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("event") ?? "";
+    if (topperEvent(requested)) setEventSlug(requested);
+  }, []);
+
+  function chooseMaterial(value: TopperMaterial) {
     setMaterial(value);
-    setColour(colours[value][0]);
-    setRequestedWoodFinish("");
+    setFinish(topperFinishes[value][0].name);
     setAdded(false);
   }
 
   function changeLine(index: number, value: string) {
-    setLines((current) => current.map((line, lineIndex) => lineIndex === index ? value : line));
+    setWording((current) => current.map((line, lineIndex) => lineIndex === index ? value : line));
     setAdded(false);
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function chooseReference(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setAdded(false);
+    setUploadError("");
+    if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+      setReferenceFile(null);
+      setUploadError("Choose a JPG, PNG or WebP image under 5 MB.");
+      event.target.value = "";
+      return;
+    }
+    setReferenceFile(file);
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!ready || lines.slice(0, lineCount).some((line) => !line.trim())) return;
-    if (lineCount === 3 && sizeCm < 13) return;
-    if (material === "wood" && colour !== "Natural wood" && !requestedWoodFinish.trim()) return;
-    const personalisation = [
-      `Event: ${eventName}`,
-      `Wording (${topperLineLabel(lineCount)}): ${lines.slice(0, lineCount).map((line) => line.trim()).join(" / ")}`,
-      `Material: ${material[0].toUpperCase()}${material.slice(1)}`,
-      `Colour or finish: ${colour}`,
-      material === "wood" && colour !== "Natural wood" ? `Requested wood finish: ${requestedWoodFinish.trim()}` : "",
-      `Size: ${sizeCm} cm / ${topperSizes.find((size) => size.cm === sizeCm)?.inch} inch`,
-      eventDate ? `Event date: ${eventDate}` : "",
-      details.trim() ? `Other details: ${details.trim()}` : "",
-    ].filter(Boolean).join("\n");
-    addItem({
-      brand: "winnie",
-      product: `${eventName} Cake Topper — ${topperLineLabel(lineCount)}`,
-      quantity,
-      notes: personalisation,
-    });
-    setAdded(true);
+    if (submitting || !ready || !topperEvent(eventSlug) || unitPriceSen === undefined || wording.slice(0, lineCount).some((line) => !line.trim())) return;
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return;
+    setSubmitting(true);
+    setUploadError("");
+    try {
+      let referenceImage: { id: string; url: string; name: string } | undefined;
+      if (referenceFile) {
+        const response = await fetch("/api/reference/", {
+          method: "POST",
+          headers: { "content-type": referenceFile.type },
+          body: referenceFile,
+          cache: "no-store",
+        });
+        const result = await response.json().catch(() => ({})) as { id?: unknown; url?: unknown; error?: unknown };
+        if (!response.ok) throw new Error(typeof result.error === "string" ? result.error : "Your image could not be uploaded. Please try again.");
+        if (typeof result.id !== "string" || typeof result.url !== "string" || result.url !== `/api/reference/${result.id}/`) throw new Error("The image upload did not finish. Please try again.");
+        referenceImage = { id: result.id, url: result.url, name: referenceFile.name.slice(0, 150) };
+      }
+      addItem({
+        brand: "winnie",
+        product: topperProductName(lineCount),
+        quantity,
+        notes: "",
+        ...(referenceImage ? { referenceImage } : {}),
+        topper: {
+          eventSlug: eventSlug as TopperEventSlug,
+          lineCount,
+          material,
+          finish,
+          sizeCm,
+          wording: wording.slice(0, lineCount).map((line) => line.trim()),
+          ...(eventDate ? { eventDate } : {}),
+          ...(details.trim() ? { details: details.trim() } : {}),
+        },
+      });
+      setAdded(true);
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Your image could not be uploaded. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <form className="custom-topper-form" id="customise" onSubmit={submit}>
+      <label className="custom-topper-form__field">Your event
+        <select required value={eventSlug} onChange={(event) => { setEventSlug(event.target.value); setAdded(false); }}>
+          <option value="" disabled>Choose an event</option>
+          {topperEvents.map((option) => <option key={option.slug} value={option.slug}>{option.name}</option>)}
+        </select>
+      </label>
+
       <fieldset className="custom-topper-form__wording">
         <legend>1. Enter your topper wording</legend>
         <p className="custom-topper-form__intro">Type the words exactly as you want them to appear. We&apos;ll send a digital mock-up on WhatsApp for your approval.</p>
         {Array.from({ length: lineCount }, (_, index) => <label className="custom-topper-form__field" key={index}>Line {index + 1}
-          <input type="text" maxLength={60} required value={lines[index]} onChange={(event) => changeLine(index, event.target.value)} placeholder={index === 0 ? "e.g. Happy Birthday" : index === 1 ? "e.g. Olivia" : "e.g. Three"} />
+          <input type="text" maxLength={60} required value={wording[index]} onChange={(event) => changeLine(index, event.target.value)} placeholder={index === 0 ? "e.g. Happy Birthday" : index === 1 ? "e.g. Olivia" : "e.g. Three"} />
         </label>)}
       </fieldset>
 
@@ -83,14 +126,11 @@ export function CustomTopperForm({ eventName, lineCount }: { eventName: string; 
       </fieldset>
 
       <label className="custom-topper-form__field">3. {material === "wood" ? "Wood finish" : "Colour or finish"}
-        <select value={colour} onChange={(event) => { setColour(event.target.value); setAdded(false); }}>
-          {colours[material].map((option) => <option key={option} value={option}>{option}</option>)}
+        <select value={finish} onChange={(event) => { setFinish(event.target.value); setAdded(false); }}>
+          {topperFinishes[material].map((option) => <option key={option.name} value={option.name}>{option.name}{option.extraRm ? ` (+RM${option.extraRm})` : ""}</option>)}
         </select>
       </label>
-      <p className="custom-topper-form__hint">The choices change with the material. We&apos;ll confirm the exact finish with you before production.</p>
-      {material === "wood" && colour !== "Natural wood" && <label className="custom-topper-form__field">Preferred wood finish
-        <input type="text" required maxLength={45} value={requestedWoodFinish} onChange={(event) => { setRequestedWoodFinish(event.target.value); setAdded(false); }} placeholder="Describe the colour or shade you want" />
-      </label>}
+      <p className="custom-topper-form__hint">The finishes change with your material. Your price updates when you change a choice.</p>
 
       <fieldset className="custom-topper-form__choices">
         <legend>4. Choose the topper width</legend>
@@ -114,12 +154,16 @@ export function CustomTopperForm({ eventName, lineCount }: { eventName: string; 
       <label className="custom-topper-form__field">Other design details <span>Optional</span>
         <textarea rows={3} maxLength={120} value={details} onChange={(event) => { setDetails(event.target.value); setAdded(false); }} placeholder="Theme, font style or other requests" />
       </label>
-      <p className="custom-topper-form__hint">Have a reference photo? You can attach it in WhatsApp after sending your cart request.</p>
-      <div className="custom-topper-form__total"><span>Item price</span><strong>To confirm</strong></div>
-      <p className="custom-topper-form__hint">We&apos;ll confirm the price and design on WhatsApp before payment. The price table is being completed.</p>
-      <button className="custom-topper-form__submit" type="submit" disabled={!ready}>Add to cart <span aria-hidden="true">＋</span></button>
-      {added && <p className="custom-topper-form__added" role="status">Added to cart. <Link href="/cart/">Choose delivery or pickup →</Link></p>}
+      <label className="custom-topper-form__field">Upload a reference image <span>Optional · JPG, PNG or WebP · max 5 MB</span>
+        <input ref={referenceInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseReference} />
+      </label>
+      {referenceFile && <button className="custom-topper-form__remove-image" type="button" onClick={() => { setReferenceFile(null); setUploadError(""); setAdded(false); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove selected image</button>}
+      <p className="custom-topper-form__hint">The image link is included with your WhatsApp request and remains available for 30 days. Anyone with the link can view it.</p>
+      {uploadError && <p className="custom-topper-form__error" role="alert">{uploadError} You can remove the image and send it to us in WhatsApp instead.</p>}
+      <div className="custom-topper-form__total"><span>{topperLineLabel(lineCount)} · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
+      <p className="custom-topper-form__hint">This is the item price. Delivery, if selected, is added in your cart. We&apos;ll confirm the design and ready date before payment.</p>
+      <button className="custom-topper-form__submit" type="submit" disabled={!ready || submitting}>{submitting ? referenceFile ? "Uploading image…" : "Adding to cart…" : "Add to cart"} <span aria-hidden="true">＋</span></button>
+      {added && <p className="custom-topper-form__added" role="status">Added to cart{referenceFile ? " with your reference image" : ""}. <Link href="/cart/">Choose delivery or pickup →</Link></p>}
     </form>
   );
 }
-
