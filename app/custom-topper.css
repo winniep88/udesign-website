@@ -66,10 +66,7 @@
 .topper-event-picker { display:grid; gap:10px; max-width:470px; margin-top:27px; padding:20px; background:#fff8f5; box-shadow:9px 9px 0 #f9b8c9; }
 .topper-event-picker label { font-size:16px; font-weight:900; }
 .topper-event-picker select { width:100%; min-height:54px; padding:11px 14px; border:1px solid #b57d95; border-radius:0; color:#652640; background:#fff; font:700 16px Arial,Helvetica,sans-serif; }
-.topper-event-picker button { display:flex; justify-content:space-between; align-items:center; gap:20px; min-height:54px; padding:11px 16px; border:0; background:#e93f78; color:#fff; cursor:pointer; font:800 15px Arial,Helvetica,sans-serif; }
-.topper-event-picker button:hover { background:#bf2759; }
-.topper-event-picker button:disabled { opacity:.55; cursor:not-allowed; }
-.topper-event-picker select:focus-visible,.topper-event-picker button:focus-visible { outline:3px solid #652640; outline-offset:2px; }
+.topper-event-picker select:focus-visible { outline:3px solid #652640; outline-offset:2px; }
 .topper-event-picker p { margin:2px 0 0; color:#725d68; font-size:13px; line-height:1.45; }
 .winnie-hero__copy .winnie-instagram-link { margin-top:23px; }
 .topper-event-page { min-height:100vh; }
