@@ -14,7 +14,7 @@ const bucket = {
   },
   async get(key) {
     const object = objects.get(key);
-    return object ? { ...object, body: new Blob([object.bytes]).stream() } : null;
+    return object ? { ...object, body: new Blob([object.bytes]).stream(), json: async () => JSON.parse(new TextDecoder().decode(object.bytes)) } : null;
   },
   async list({ prefix, limit }) {
     return { objects: [...objects.keys()].filter((key) => key.startsWith(prefix)).sort().slice(0, limit).map((key) => ({ key })) };
@@ -48,4 +48,29 @@ assert.equal(reference.status, 200);
 assert.equal(reference.headers.get("content-type"), "image/png");
 assert.deepEqual(new Uint8Array(await reference.arrayBuffer()), png);
 assert.equal((await fetchSite("/api/reference/not-an-id/")).status, 404);
-console.log("Worker storefront and reference image upload smoke checks passed.");
+assert.deepEqual(await (await fetchSite("/api/checkout/status/")).json(), { available: false });
+const checkoutBody = { items: [{ productId: "4306939371", variantId: "4306939371:307123826891", quantity: 2, notes: "Happy birthday" }], fulfilment: "pickup", customer: { name: "Test Customer", email: "test@example.com", phone: "+60123456789" } };
+const checkout = (body) => fetchSite("/api/checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify(body) });
+assert.equal((await checkout(checkoutBody)).status, 503, "Payment remains closed until credentials are installed");
+const paidEnv = { ...env, CHIP_SECRET_KEY: "test-secret", CHIP_BRAND_ID: "brand-123" };
+const originalFetch = globalThis.fetch;
+let createdPurchase;
+globalThis.fetch = async (url, options) => {
+  assert.match(url, /^https:\/\/gate\.chip-in\.asia\/api\/v1\/purchases\//);
+  if (options.method === "POST") {
+    createdPurchase = JSON.parse(options.body);
+    return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: false, reference: createdPurchase.reference, purchase: { total: 3200 }, checkout_url: "https://gate.chip-in.asia/p/purchase-123/" });
+  }
+  return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: false, reference: createdPurchase.reference, purchase: { total: 3200 }, status: "paid" });
+};
+try {
+  const paidFetch = (path, options) => worker.fetch(new Request(`https://udesign.example${path}`, options), paidEnv, context);
+  const body = { ...checkoutBody, items: checkoutBody.items.map((item) => ({ ...item, priceSen: 1 })) };
+  const start = await paidFetch("/api/checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify(body) });
+  assert.equal(start.status, 200);
+  const { orderId } = await start.json();
+  assert.equal(createdPurchase.purchase.products[0].price, 1600, "Server must use catalog price, not browser price");
+  const status = await paidFetch(`/api/orders/${orderId}/status/`);
+  assert.deepEqual(await status.json(), { status: "paid", orderId });
+} finally { globalThis.fetch = originalFetch; }
+console.log("Worker storefront, image upload and CHIP checkout checks passed.");
