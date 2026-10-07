@@ -42,7 +42,6 @@ function topperDetails(item: CartItem) {
     `Material: ${choice.material[0].toUpperCase()}${choice.material.slice(1)}`,
     `Colour or finish: ${choice.finish}`,
     `Width: ${choice.sizeCm} cm${inch ? ` / ${inch} inch` : ""}`,
-    ...(choice.eventDate ? [`Event date: ${choice.eventDate}`] : []),
     ...(choice.details ? [`Design details: ${choice.details}`] : []),
   ];
 }
@@ -52,7 +51,6 @@ export default function CartPage() {
   const [fulfilment, setFulfilment] = useState<Fulfilment>("pickup");
   const [deliveryRegion, setDeliveryRegion] = useState<DeliveryRegion | "">("");
   const [address, setAddress] = useState("");
-  const [preferredDate, setPreferredDate] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const [addressError, setAddressError] = useState("");
@@ -97,11 +95,10 @@ export default function CartPage() {
       lines.push(`Delivery address: ${address.trim() || "To be provided"}`);
     }
     lines.push(`Estimated total: ${totalToConfirm ? "To confirm" : formatRinggit(pricing.subtotalSen + deliveryFeeSen)}`);
-    if (preferredDate) lines.push(`Preferred date: ${preferredDate}`);
     if (extraNotes.trim()) lines.push(`Other notes: ${extraNotes.trim()}`);
     lines.push("", "Please confirm the design, ready date, final total and payment instructions. Thank you!");
     return lines.join("\n");
-  }, [items, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, deliveryFeeSen, address, preferredDate, extraNotes]);
+  }, [items, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, deliveryFeeSen, address, extraNotes]);
 
   function validateRequest() {
     if (fulfilment === "delivery" && !deliveryRegion) {
@@ -168,7 +165,7 @@ export default function CartPage() {
                     {item.referenceImage && <p className="cart-item__reference">Reference image: <a href={item.referenceImage.url} target="_blank" rel="noopener noreferrer">{item.referenceImage.name} ↗</a></p>}
                     <div className="cart-item__fields">
                       <div className="cart-item__quantity"><span>Quantity</span><div><button type="button" aria-label={`Decrease ${item.product} quantity`} disabled={item.quantity <= 1} onClick={() => setQuantity(item.id, item.quantity - 1)}>−</button><output aria-label={`${item.product} quantity`}>{item.quantity}</output><button type="button" aria-label={`Increase ${item.product} quantity`} disabled={item.quantity >= 99} onClick={() => setQuantity(item.id, item.quantity + 1)}>+</button></div></div>
-                      <label className="cart-field">Personalisation or idea<textarea rows={3} maxLength={1000} placeholder="Names, colours, theme, date, size or other details" value={item.notes} onChange={(event) => setNotes(item.id, event.target.value)} /></label>
+                      <label className="cart-field">Personalisation or idea<textarea rows={3} maxLength={1000} placeholder="Names, colours, theme, size or other details" value={item.notes} onChange={(event) => setNotes(item.id, event.target.value)} /></label>
                     </div>
                     <p className="cart-item__price"><span>{itemUnitPriceSen(item) !== undefined ? `Unit price ${formatRinggit(itemUnitPriceSen(item)!)}` : "Custom item price"}</span><strong>{itemUnitPriceSen(item) !== undefined ? formatRinggit(itemUnitPriceSen(item)! * item.quantity) : "To confirm"}</strong></p>
                   </article>
@@ -183,6 +180,7 @@ export default function CartPage() {
                 <label className={fulfilment === "pickup" ? "is-selected" : ""}><input type="radio" name="fulfilment" checked={fulfilment === "pickup"} onChange={() => { setFulfilment("pickup"); setAddressError(""); setRegionError(""); }} /><span><strong>Pickup in Kuchai Lama</strong><small>Kuala Lumpur · Exact collection details shared after confirmation</small></span></label>
                 <label className={fulfilment === "delivery" ? "is-selected" : ""}><input type="radio" name="fulfilment" checked={fulfilment === "delivery"} onChange={() => setFulfilment("delivery")} /><span><strong>Delivery</strong><small>Choose a region and enter your full address</small></span></label>
               </fieldset>
+              <p className="cart-urgent">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I have an urgent order and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp ↗</a> Urgent orders are for pickup in Kuchai Lama, KL, once we confirm availability.</p>
               {fulfilment === "delivery" && <div className="cart-delivery-fields">
                 <label className="cart-field cart-delivery-region">Delivery region
                   <select ref={regionRef} value={deliveryRegion} required onChange={(event) => { setDeliveryRegion(event.target.value as DeliveryRegion | ""); setRegionError(""); }} aria-invalid={Boolean(regionError)} aria-describedby={regionError ? "cart-region-error" : undefined}>
@@ -194,7 +192,7 @@ export default function CartPage() {
                 <label className="cart-field cart-field--full">Full delivery address<textarea ref={addressRef} rows={4} minLength={10} required placeholder={deliveryRegion === "singapore" ? "Street, building/unit and postal code, Singapore" : "Street, building/unit, postcode, city and state"} value={address} onChange={(event) => { setAddress(event.target.value); setAddressError(""); }} aria-invalid={Boolean(addressError)} aria-describedby={addressError ? "cart-address-error" : undefined} />{addressError && <span className="cart-field__error" id="cart-address-error" role="alert">{addressError}</span>}</label>
                 <p className="cart-delivery-fields__note">{cakeTopperOnly ? "Delivery fees are for a cake topper order. Transit times are estimates after dispatch." : "This cart includes other products, so we&apos;ll confirm the delivery fee and timing on WhatsApp."}</p>
               </div>}
-              <div className="cart-checkout__extra"><label className="cart-field">Preferred date <span>(optional)</span><input type="date" value={preferredDate} onChange={(event) => setPreferredDate(event.target.value)} /></label><label className="cart-field">Anything else? <span>(optional)</span><textarea rows={3} maxLength={500} placeholder="Any other request we should know" value={extraNotes} onChange={(event) => setExtraNotes(event.target.value)} /></label></div>
+              <div className="cart-checkout__extra"><label className="cart-field">Anything else? <span>(optional)</span><textarea rows={3} maxLength={500} placeholder="Any other request we should know" value={extraNotes} onChange={(event) => setExtraNotes(event.target.value)} /></label></div>
               <div className="cart-quote">
                 <div className="cart-quote__row"><h3>Item subtotal</h3><strong>{itemSubtotalText}</strong></div>
                 {fulfilment === "delivery" && <div className="cart-quote__row"><span>Delivery</span><strong>{cakeTopperOnly && region ? formatRinggit(region.feeSen) : "To confirm"}</strong></div>}

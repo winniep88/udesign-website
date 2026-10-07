@@ -87,7 +87,6 @@ export type TopperCartSelection = {
   finish: string;
   sizeCm: number;
   wording: string[];
-  eventDate?: string;
   details?: string;
 };
 
@@ -128,7 +127,6 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
   if (typeof item.finish !== "string" || typeof item.sizeCm !== "number" || topperChoicePriceSen(item.lineCount, item.material, item.finish, item.sizeCm) === undefined) return undefined;
   if (!Array.isArray(item.wording) || item.wording.length !== item.lineCount) return undefined;
   if (item.wording.some((line) => typeof line !== "string" || !line.trim() || line.length > 60)) return undefined;
-  if (item.eventDate !== undefined && (typeof item.eventDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(item.eventDate))) return undefined;
   if (item.details !== undefined && (typeof item.details !== "string" || item.details.length > 120)) return undefined;
   return {
     eventSlug: item.eventSlug as TopperEventSlug,
@@ -137,7 +135,6 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
     finish: item.finish,
     sizeCm: item.sizeCm,
     wording: item.wording.map((line) => line.replace(/\s+/g, " ").trim()),
-    ...(item.eventDate ? { eventDate: item.eventDate } : {}),
     ...(item.details?.trim() ? { details: item.details.trim() } : {}),
   };
 }

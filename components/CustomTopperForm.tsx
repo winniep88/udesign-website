@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useCart } from "@/components/CartProvider";
 import { formatRinggit } from "@/lib/catalog";
+import { whatsappLink } from "@/lib/contact";
 import { topperChoicePriceSen, topperFinishes, topperLineLabel, topperProductName, topperSizes, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
 export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: TopperLineCount; initialEventSlug: TopperEventSlug }) {
@@ -13,7 +14,6 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   const [sizeCm, setSizeCm] = useState(lineCount === 3 ? 13 : 10);
   const [wording, setWording] = useState(["", "", ""]);
   const [wordingError, setWordingError] = useState("");
-  const [eventDate, setEventDate] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [details, setDetails] = useState("");
   const [referenceFile, setReferenceFile] = useState<File | null>(null);
@@ -89,7 +89,6 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
           finish,
           sizeCm,
           wording: wording.slice(0, lineCount).map((line) => line.trim()),
-          ...(eventDate ? { eventDate } : {}),
           ...(details.trim() ? { details: details.trim() } : {}),
         },
       });
@@ -141,14 +140,9 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
         {lineCount === 3 && <p className="custom-topper-form__size-note">Three-line toppers start at 13 cm / 5 inch.</p>}
       </fieldset>
 
-      <div className="custom-topper-form__extra">
-        <label className="custom-topper-form__field">Event date <span>Optional</span>
-          <input type="date" value={eventDate} onChange={(event) => { setEventDate(event.target.value); setAdded(false); }} />
-        </label>
-        <label className="custom-topper-form__field">Quantity
-          <input type="number" min={1} max={99} required value={quantity} onChange={(event) => { setQuantity(Number(event.target.value)); setAdded(false); }} />
-        </label>
-      </div>
+      <label className="custom-topper-form__field">Quantity
+        <input type="number" min={1} max={99} required value={quantity} onChange={(event) => { setQuantity(Number(event.target.value)); setAdded(false); }} />
+      </label>
       <label className="custom-topper-form__field">Special Request <span>Optional · {50 - details.length} characters remaining</span>
         <textarea rows={3} maxLength={50} value={details} onChange={(event) => { setDetails(event.target.value); setAdded(false); }} placeholder="Theme, font style or other requests" />
       </label>
@@ -160,6 +154,7 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
       {uploadError && <p className="custom-topper-form__error" role="alert">{uploadError} You can remove the image and send it to us in WhatsApp instead.</p>}
       <div className="custom-topper-form__total"><span>{topperLineLabel(lineCount)} · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
       <p className="custom-topper-form__hint">This is the item price. Delivery, if selected, is added in your cart. We&apos;ll confirm the design and ready date before payment.</p>
+      <p className="custom-topper-form__hint">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I need an urgent cake topper and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp</a> first. Pickup in Kuchai Lama, KL is available once we confirm your order.</p>
       <button className="custom-topper-form__submit" type="submit" disabled={!ready || submitting}>{submitting ? referenceFile ? "Uploading image…" : "Adding to cart…" : "Add to cart"} <span aria-hidden="true">＋</span></button>
       {added && <p className="custom-topper-form__added" role="status">Added to cart{referenceFile ? " with your reference image" : ""}. <Link href="/cart/">Choose delivery or pickup →</Link></p>}
     </form>
