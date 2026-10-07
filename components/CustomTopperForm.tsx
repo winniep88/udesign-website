@@ -12,7 +12,7 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   const [material, setMaterial] = useState<TopperMaterial | "">("");
   const [finish, setFinish] = useState("");
   const [sizeCm, setSizeCm] = useState(lineCount === 3 ? 13 : 10);
-  const [wording, setWording] = useState(["", "", ""]);
+  const [wording, setWording] = useState("");
   const [wordingError, setWordingError] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [details, setDetails] = useState("");
@@ -22,7 +22,8 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   const [added, setAdded] = useState(false);
   const referenceInput = useRef<HTMLInputElement>(null);
   const availableSizes = topperSizes.filter((size) => lineCount !== 3 || size.cm >= 13);
-  const wordingCharacters = wording.slice(0, lineCount).join("").length;
+  const wordingLines = wording.split(/\r?\n/);
+  const wordingCharacters = wording.replace(/\r?\n/g, "").length;
   const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm) : undefined;
 
   function chooseMaterial(value: TopperMaterial) {
@@ -31,9 +32,9 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
     setAdded(false);
   }
 
-  function changeLine(index: number, value: string) {
-    const next = wording.map((line, lineIndex) => lineIndex === index ? value : line);
-    if (next.slice(0, lineCount).join("").length > 40) return;
+  function changeWording(value: string) {
+    const next = value.replace(/\r\n?/g, "\n");
+    if (next.replace(/\n/g, "").length > 40 || next.split("\n").length > lineCount) return;
     setWording(next);
     setWordingError("");
     setAdded(false);
@@ -55,8 +56,8 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting || !ready || !material || !finish || unitPriceSen === undefined) return;
-    if (wordingCharacters > 40 || wording.slice(0, lineCount).some((line) => !line.trim())) {
-      setWordingError(`Please enter wording for all ${lineCount} ${lineCount === 1 ? "line" : "lines"}, within 40 characters.`);
+    if (wordingCharacters > 40 || wordingLines.length !== lineCount || wordingLines.some((line) => !line.trim())) {
+      setWordingError(`Please type exactly ${lineCount} ${lineCount === 1 ? "line" : "lines"} of wording, within 40 characters. Press Enter between lines.`);
       return;
     }
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return;
@@ -88,7 +89,7 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
           material,
           finish,
           sizeCm,
-          wording: wording.slice(0, lineCount).map((line) => line.trim()),
+          wording: wordingLines.map((line) => line.trim()),
           ...(details.trim() ? { details: details.trim() } : {}),
         },
       });
@@ -104,11 +105,11 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
     <form className="custom-topper-form" id="customise" onSubmit={submit}>
       <fieldset className="custom-topper-form__wording">
         <legend>1. Name / Phrase ({lineCount} {lineCount === 1 ? "Line" : "Lines"})</legend>
-        <p className="custom-topper-form__intro">Type the words exactly as you want them to appear, one line in each box.</p>
+        <p className="custom-topper-form__intro" id="topper-wording-help">Type the words exactly as you want them to appear.{lineCount > 1 ? ` Press Enter to start line 2${lineCount === 3 ? " and line 3" : ""}.` : " This product has one line of wording."}</p>
         <p className="custom-topper-form__remaining" aria-live="polite">{40 - wordingCharacters} characters remaining</p>
-        {Array.from({ length: lineCount }, (_, index) => <label className="custom-topper-form__field" key={index}>Line {index + 1}
-          <input type="text" maxLength={40} required value={wording[index]} onChange={(event) => changeLine(index, event.target.value)} placeholder={index === 0 ? "e.g. Happy Birthday" : index === 1 ? "e.g. Olivia" : "e.g. Three"} />
-        </label>)}
+        <label className="custom-topper-form__field">Your wording
+          <textarea rows={lineCount + 1} required value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={lineCount === 1 ? "e.g. Happy Birthday Olivia" : lineCount === 2 ? "e.g. Happy Birthday\nOlivia" : "e.g. Happy Birthday\nOlivia\nThree"} />
+        </label>
         {wordingError && <p className="custom-topper-form__error" role="alert">{wordingError}</p>}
       </fieldset>
 
