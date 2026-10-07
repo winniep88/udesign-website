@@ -49,6 +49,8 @@ for (const file of walk(exportDir)) {
 
 mkdirSync(join(output, "server"), { recursive: true });
 mkdirSync(join(output, ".openai"), { recursive: true });
-writeFileSync(join(output, "server", "index.js"), `const ASSETS = ${JSON.stringify(assets)};\n${readFileSync(workerSource, "utf8")}`);
+const catalog = JSON.parse(readFileSync(join(root, "data", "catalog.json"), "utf8"));
+const topperPrices = JSON.parse(readFileSync(join(root, "data", "topper-prices.json"), "utf8"));
+writeFileSync(join(output, "server", "index.js"), `const ASSETS = ${JSON.stringify(assets)};\nconst CATALOG = ${JSON.stringify(catalog)};\nconst TOPPER_PRICES = ${JSON.stringify(topperPrices)};\n${readFileSync(workerSource, "utf8")}`);
 writeFileSync(join(output, ".openai", "hosting.json"), `${JSON.stringify(hosting)}\n`);
 console.log(`Built ${Object.keys(assets).length} static files and the reference image service.`);
