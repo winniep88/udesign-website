@@ -83,7 +83,9 @@
 .cart-delivery-fields { display:grid; gap:17px; }
 .cart-delivery-region { max-width:520px; }
 .cart-delivery-fields__note { margin:0; color:#5f696d; font-size:13px; line-height:1.5; }
-.cart-checkout__extra { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:23px; }
+.cart-urgent { margin:0 0 24px; padding:15px 18px; background:#fff1e8; color:#613925; font-size:13px; line-height:1.6; }
+.cart-urgent a { color:#7d2d16; font-weight:800; text-decoration:underline; text-underline-offset:3px; }
+.cart-checkout__extra { display:grid; grid-template-columns:1fr; gap:16px; margin-top:23px; }
 .cart-quote { display:grid; gap:12px; margin-top:27px; padding:24px; background:#e6eae6; }
 .cart-quote__row { display:flex; justify-content:space-between; align-items:start; gap:20px; }
 .cart-quote__row--total { padding-top:14px; border-top:1px solid #c8d1cc; font-size:18px; font-weight:800; }

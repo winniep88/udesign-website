@@ -27,7 +27,6 @@ export function WinnieProductForm({ product }: { product: CatalogProduct }) {
   const [variantId, setVariantId] = useState(cheapest?.variant.id ?? "");
   const [wording, setWording] = useState("");
   const [notes, setNotes] = useState("");
-  const [eventDate, setEventDate] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const selected = options.find((item) => item.variant.id === variantId) ?? cheapest;
@@ -55,7 +54,6 @@ export function WinnieProductForm({ product }: { product: CatalogProduct }) {
     if (!selected || !ready) return;
     const personalisation = [
       wording.trim() ? `Topper text or idea: ${wording.trim()}` : "Topper wording: to confirm with studio",
-      eventDate ? `Event date: ${eventDate}` : "",
       notes.trim() ? `Other details: ${notes.trim()}` : "",
     ].filter(Boolean).join("\n");
     addItem({
@@ -95,14 +93,9 @@ export function WinnieProductForm({ product }: { product: CatalogProduct }) {
       <label className="winnie-product-form__field">Name, wording or design idea {needsWording ? <strong>Required</strong> : <span>Optional</span>}
         <textarea rows={3} maxLength={160} required={needsWording} value={wording} onChange={(event) => { setWording(event.target.value); setAdded(false); }} placeholder="Type exactly what you want on the topper, or describe your theme" />
       </label>
-      <div className="winnie-product-form__two">
-        <label className="winnie-product-form__field">Event date <span>Optional</span>
-          <input type="date" value={eventDate} onChange={(event) => { setEventDate(event.target.value); setAdded(false); }} />
-        </label>
-        <label className="winnie-product-form__field">Quantity
-          <input type="number" min={1} max={99} required value={quantity} onChange={(event) => { setQuantity(Number(event.target.value)); setAdded(false); }} />
-        </label>
-      </div>
+      <label className="winnie-product-form__field">Quantity
+        <input type="number" min={1} max={99} required value={quantity} onChange={(event) => { setQuantity(Number(event.target.value)); setAdded(false); }} />
+      </label>
       <label className="winnie-product-form__field">Other details <span>Optional</span>
         <textarea rows={3} maxLength={250} value={notes} onChange={(event) => { setNotes(event.target.value); setAdded(false); }} placeholder="Tell us the occasion, style or anything else we should know" />
       </label>

@@ -35,7 +35,6 @@
 .winnie-product-form__field input,.winnie-product-form__field select,.winnie-product-form__field textarea { width:100%; min-height:50px; padding:12px 13px; border:1px solid #d5bfc6; border-radius:0; background:#fff; color:#432233; font:16px/1.4 Arial,Helvetica,sans-serif; }
 .winnie-product-form__field textarea { min-height:94px; resize:vertical; }
 .winnie-product-form__field input:focus-visible,.winnie-product-form__field select:focus-visible,.winnie-product-form__field textarea:focus-visible { outline:3px solid #e74c81; outline-offset:2px; }
-.winnie-product-form__two { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 .winnie-product-form__selected { padding:13px 15px; margin:0 0 20px; border:1px solid #d5bfc6; background:white; font-size:14px; }
 .winnie-product-form__reference { margin:0 0 22px; padding:14px 16px; background:#ffe7ee; font-size:14px; line-height:1.5; }
 .winnie-product-form__total { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:20px 0 12px; border-top:1px solid #e5cbd3; font-size:17px; }
