@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useCart, type CartItem } from "@/components/CartProvider";
@@ -53,11 +53,21 @@ export default function CartPage() {
   const [address, setAddress] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
+  const [paymentAvailable, setPaymentAvailable] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [addressError, setAddressError] = useState("");
   const [regionError, setRegionError] = useState("");
   const addressRef = useRef<HTMLTextAreaElement>(null);
   const regionRef = useRef<HTMLSelectElement>(null);
   const summaryRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    fetch("/api/checkout/status/", { cache: "no-store" }).then((response) => response.json()).then((data) => setPaymentAvailable(data.available === true)).catch(() => setPaymentAvailable(false));
+  }, []);
 
   const pricing = useMemo(() => items.reduce((result, item) => {
     const unitPriceSen = itemUnitPriceSen(item);
@@ -130,6 +140,20 @@ export default function CartPage() {
     }
   }
 
+  async function payNow() {
+    setPaymentError("");
+    if (!validateRequest()) return;
+    if (!customerName.trim() || !customerEmail.trim() || !customerPhone.trim()) { setPaymentError("Please enter your name, email and WhatsApp number."); return; }
+    setPaying(true);
+    try {
+      const response = await fetch("/api/checkout/", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items, fulfilment, region: deliveryRegion, address, extraNotes, customer: { name: customerName, email: customerEmail, phone: customerPhone } }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Payment checkout is unavailable. Please try again.");
+      if (typeof data.checkoutUrl !== "string" || new URL(data.checkoutUrl).hostname !== "gate.chip-in.asia") throw new Error("Payment checkout is unavailable. Please contact us.");
+      window.location.assign(data.checkoutUrl);
+    } catch (error) { setPaymentError(error instanceof Error ? error.message : "Payment checkout is unavailable. Please try again."); setPaying(false); }
+  }
+
   return (
     <div className="cart-page">
       <SiteHeader active="cart" />
@@ -137,7 +161,7 @@ export default function CartPage() {
         <section className="cart-hero shell">
           <p className="eyebrow">YOUR CUSTOM PIECES</p>
           <h1>Your cart<span>.</span></h1>
-          <p>Bring pieces from all three UDESIGN brands together. Choose your options and send us the request; we&apos;ll confirm the design and final total before payment.</p>
+          <p>Bring pieces from all three UDESIGN brands together. Choose pickup or delivery, then pay securely or send us your request on WhatsApp.</p>
         </section>
 
         {!ready ? (
@@ -197,18 +221,28 @@ export default function CartPage() {
                 <div className="cart-quote__row"><h3>Item subtotal</h3><strong>{itemSubtotalText}</strong></div>
                 {fulfilment === "delivery" && <div className="cart-quote__row"><span>Delivery</span><strong>{cakeTopperOnly && region ? formatRinggit(region.feeSen) : "To confirm"}</strong></div>}
                 <div className="cart-quote__row cart-quote__row--total"><span>Estimated total</span><strong>{totalToConfirm ? "To confirm" : formatRinggit(pricing.subtotalSen + deliveryFeeSen)}</strong></div>
-                <p>{fulfilment === "delivery" && cakeTopperOnly && region ? `${region.label}: estimated ${region.transit} after dispatch. ` : fulfilment === "pickup" ? "Pickup in Kuchai Lama, Kuala Lumpur. " : "Delivery timing to confirm. "}We&apos;ll confirm the design, ready date and final total with you. No payment is taken here.</p>
+                <p>{fulfilment === "delivery" && cakeTopperOnly && region ? `${region.label}: estimated ${region.transit} after dispatch. ` : fulfilment === "pickup" ? "Pickup in Kuchai Lama, Kuala Lumpur. " : "Delivery timing to confirm. "}We&apos;ll send a design confirmation on WhatsApp. If we need to change or cannot make an order, we&apos;ll contact you first and agree on a replacement or refund.</p>
               </div>
             </section>
 
             <section className="cart-request" aria-labelledby="cart-request-title">
-              <div className="cart-section-heading"><div><span>03 / SEND YOUR REQUEST</span><h2 id="cart-request-title">Ready to ask?</h2></div></div>
-              <p>Open WhatsApp with this request ready to send. We&apos;ll reply to confirm the design, availability, final total and payment instructions.</p>
+              <div className="cart-section-heading"><div><span>03 / PLACE YOUR ORDER</span><h2 id="cart-request-title">Ready to order?</h2></div></div>
+              {paymentAvailable && !totalToConfirm && <div className="cart-delivery-fields">
+                <p>Pay {formatRinggit(pricing.subtotalSen + deliveryFeeSen)} now through CHIP. You&apos;ll enter payment details on CHIP&apos;s secure page.</p>
+                <label className="cart-field">Full name<input type="text" value={customerName} maxLength={100} autoComplete="name" onChange={(event) => setCustomerName(event.target.value)} /></label>
+                <label className="cart-field">Email<input type="email" value={customerEmail} maxLength={150} autoComplete="email" onChange={(event) => setCustomerEmail(event.target.value)} /></label>
+                <label className="cart-field">WhatsApp number<input type="tel" value={customerPhone} maxLength={30} autoComplete="tel" onChange={(event) => setCustomerPhone(event.target.value)} /></label>
+                <button className="cart-request__whatsapp" type="button" disabled={paying} onClick={payNow}>{paying ? "Opening secure checkout…" : `Pay ${formatRinggit(pricing.subtotalSen + deliveryFeeSen)} with CHIP ↗`}</button>
+                {paymentError && <p className="cart-field__error" role="alert">{paymentError}</p>}
+              </div>}
+              {!paymentAvailable && <p>Online payment will open once our CHIP account is approved. For now, send us your request on WhatsApp.</p>}
+              {paymentAvailable && totalToConfirm && <p>This cart needs a delivery or item price confirmed first. Please send it on WhatsApp.</p>}
+              <p>Prefer to ask us first? Open WhatsApp with this request ready to send.</p>
               <label className="cart-field cart-field--full" htmlFor="cart-summary">Your request</label>
               <textarea id="cart-summary" ref={summaryRef} className="cart-request__summary" readOnly rows={Math.min(18, 9 + items.length * 2)} value={summary} />
               <div className="cart-request__actions"><a className="cart-request__whatsapp" href={whatsappLink(summary)} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validateRequest()) event.preventDefault(); }}>Continue in WhatsApp <span aria-hidden="true">↗</span></a><button type="button" onClick={copySummary}>Copy request <span aria-hidden="true">⧉</span></button></div>
               {copyMessage && <p className="cart-request__message" role="status">{copyMessage}</p>}
-              <p className="cart-request__fineprint">WhatsApp opens with a prepared message; tap Send there to contact us. Your order is placed only after UDESIGN confirms it with you. We do not take payment on this page.</p>
+              <p className="cart-request__fineprint">WhatsApp opens with a prepared message; tap Send there to contact us. A WhatsApp request is confirmed after we reply. CHIP payments are confirmed only after the payment succeeds.</p>
             </section>
           </div>
         )}
