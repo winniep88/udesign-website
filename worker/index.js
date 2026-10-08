@@ -27,10 +27,12 @@ function pricedLines(items) {
       const validEvent = ["birthday", "wedding", "baby-shower", "bridal-shower", "anniversary", "celebration"].includes(t.eventSlug);
       const validLines = [1, 2, 3].includes(t.lineCount) && Array.isArray(t.wording) && t.wording.length === t.lineCount && t.wording.every((s) => cleanString(s, 60));
       const validSize = [10, 13, 15, 18, 20].includes(t.sizeCm) && (t.lineCount !== 3 || t.sizeCm >= 13);
+      const words = validLines ? t.wording.join(" ").trim().split(/\s+/u).length : 0;
+      const validWording = validLines && t.wording.join("").length <= 40 && (t.sizeCm !== 10 || words <= 2) && (t.sizeCm !== 13 || words <= 5);
       const finishes = { cardstock: ["Glitter Black", "Glitter Dark Blue", "Glitter Green", "Glitter Gold", "Glitter Pink", "Glitter Purple", "Glitter Silver", "Matte Black", "Shiny Gold", "Shiny Rose Gold", "Shiny Silver"], acrylic: ["Black", "Blue", "Green", "Grey", "Matte gold", "Mirror Gold", "Mirror Rose Gold", "Mirror Silver", "Pink", "Red", "Yellow"], wood: ["Natural wood", "Brown wood"] };
-      if (!validEvent || !validLines || !validSize || !finishes[t.material]?.includes(t.finish) || (t.details && !cleanString(t.details, 120)) || (t.fontFamily && (typeof t.fontFamily !== "string" || t.fontFamily.length > 80 || !/^[\p{L}\p{N} .'-]+$/u.test(t.fontFamily)))) throw new Error("Check the cake topper choices.");
+      if (!validEvent || !validWording || !validSize || !finishes[t.material]?.includes(t.finish) || (t.details && !cleanString(t.details, 120)) || (t.fontFamily && (typeof t.fontFamily !== "string" || t.fontFamily.length > 80 || !/^[\p{L}\p{N} .'-]+$/u.test(t.fontFamily)))) throw new Error("Check the cake topper choices.");
       price = TOPPER_PRICES[t.material]?.[t.sizeCm] + (TOPPER_PRICES.finishExtras[t.finish] ?? 0);
-      name = `Custom ${t.lineCount} line cake topper · ${t.material}, ${t.finish}, ${t.sizeCm}cm${t.fontFamily ? ` · ${t.fontFamily}` : ""}`;
+      name = `Custom Cake Topper · ${t.material}, ${t.finish}, ${t.sizeCm}cm${t.fontFamily ? ` · ${t.fontFamily}` : ""}`;
       brand = "winnie";
     } else {
       const product = CATALOG.find((p) => p.id === item.productId);
@@ -270,10 +272,15 @@ export default {
       }
       if (url.pathname.startsWith("/api/")) return new Response("Not found", { status: 404 });
       if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: { allow: "GET, HEAD" } });
+      const oldEventProduct = /^\/winnie-cake-topper\/event\/([^/]+)\/[123]-line\/?$/.exec(url.pathname);
+      if (oldEventProduct) {
+        const destination = `/winnie-cake-topper/event/${oldEventProduct[1]}/custom-cake-topper/`;
+        return Response.redirect(new URL(ASSETS[`${destination}index.html`] ? destination : "/winnie-cake-topper/#choose-event", url), 308);
+      }
       const oldProduct = /^\/winnie-cake-topper\/topper\/([123])-line\/?$/.exec(url.pathname);
       if (oldProduct) {
         const event = url.searchParams.get("event");
-        const eventProduct = `/winnie-cake-topper/event/${event}/${oldProduct[1]}-line/`;
+        const eventProduct = `/winnie-cake-topper/event/${event}/custom-cake-topper/`;
         const destination = event && ASSETS[`${eventProduct}index.html`] ? eventProduct : "/winnie-cake-topper/#choose-event";
         return Response.redirect(new URL(destination, url), 308);
       }

@@ -25,7 +25,7 @@ const env = { BUCKET: bucket };
 const context = { waitUntil() {} };
 const fetchSite = (path, options) => worker.fetch(new Request(`https://udesign.example${path}`, options), env, context);
 
-for (const path of ["/", "/winnie-cake-topper/event/wedding/", "/winnie-cake-topper/event/wedding/3-line/", "/cart/"]) {
+for (const path of ["/", "/winnie-cake-topper/event/wedding/", "/winnie-cake-topper/event/wedding/custom-cake-topper/", "/cart/"]) {
   const response = await fetchSite(path);
   assert.equal(response.status, 200, `${path} should load`);
   assert.match(await response.text(), /UDESIGN|Cake Topper|Your cart/i);
@@ -33,7 +33,10 @@ for (const path of ["/", "/winnie-cake-topper/event/wedding/", "/winnie-cake-top
 assert.equal((await fetchSite("/missing-page/")).status, 404);
 const oldProduct = await fetchSite("/winnie-cake-topper/topper/3-line/?event=wedding");
 assert.equal(oldProduct.status, 308);
-assert.equal(oldProduct.headers.get("location"), "https://udesign.example/winnie-cake-topper/event/wedding/3-line/");
+assert.equal(oldProduct.headers.get("location"), "https://udesign.example/winnie-cake-topper/event/wedding/custom-cake-topper/");
+const oldEventProduct = await fetchSite("/winnie-cake-topper/event/wedding/2-line/");
+assert.equal(oldEventProduct.status, 308);
+assert.equal(oldEventProduct.headers.get("location"), "https://udesign.example/winnie-cake-topper/event/wedding/custom-cake-topper/");
 
 const png = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/uQAAAABJRU5ErkJggg==", "base64"));
 const upload = (headers) => fetchSite("/api/reference/", { method: "POST", headers: { "content-type": "image/png", ...headers }, body: png });
@@ -55,13 +58,15 @@ assert.equal((await checkout(checkoutBody)).status, 503, "Payment remains closed
 const paidEnv = { ...env, CHIP_SECRET_KEY: "test-secret", CHIP_BRAND_ID: "brand-123" };
 const originalFetch = globalThis.fetch;
 let createdPurchase;
+let purchaseTotal;
 globalThis.fetch = async (url, options) => {
   assert.match(url, /^https:\/\/gate\.chip-in\.asia\/api\/v1\/purchases\//);
   if (options.method === "POST") {
     createdPurchase = JSON.parse(options.body);
-    return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: false, reference: createdPurchase.reference, purchase: { total: 3200 }, checkout_url: "https://gate.chip-in.asia/p/purchase-123/" });
+    purchaseTotal = createdPurchase.purchase.products.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: false, reference: createdPurchase.reference, purchase: { total: purchaseTotal }, checkout_url: "https://gate.chip-in.asia/p/purchase-123/" });
   }
-  return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: false, reference: createdPurchase.reference, purchase: { total: 3200 }, status: "paid" });
+  return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: false, reference: createdPurchase.reference, purchase: { total: purchaseTotal }, status: "paid" });
 };
 try {
   const paidFetch = (path, options) => worker.fetch(new Request(`https://udesign.example${path}`, options), paidEnv, context);
@@ -72,5 +77,12 @@ try {
   assert.equal(createdPurchase.purchase.products[0].price, 1600, "Server must use catalog price, not browser price");
   const status = await paidFetch(`/api/orders/${orderId}/status/`);
   assert.deepEqual(await status.json(), { status: "paid", orderId });
+  const topper = { brand: "winnie", product: "Custom Cake Topper", quantity: 1, notes: "", topper: { eventSlug: "birthday", lineCount: 1, material: "cardstock", finish: "Glitter Black", sizeCm: 10, wording: ["Happy Birthday Olivia"] } };
+  const topperCheckout = (item) => paidFetch("/api/checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify({ ...checkoutBody, items: [item] }) });
+  assert.equal((await topperCheckout(topper)).status, 400, "10 cm must reject more than two words");
+  assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm: 13, wording: ["One Two Three Four Five Six"] } })).status, 400, "13 cm must reject more than five words");
+  const validTopper = await topperCheckout({ ...topper, topper: { ...topper.topper, wording: ["Happy Birthday"] } });
+  assert.equal(validTopper.status, 200, "10 cm accepts two words");
+  assert.equal(createdPurchase.purchase.products[0].price, 1500);
 } finally { globalThis.fetch = originalFetch; }
 console.log("Worker storefront, image upload and CHIP checkout checks passed.");
