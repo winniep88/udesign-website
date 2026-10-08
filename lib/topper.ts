@@ -1,3 +1,7 @@
+import topperFonts from "@/data/topper-fonts.json";
+
+export const topperFontStyles: readonly string[] = topperFonts;
+
 export const topperEvents = [
   { slug: "birthday", name: "Birthday", description: "A cake topper made for their day." },
   { slug: "wedding", name: "Wedding", description: "Names and words for your wedding cake." },
@@ -87,6 +91,7 @@ export type TopperCartSelection = {
   finish: string;
   sizeCm: number;
   wording: string[];
+  fontFamily?: string;
   details?: string;
 };
 
@@ -128,6 +133,7 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
   if (!Array.isArray(item.wording) || item.wording.length !== item.lineCount) return undefined;
   if (item.wording.some((line) => typeof line !== "string" || !line.trim() || line.length > 60)) return undefined;
   if (item.details !== undefined && (typeof item.details !== "string" || item.details.length > 120)) return undefined;
+  if (item.fontFamily !== undefined && (typeof item.fontFamily !== "string" || !topperFontStyles.includes(item.fontFamily))) return undefined;
   return {
     eventSlug: item.eventSlug as TopperEventSlug,
     lineCount: item.lineCount,
@@ -135,6 +141,7 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
     finish: item.finish,
     sizeCm: item.sizeCm,
     wording: item.wording.map((line) => line.replace(/\s+/g, " ").trim()),
+    ...(item.fontFamily ? { fontFamily: item.fontFamily } : {}),
     ...(item.details?.trim() ? { details: item.details.trim() } : {}),
   };
 }
@@ -142,3 +149,4 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
 export function topperSelectionPriceSen(selection: TopperCartSelection): number | undefined {
   return topperChoicePriceSen(selection.lineCount, selection.material, selection.finish, selection.sizeCm);
 }
+

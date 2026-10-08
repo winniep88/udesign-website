@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useCart } from "@/components/CartProvider";
 import { formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
-import { topperChoicePriceSen, topperFinishes, topperLineLabel, topperProductName, topperSizes, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
+import { topperChoicePriceSen, topperFinishes, topperFontStyles, topperLineLabel, topperProductName, topperSizes, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
 export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: TopperLineCount; initialEventSlug: TopperEventSlug }) {
   const { addItem, ready } = useCart();
@@ -14,6 +14,9 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   const [sizeCm, setSizeCm] = useState(lineCount === 3 ? 13 : 10);
   const [wording, setWording] = useState("");
   const [wordingError, setWordingError] = useState("");
+  const [fontFamily, setFontFamily] = useState("");
+  const [fontSearch, setFontSearch] = useState("");
+  const [shownFonts, setShownFonts] = useState(12);
   const [quantity, setQuantity] = useState(1);
   const [details, setDetails] = useState("");
   const [referenceFile, setReferenceFile] = useState<File | null>(null);
@@ -25,6 +28,21 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   const wordingLines = wording.split(/\r?\n/);
   const wordingCharacters = wording.replace(/\r?\n/g, "").length;
   const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm) : undefined;
+  const matchingFonts = useMemo(() => topperFontStyles.filter((font) => font.toLowerCase().includes(fontSearch.trim().toLowerCase())), [fontSearch]);
+  const visibleFonts = matchingFonts.slice(0, shownFonts);
+
+  useEffect(() => {
+    if (!wording.trim()) return;
+    for (const font of visibleFonts) {
+      const id = `topper-font-${font.replace(/[^a-z0-9]/gi, "-").toLowerCase()}`;
+      if (document.getElementById(id)) continue;
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, "+")}&display=swap`;
+      document.head.appendChild(link);
+    }
+  }, [visibleFonts, wording]);
 
   function chooseMaterial(value: TopperMaterial) {
     setMaterial(value);
@@ -90,6 +108,7 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
           finish,
           sizeCm,
           wording: wordingLines.map((line) => line.trim()),
+          ...(fontFamily ? { fontFamily } : {}),
           ...(details.trim() ? { details: details.trim() } : {}),
         },
       });
@@ -112,6 +131,27 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
         </label>
         {wordingError && <p className="custom-topper-form__error" role="alert">{wordingError}</p>}
       </fieldset>
+
+      <section className="custom-topper-form__fonts" aria-labelledby="topper-fonts-title">
+        <h2 id="topper-fonts-title">Optional font style</h2>
+        <p>Type your wording above to see it in 88 font styles. Choose one you like, or leave the style to us. You can also upload your own design photo below.</p>
+        {fontFamily && <div className="custom-topper-form__selected-font"><span>Selected: <strong>{fontFamily}</strong></span><button type="button" onClick={() => { setFontFamily(""); setAdded(false); }}>Leave font choice to UDESIGN</button></div>}
+        {wording.trim() ? <>
+          <label className="custom-topper-form__field">Search the 88 fonts
+            <input type="search" value={fontSearch} onChange={(event) => { setFontSearch(event.target.value); setShownFonts(12); }} placeholder="Search font names" />
+          </label>
+          <p className="custom-topper-form__font-count" role="status">Showing {visibleFonts.length} of {matchingFonts.length} fonts</p>
+          <div className="custom-topper-form__font-grid">
+            {visibleFonts.map((font) => <button type="button" key={font} className="custom-topper-form__font-card" aria-pressed={fontFamily === font} onClick={() => { setFontFamily(font); setAdded(false); }}>
+              <span className="custom-topper-form__font-preview" style={{ fontFamily: `"${font}", cursive` }}>{wording}</span>
+              <span className="custom-topper-form__font-name">{font}</span>
+            </button>)}
+          </div>
+          {matchingFonts.length === 0 && <p>No font names match. Try another search.</p>}
+          {shownFonts < matchingFonts.length && <button className="custom-topper-form__show-fonts" type="button" onClick={() => setShownFonts((current) => current + 12)}>Show more fonts</button>}
+          <p className="custom-topper-form__font-note">This is a font preview. We&apos;ll send a design mock-up for you to confirm before making the topper.</p>
+        </> : <p className="custom-topper-form__font-note">Font previews will appear when you type your wording.</p>}
+      </section>
 
       <label className="custom-topper-form__field">2. Material Type
         <select required value={material} onChange={(event) => chooseMaterial(event.target.value as TopperMaterial)}>

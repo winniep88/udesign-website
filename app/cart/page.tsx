@@ -39,6 +39,7 @@ function topperDetails(item: CartItem) {
   return [
     `Event: ${topperEvent(choice.eventSlug)?.name ?? choice.eventSlug}`,
     `Wording: ${choice.wording.join(" / ")}`,
+    `Font style: ${choice.fontFamily ?? "Studio to choose"}`,
     `Material: ${choice.material[0].toUpperCase()}${choice.material.slice(1)}`,
     `Colour or finish: ${choice.finish}`,
     `Width: ${choice.sizeCm} cm${inch ? ` / ${inch} inch` : ""}`,
