@@ -81,6 +81,10 @@ try {
   const topperCheckout = (item) => paidFetch("/api/checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify({ ...checkoutBody, items: [item] }) });
   assert.equal((await topperCheckout(topper)).status, 400, "10 cm must reject more than two words");
   assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm: 13, wording: ["One Two Three Four Five Six"] } })).status, 400, "13 cm must reject more than five words");
+  for (const [sizeCm, limit] of [[15, 8], [18, 10], [20, 14]]) {
+    const wording = [Array.from({ length: limit + 1 }, () => "a").join(" ")];
+    assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm, wording } })).status, 400, `${sizeCm} cm must reject more than ${limit} words`);
+  }
   const validTopper = await topperCheckout({ ...topper, topper: { ...topper.topper, wording: ["Happy Birthday"] } });
   assert.equal(validTopper.status, 200, "10 cm accepts two words");
   assert.equal(createdPurchase.purchase.products[0].price, 1500);
