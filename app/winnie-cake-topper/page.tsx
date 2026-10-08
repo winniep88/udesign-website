@@ -11,7 +11,7 @@ import { whatsappLink } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "WINNIE CAKE TOPPER by Udesign — Celebration pieces",
-  description: "Choose an event, then personalise a one, two or three line cake topper with Winnie Cake Topper by UDESIGN.",
+  description: "Choose an event, then personalise a custom cake topper with Winnie Cake Topper by UDESIGN.",
 };
 
 export default function WinniePage() {
@@ -25,7 +25,7 @@ export default function WinniePage() {
               <p className="eyebrow">WINNIE CAKE TOPPER BY UDESIGN</p>
               <span className="winnie-hero__brand">WINNIE CAKE TOPPER <small>by Udesign</small></span>
               <h1>What are we<br /><em>celebrating?</em></h1>
-              <p>Choose your event first. Then choose a one, two or three line product to make your cake topper yours.</p>
+              <p>Choose your event first. Then personalise your custom cake topper with wording, font, material, colour and size.</p>
               <TopperEventPicker />
               <a className="winnie-instagram-link" href="https://www.instagram.com/winniecaketopper/" target="_blank" rel="noopener noreferrer">See our real toppers on Instagram ↗</a>
             </div>
@@ -34,7 +34,7 @@ export default function WinniePage() {
         </section>
 
         <section className="custom-topper-feature shell" aria-labelledby="custom-topper-feature-title">
-          <div><p className="eyebrow">YOUR TOPPER, YOUR WAY</p><h2 id="custom-topper-feature-title">One, two or three lines. Three materials.</h2><p>For every event, you can choose cardstock, acrylic or wood, its matching colour or finish, and your topper width.</p></div>
+          <div><p className="eyebrow">YOUR TOPPER, YOUR WAY</p><h2 id="custom-topper-feature-title">One custom topper. Your choices.</h2><p>For every event, choose your wording, font, cardstock, acrylic or wood, its matching colour or finish, and your topper width.</p></div>
           <a href="#choose-event">Choose your event <span aria-hidden="true">↑</span></a>
         </section>
 
@@ -49,4 +49,3 @@ export default function WinniePage() {
     </div>
   );
 }
-

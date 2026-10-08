@@ -98,6 +98,7 @@
 .topper-line-products h2 { margin:10px 0 9px; font-size:clamp(45px,5vw,70px); line-height:1; letter-spacing:-.07em; }
 .topper-line-products > p:not(.eyebrow) { margin:0; font-size:16px; line-height:1.55; }
 .topper-line-products__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:31px; }
+.topper-line-products__grid--single { grid-template-columns:minmax(0,520px); }
 .topper-line-products__grid article { display:flex; flex-direction:column; min-height:310px; padding:28px; background:#ffe3eb; }
 .topper-line-products__grid article:nth-child(2) { background:#fff0e3; }
 .topper-line-products__grid article:nth-child(3) { background:#f4d7e9; }

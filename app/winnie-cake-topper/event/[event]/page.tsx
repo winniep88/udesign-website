@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { formatRinggit } from "@/lib/catalog";
-import { topperChoicePriceSen, topperEvent, topperEventDesigns, topperEvents, topperFinishes, topperLineCounts, topperLineLabel, topperProductHref, topperProductName } from "@/lib/topper";
+import { topperChoicePriceSen, topperEvent, topperEventDesigns, topperEvents, topperFinishes, topperProductHref, topperProductName } from "@/lib/topper";
 
 type Props = { params: Promise<{ event: string }> };
 
@@ -29,23 +29,23 @@ export default async function TopperEventPage({ params }: Props) {
         <section className="topper-event-hero shell">
           <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><span>{chosen.name}</span></nav>
           <div className="topper-event-hero__grid">
-            <div><p className="eyebrow">CHOOSE YOUR EVENT / {chosen.name.toUpperCase()}</p><h1>{chosen.name} cake toppers</h1><p>{chosen.description} Now choose how many lines of wording you need.</p><Link className="topper-event-hero__change" href="/winnie-cake-topper/#choose-event">← Choose another event</Link></div>
+            <div><p className="eyebrow">CHOOSE YOUR EVENT / {chosen.name.toUpperCase()}</p><h1>{chosen.name} cake toppers</h1><p>{chosen.description} Personalise one custom cake topper with your wording, material, colour and size.</p><Link className="topper-event-hero__change" href="/winnie-cake-topper/#choose-event">← Choose another event</Link></div>
             <div className="topper-event-hero__image"><Image src="/images/winnie.webp" alt="Cake topper style inspiration; concept image rather than a product photo" fill sizes="(max-width: 800px) 100vw, 42vw" priority /><span>STYLE INSPIRATION · NOT A PRODUCT PHOTO</span></div>
           </div>
         </section>
         <section className="topper-line-products shell" aria-labelledby="topper-line-products-title">
           <p className="eyebrow">STEP 2 / CHOOSE A PRODUCT</p>
-          <h2 id="topper-line-products-title">How many lines?</h2>
-          <p>These are the same three custom products for every event. Choose cardstock, acrylic or wood, then its colour and topper width.</p>
-          <div className="topper-line-products__grid">
-            {topperLineCounts.map((lines) => <article key={lines}>
-              <span className="topper-line-products__number">0{lines}</span>
-              <h3>{topperLineLabel(lines)}</h3>
-              <p>{lines === 1 ? "One name or short phrase." : lines === 2 ? "Two lines for a name and message." : "Three lines for a fuller message."}</p>
-              <small>{lines === 3 ? "13–20 cm / 5–8 inch" : "10–20 cm / 4–8 inch"}</small>
-              <small>From {formatRinggit(topperChoicePriceSen(lines, "cardstock", topperFinishes.cardstock[0].name, lines === 3 ? 13 : 10)!)}</small>
-              <Link href={topperProductHref(chosen.slug, lines)}>{topperProductName(lines)} <span aria-hidden="true">→</span></Link>
-            </article>)}
+          <h2 id="topper-line-products-title">Make it yours.</h2>
+          <p>One custom product for every event. Type your wording, preview your font, then choose cardstock, acrylic or wood, its colour and the topper width.</p>
+          <div className="topper-line-products__grid topper-line-products__grid--single">
+            <article>
+              <span className="topper-line-products__number">CUSTOM MADE</span>
+              <h3>{topperProductName()}</h3>
+              <p>10 cm allows up to 2 words. 13 cm allows up to 5 words. Choose 15, 18 or 20 cm for longer wording, up to 40 characters.</p>
+              <small>10–20 cm / 4–8 inch</small>
+              <small>From {formatRinggit(topperChoicePriceSen(1, "cardstock", topperFinishes.cardstock[0].name, 10)!)}</small>
+              <Link href={topperProductHref(chosen.slug)}>Customise your cake topper <span aria-hidden="true">→</span></Link>
+            </article>
           </div>
           <p className="topper-line-products__price-note">Your exact item price appears as you choose material, finish and width. We&apos;ll confirm the design and ready date before payment.</p>
           {topperEventDesigns[chosen.slug].length > 0 && <section aria-label={`${chosen.name} design ideas`}>

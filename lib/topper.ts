@@ -27,7 +27,7 @@ export const topperSizes = [
 ] as const;
 
 // Confirmed by UDESIGN in its completed price sheet on 6 October 2026.
-// The same three products and prices are shared across all six event categories.
+// One custom product uses these material and size prices across all events.
 export const topperBasePricesRm: Record<TopperMaterial, Record<number, number>> = {
   cardstock: { 10: 15, 13: 16, 15: 17, 18: 18, 20: 20 },
   acrylic: { 10: 25, 13: 27, 15: 29, 18: 31, 20: 35 },
@@ -67,7 +67,7 @@ export const topperFinishes: Record<TopperMaterial, readonly { name: string; ext
   ],
 };
 
-// Add curated designs here later. The universal 1/2/3-line products remain shared.
+// Add curated event designs here later. The custom product remains shared.
 export type TopperEventDesign = {
   id: string;
   name: string;
@@ -103,16 +103,24 @@ export function topperEventHref(slug: string) {
   return `/winnie-cake-topper/event/${slug}/`;
 }
 
-export function topperProductHref(slug: string, lines: TopperLineCount) {
-  return `/winnie-cake-topper/event/${encodeURIComponent(slug)}/${lines}-line/`;
+export function topperProductHref(slug: string) {
+  return `/winnie-cake-topper/event/${encodeURIComponent(slug)}/custom-cake-topper/`;
 }
 
 export function topperLineLabel(lines: TopperLineCount) {
   return `${lines} ${lines === 1 ? "line" : "lines"}`;
 }
 
-export function topperProductName(lines: TopperLineCount) {
-  return `Custom ${lines} ${lines === 1 ? "Line" : "Lines"} – Cake Topper`;
+export function topperProductName() {
+  return "Custom Cake Topper";
+}
+
+export function topperWordLimit(sizeCm: number): number | undefined {
+  return sizeCm === 10 ? 2 : sizeCm === 13 ? 5 : undefined;
+}
+
+export function topperWordCount(wording: readonly string[]): number {
+  return wording.join(" ").trim().split(/\s+/u).filter(Boolean).length;
 }
 
 export function topperChoicePriceSen(lineCount: TopperLineCount, material: TopperMaterial, finish: string, sizeCm: number): number | undefined {

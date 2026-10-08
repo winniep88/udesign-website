@@ -5,13 +5,13 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { useCart } from "@/components/CartProvider";
 import { formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
-import { topperChoicePriceSen, topperFinishes, topperFontStyles, topperLineLabel, topperProductName, topperSizes, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
+import { topperChoicePriceSen, topperFinishes, topperFontStyles, topperProductName, topperSizes, topperWordCount, topperWordLimit, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
-export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: TopperLineCount; initialEventSlug: TopperEventSlug }) {
+export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: TopperEventSlug }) {
   const { addItem, ready } = useCart();
   const [material, setMaterial] = useState<TopperMaterial | "">("");
   const [finish, setFinish] = useState("");
-  const [sizeCm, setSizeCm] = useState(lineCount === 3 ? 13 : 10);
+  const [sizeCm, setSizeCm] = useState(10);
   const [wording, setWording] = useState("");
   const [wordingError, setWordingError] = useState("");
   const [fontFamily, setFontFamily] = useState("");
@@ -24,9 +24,11 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   const [submitting, setSubmitting] = useState(false);
   const [added, setAdded] = useState(false);
   const referenceInput = useRef<HTMLInputElement>(null);
-  const availableSizes = topperSizes.filter((size) => lineCount !== 3 || size.cm >= 13);
   const wordingLines = wording.split(/\r?\n/);
+  const lineCount = wordingLines.length as TopperLineCount;
   const wordingCharacters = wording.replace(/\r?\n/g, "").length;
+  const wordCount = topperWordCount(wordingLines);
+  const wordLimit = topperWordLimit(sizeCm);
   const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm) : undefined;
   const matchingFonts = useMemo(() => topperFontStyles.filter((font) => font.toLowerCase().includes(fontSearch.trim().toLowerCase())), [fontSearch]);
   const visibleFonts = matchingFonts.slice(0, shownFonts);
@@ -52,7 +54,7 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
 
   function changeWording(value: string) {
     const next = value.replace(/\r\n?/g, "\n");
-    if (next.replace(/\n/g, "").length > 40 || next.split("\n").length > lineCount) return;
+    if (next.replace(/\n/g, "").length > 40 || next.split("\n").length > 3) return;
     setWording(next);
     setWordingError("");
     setAdded(false);
@@ -73,11 +75,20 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting || !ready || !material || !finish || unitPriceSen === undefined) return;
-    if (wordingCharacters > 40 || wordingLines.length !== lineCount || wordingLines.some((line) => !line.trim())) {
-      setWordingError(`Please type exactly ${lineCount} ${lineCount === 1 ? "line" : "lines"} of wording, within 40 characters. Press Enter between lines.`);
+    if (submitting || !ready || !material || !finish) return;
+    if (wordingCharacters > 40 || wordingLines.some((line) => !line.trim())) {
+      setWordingError("Please enter wording on every line, within 40 characters. Use up to 3 lines.");
       return;
     }
+    if (wordLimit && wordCount > wordLimit) {
+      setWordingError(`${sizeCm} cm allows up to ${wordLimit} words. Shorten your wording or choose a larger size.`);
+      return;
+    }
+    if (sizeCm === 10 && lineCount > 2) {
+      setWordingError("Three lines need a 13 cm or larger topper.");
+      return;
+    }
+    if (unitPriceSen === undefined) return;
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) return;
     setSubmitting(true);
     setUploadError("");
@@ -97,7 +108,7 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
       }
       addItem({
         brand: "winnie",
-        product: topperProductName(lineCount),
+        product: topperProductName(),
         quantity,
         notes: "",
         ...(referenceImage ? { referenceImage } : {}),
@@ -123,12 +134,15 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
   return (
     <form className="custom-topper-form" id="customise" onSubmit={submit}>
       <fieldset className="custom-topper-form__wording">
-        <legend>1. Name / Phrase ({lineCount} {lineCount === 1 ? "Line" : "Lines"})</legend>
-        <p className="custom-topper-form__intro" id="topper-wording-help">Type the words exactly as you want them to appear.{lineCount > 1 ? ` Press Enter to start line 2${lineCount === 3 ? " and line 3" : ""}.` : " This product has one line of wording."}</p>
+        <legend>1. Name / Phrase</legend>
+        <p className="custom-topper-form__intro" id="topper-wording-help">Type the words exactly as you want them to appear. Press Enter for another line, up to 3 lines.</p>
         <p className="custom-topper-form__remaining" aria-live="polite">{40 - wordingCharacters} characters remaining</p>
+        <p className="custom-topper-form__remaining" aria-live="polite">{wordCount} {wordCount === 1 ? "word" : "words"}{wordLimit ? ` · ${sizeCm} cm allows up to ${wordLimit} words` : ""}</p>
         <label className="custom-topper-form__field">Your wording
-          <textarea rows={lineCount + 1} required value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={lineCount === 1 ? "e.g. Happy Birthday Olivia" : lineCount === 2 ? "e.g. Happy Birthday\nOlivia" : "e.g. Happy Birthday\nOlivia\nThree"} />
+          <textarea rows={4} required value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
         </label>
+        {wordLimit && wordCount > wordLimit && <p className="custom-topper-form__error" role="alert">{sizeCm} cm allows up to {wordLimit} words. Choose a larger size or shorten your wording.</p>}
+        {sizeCm === 10 && lineCount > 2 && <p className="custom-topper-form__error" role="alert">Three lines need a 13 cm or larger topper.</p>}
         {wordingError && <p className="custom-topper-form__error" role="alert">{wordingError}</p>}
       </fieldset>
 
@@ -173,12 +187,12 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
       <fieldset className="custom-topper-form__choices">
         <legend>4. Choose the topper width</legend>
         <div className="custom-topper-form__size-grid">
-          {availableSizes.map((size) => <label className={sizeCm === size.cm ? "is-selected" : ""} key={size.cm}>
-            <input type="radio" name="size" checked={sizeCm === size.cm} onChange={() => { setSizeCm(size.cm); setAdded(false); }} />
-            <strong>{size.cm} cm</strong><small>{size.inch} inch</small>
+          {topperSizes.map((size) => <label className={sizeCm === size.cm ? "is-selected" : ""} key={size.cm}>
+            <input type="radio" name="size" checked={sizeCm === size.cm} onChange={() => { setSizeCm(size.cm); setWordingError(""); setAdded(false); }} />
+            <strong>{size.cm} cm</strong><small>{size.inch} inch</small>{topperWordLimit(size.cm) && <small>Max {topperWordLimit(size.cm)} words</small>}
           </label>)}
         </div>
-        {lineCount === 3 && <p className="custom-topper-form__size-note">Three-line toppers start at 13 cm / 5 inch.</p>}
+        <p className="custom-topper-form__size-note">10 cm: up to 2 words and 2 lines. 13 cm: up to 5 words. For 15, 18 and 20 cm, use up to 40 characters and 3 lines.</p>
       </fieldset>
 
       <label className="custom-topper-form__field">Quantity
@@ -193,7 +207,7 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
       {referenceFile && <button className="custom-topper-form__remove-image" type="button" onClick={() => { setReferenceFile(null); setUploadError(""); setAdded(false); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove selected image</button>}
       <p className="custom-topper-form__hint">Upload a design you like and we can make something similar. The image link is included with your WhatsApp request and remains available for 30 days. Anyone with the link can view it.</p>
       {uploadError && <p className="custom-topper-form__error" role="alert">{uploadError} You can remove the image and send it to us in WhatsApp instead.</p>}
-      <div className="custom-topper-form__total"><span>{topperLineLabel(lineCount)} · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
+      <div className="custom-topper-form__total"><span>{sizeCm} cm · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? lineCount === 3 && sizeCm === 10 ? "Choose 13 cm or larger" : "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
       <p className="custom-topper-form__hint">This is the item price. Delivery, if selected, is added in your cart. We&apos;ll confirm the design and ready date before payment.</p>
       <p className="custom-topper-form__hint">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I need an urgent cake topper and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp</a> first. Pickup in Kuchai Lama, KL is available once we confirm your order.</p>
       <button className="custom-topper-form__submit" type="submit" disabled={!ready || submitting}>{submitting ? referenceFile ? "Uploading image…" : "Adding to cart…" : "Add to cart"} <span aria-hidden="true">＋</span></button>
