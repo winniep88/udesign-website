@@ -116,7 +116,7 @@ export function topperProductName() {
 }
 
 export function topperWordLimit(sizeCm: number): number | undefined {
-  return sizeCm === 10 ? 2 : sizeCm === 13 ? 5 : undefined;
+  return ({ 10: 2, 13: 5, 15: 8, 18: 10, 20: 14 } as Record<number, number>)[sizeCm];
 }
 
 export function topperWordCount(wording: readonly string[]): number {

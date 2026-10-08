@@ -41,7 +41,7 @@ export default async function TopperEventPage({ params }: Props) {
             <article>
               <span className="topper-line-products__number">CUSTOM MADE</span>
               <h3>{topperProductName()}</h3>
-              <p>10 cm allows up to 2 words. 13 cm allows up to 5 words. Choose 15, 18 or 20 cm for longer wording, up to 40 characters.</p>
+              <p>Word limits by size: 10 cm (2), 13 cm (5), 15 cm (8), 18 cm (10), 20 cm (14). Up to 40 characters overall.</p>
               <small>10–20 cm / 4–8 inch</small>
               <small>From {formatRinggit(topperChoicePriceSen(1, "cardstock", topperFinishes.cardstock[0].name, 10)!)}</small>
               <Link href={topperProductHref(chosen.slug)}>Customise your cake topper <span aria-hidden="true">→</span></Link>

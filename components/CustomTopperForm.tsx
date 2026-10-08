@@ -192,7 +192,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
             <strong>{size.cm} cm</strong><small>{size.inch} inch</small>{topperWordLimit(size.cm) && <small>Max {topperWordLimit(size.cm)} words</small>}
           </label>)}
         </div>
-        <p className="custom-topper-form__size-note">10 cm: up to 2 words and 2 lines. 13 cm: up to 5 words. For 15, 18 and 20 cm, use up to 40 characters and 3 lines.</p>
+        <p className="custom-topper-form__size-note">10 cm: 2 words and up to 2 lines. 13 cm: 5 words. 15 cm: 8 words. 18 cm: 10 words. 20 cm: 14 words. Up to 40 characters and 3 lines overall.</p>
       </fieldset>
 
       <label className="custom-topper-form__field">Quantity
