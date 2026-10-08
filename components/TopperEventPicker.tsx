@@ -15,7 +15,7 @@ export function TopperEventPicker() {
         <option value="" disabled>Select an event</option>
         {topperEvents.map((event) => <option key={event.slug} value={event.slug}>{event.name}</option>)}
       </select>
-      <p>Selecting an event opens its page. Next, choose a one, two or three line topper.</p>
+      <p>Selecting an event opens its page. Then customise one cake topper with your wording and size.</p>
     </div>
   );
 }

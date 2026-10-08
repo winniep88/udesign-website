@@ -6,37 +6,30 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CustomTopperForm } from "@/components/CustomTopperForm";
 import { formatRinggit } from "@/lib/catalog";
-import { topperChoicePriceSen, topperEvent, topperEvents, topperFinishes, topperLineCounts, topperLineLabel, topperProductName, type TopperLineCount } from "@/lib/topper";
+import { topperChoicePriceSen, topperEvent, topperEvents, topperFinishes, topperProductName } from "@/lib/topper";
 
 type Props = { params: Promise<{ event: string; lines: string }> };
 
-function parseLineCount(value: string): TopperLineCount | undefined {
-  const count = Number(value.replace(/-line$/, ""));
-  return value === `${count}-line` && topperLineCounts.includes(count as TopperLineCount) ? count as TopperLineCount : undefined;
-}
-
 export function generateStaticParams() {
-  return topperEvents.flatMap((event) => topperLineCounts.map((lines) => ({ event: event.slug, lines: `${lines}-line` })));
+  return topperEvents.map((event) => ({ event: event.slug, lines: "custom-cake-topper" }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const route = await params;
   const chosen = topperEvent(route.event);
-  const lines = parseLineCount(route.lines);
-  return { title: chosen && lines ? `${topperProductName(lines)} — Winnie Cake Topper` : "Custom Cake Topper" };
+  return { title: chosen && route.lines === "custom-cake-topper" ? `${topperProductName()} — Winnie Cake Topper` : "Custom Cake Topper" };
 }
 
 export default async function TopperProductPage({ params }: Props) {
   const route = await params;
   const chosen = topperEvent(route.event);
-  const lineCount = parseLineCount(route.lines);
-  if (!chosen || !lineCount) notFound();
+  if (!chosen || route.lines !== "custom-cake-topper") notFound();
 
   return (
     <div className="winnie-page custom-topper-page">
       <SiteHeader active="winnie" sectionPage={false} />
       <main className="shell">
-        <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><Link href={`/winnie-cake-topper/event/${chosen.slug}/`}>{chosen.name}</Link><span aria-hidden="true">/</span><span>{topperLineLabel(lineCount)}</span></nav>
+        <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><Link href={`/winnie-cake-topper/event/${chosen.slug}/`}>{chosen.name}</Link><span aria-hidden="true">/</span><span>Custom Cake Topper</span></nav>
         <div className="custom-topper__layout">
           <div className="custom-topper__visual">
             <div className="custom-topper__image"><Image src="/images/winnie.webp" alt="Colourful cake topper style inspiration; this is a concept image, not a product photo" fill sizes="(max-width: 900px) 100vw, 42vw" priority /><span>STYLE INSPIRATION · NOT A PRODUCT PHOTO</span></div>
@@ -44,10 +37,10 @@ export default async function TopperProductPage({ params }: Props) {
           </div>
           <div className="custom-topper__content">
             <p className="eyebrow">WINNIE CAKE TOPPER BY UDESIGN / {chosen.name.toUpperCase()}</p>
-            <h1>{topperProductName(lineCount)}</h1>
-            <p className="custom-topper__lead">A perfect addition to your {chosen.name.toLowerCase()} celebration. Our personalised cardstock, acrylic and wooden cake toppers come in a variety of colours. This topper has {topperLineLabel(lineCount)} for your wording.</p>
-            <p className="custom-topper__price">From {formatRinggit(topperChoicePriceSen(lineCount, "cardstock", topperFinishes.cardstock[0].name, lineCount === 3 ? 13 : 10)!)}</p>
-            <CustomTopperForm key={`${chosen.slug}-${lineCount}`} initialEventSlug={chosen.slug} lineCount={lineCount} />
+            <h1>{topperProductName()}</h1>
+            <p className="custom-topper__lead">A perfect addition to your {chosen.name.toLowerCase()} celebration. Personalise one cardstock, acrylic or wooden cake topper with your wording, font, colour and size.</p>
+            <p className="custom-topper__price">From {formatRinggit(topperChoicePriceSen(1, "cardstock", topperFinishes.cardstock[0].name, 10)!)}</p>
+            <CustomTopperForm key={chosen.slug} initialEventSlug={chosen.slug} />
           </div>
         </div>
         <section className="custom-topper__details" aria-labelledby="custom-topper-details-title">
@@ -59,7 +52,7 @@ export default async function TopperProductPage({ params }: Props) {
           </div>
         </section>
         <section className="custom-topper__timeline" aria-labelledby="custom-topper-timeline-title"><div><p className="eyebrow">BEFORE WE MAKE IT</p><h2 id="custom-topper-timeline-title">Lead time</h2></div><p>Design takes 1 working day. We aim to send a digital mock-up via WhatsApp, or by email if you give us your address, within 1–2 working days after your order is confirmed. Production takes 1 working day after you approve the mock-up, excluding weekends and public holidays. Courier transit after dispatch is estimated at 3 business days to West Malaysia, 8–10 business days to East Malaysia, and 4 business days to Singapore. You can also choose pickup in Kuchai Lama, Kuala Lumpur.</p></section>
-        <Link className="winnie-product__back" href={`/winnie-cake-topper/event/${chosen.slug}/`}>← See all {chosen.name.toLowerCase()} toppers</Link>
+        <Link className="winnie-product__back" href={`/winnie-cake-topper/event/${chosen.slug}/`}>← Back to {chosen.name.toLowerCase()} toppers</Link>
       </main>
       <SiteFooter />
     </div>

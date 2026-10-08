@@ -80,7 +80,7 @@ function readStoredCart(value: string | null): CartItem[] {
       return [{
         id: item.id,
         brand: topper ? "winnie" : product?.brand ?? item.brand as CartBrand,
-        product: topper ? topperProductName(topper.lineCount) : product?.name ?? item.product!.trim().slice(0, 100),
+        product: topper ? topperProductName() : product?.name ?? item.product!.trim().slice(0, 100),
         ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
         ...(topper ? { topper } : {}),
         ...(referenceImage ? { referenceImage } : {}),
@@ -142,7 +142,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return [...current, {
         id: makeId(),
         brand: topper ? "winnie" : product?.brand ?? item.brand,
-        product: topper ? topperProductName(topper.lineCount) : product?.name ?? item.product.trim().slice(0, 100),
+        product: topper ? topperProductName() : product?.name ?? item.product.trim().slice(0, 100),
         ...(product && variant ? { productId: product.id, variantId: variant.id } : {}),
         ...(topper ? { topper } : {}),
         ...(referenceImage ? { referenceImage } : {}),
