@@ -28,9 +28,9 @@ function pricedLines(items) {
       const validLines = [1, 2, 3].includes(t.lineCount) && Array.isArray(t.wording) && t.wording.length === t.lineCount && t.wording.every((s) => cleanString(s, 60));
       const validSize = [10, 13, 15, 18, 20].includes(t.sizeCm) && (t.lineCount !== 3 || t.sizeCm >= 13);
       const finishes = { cardstock: ["Glitter Black", "Glitter Dark Blue", "Glitter Green", "Glitter Gold", "Glitter Pink", "Glitter Purple", "Glitter Silver", "Matte Black", "Shiny Gold", "Shiny Rose Gold", "Shiny Silver"], acrylic: ["Black", "Blue", "Green", "Grey", "Matte gold", "Mirror Gold", "Mirror Rose Gold", "Mirror Silver", "Pink", "Red", "Yellow"], wood: ["Natural wood", "Brown wood"] };
-      if (!validEvent || !validLines || !validSize || !finishes[t.material]?.includes(t.finish) || (t.details && !cleanString(t.details, 120))) throw new Error("Check the cake topper choices.");
+      if (!validEvent || !validLines || !validSize || !finishes[t.material]?.includes(t.finish) || (t.details && !cleanString(t.details, 120)) || (t.fontFamily && !TOPPER_FONTS.includes(t.fontFamily))) throw new Error("Check the cake topper choices.");
       price = TOPPER_PRICES[t.material]?.[t.sizeCm] + (TOPPER_PRICES.finishExtras[t.finish] ?? 0);
-      name = `Custom ${t.lineCount} line cake topper · ${t.material}, ${t.finish}, ${t.sizeCm}cm`;
+      name = `Custom ${t.lineCount} line cake topper · ${t.material}, ${t.finish}, ${t.sizeCm}cm${t.fontFamily ? ` · ${t.fontFamily}` : ""}`;
       brand = "winnie";
     } else {
       const product = CATALOG.find((p) => p.id === item.productId);

@@ -37,6 +37,20 @@
 .custom-topper-form__wording { display:grid; gap:12px; }
 .custom-topper-form__wording legend { margin-bottom:2px; }
 .custom-topper-form__remaining { margin:0 0 2px; color:#a12447; font-size:13px; font-weight:800; }
+.custom-topper-form__fonts { display:grid; gap:13px; min-width:0; padding:22px; border:1px solid #e5cbd3; background:#fff; }
+.custom-topper-form__fonts h2 { margin:0; font-size:22px; letter-spacing:-.03em; }
+.custom-topper-form__fonts > p { margin:0; color:#725d68; font-size:13px; line-height:1.5; }
+.custom-topper-form__font-count { font-weight:800; }
+.custom-topper-form__font-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; max-height:480px; overflow:auto; padding:2px; }
+.custom-topper-form__font-card { display:grid; gap:8px; min-width:0; padding:12px; border:1px solid #d5bfc6; background:#fffaf8; color:#432233; text-align:left; cursor:pointer; }
+.custom-topper-form__font-card:hover,.custom-topper-form__font-card:focus-visible { border-color:#e93f78; outline:2px solid #e93f78; outline-offset:1px; }
+.custom-topper-form__font-card[aria-pressed=true] { border:2px solid #e93f78; background:#fff0f5; }
+.custom-topper-form__font-preview { display:grid; align-content:center; min-height:82px; overflow:hidden; font-size:25px; line-height:1.2; white-space:pre-line; overflow-wrap:anywhere; }
+.custom-topper-form__font-name { font-size:12px; font-weight:800; }
+.custom-topper-form__selected-font { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:11px 13px; background:#fff0f5; font-size:13px; }
+.custom-topper-form__selected-font button { border:0; background:none; color:#a12447; font:800 12px Arial,Helvetica,sans-serif; text-decoration:underline; cursor:pointer; }
+.custom-topper-form__show-fonts { justify-self:start; padding:10px 15px; border:1px solid #a12447; background:#fff; color:#a12447; font:800 13px Arial,Helvetica,sans-serif; cursor:pointer; }
+.custom-topper-form__font-note { font-size:12px!important; }
 .custom-topper-form__extra { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
 .custom-topper-form__total { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:19px 0 0; border-top:1px solid #e5cbd3; font-size:16px; }
 .custom-topper-form__total strong { font-size:22px; }
@@ -59,7 +73,7 @@
 .custom-topper-feature a:hover { background:#c62c60; }
 @media (max-width:1000px) { .custom-topper-form__size-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media (max-width:900px) { .custom-topper__layout { grid-template-columns:1fr; } .custom-topper__visual { position:static; } .custom-topper__image { min-height:420px; } .custom-topper__details,.custom-topper__timeline { grid-template-columns:1fr; } }
-@media (max-width:650px) { .custom-topper__layout { gap:28px; } .custom-topper__image { min-height:350px; } .custom-topper-form__choice-grid--three { grid-template-columns:1fr 1fr; } .custom-topper-form__size-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } .custom-topper__material-grid { grid-template-columns:1fr; } .custom-topper__details,.custom-topper__timeline { padding:25px; } .custom-topper-feature { display:block; margin-top:48px; padding:25px; } .custom-topper-feature a { width:100%; margin-top:20px; } }
+@media (max-width:650px) { .custom-topper__layout { gap:28px; } .custom-topper__image { min-height:350px; } .custom-topper-form__choice-grid--three { grid-template-columns:1fr 1fr; } .custom-topper-form__size-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } .custom-topper-form__font-grid { grid-template-columns:1fr; } .custom-topper-form__fonts { padding:16px; } .custom-topper__material-grid { grid-template-columns:1fr; } .custom-topper__details,.custom-topper__timeline { padding:25px; } .custom-topper-feature { display:block; margin-top:48px; padding:25px; } .custom-topper-feature a { width:100%; margin-top:20px; } }
 
 /* Choose an occasion, then a distinct line-count product. */
 .winnie-hero h1 { font-size:clamp(65px,7.6vw,112px); }
