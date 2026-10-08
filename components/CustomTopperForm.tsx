@@ -134,10 +134,10 @@ export function CustomTopperForm({ lineCount, initialEventSlug }: { lineCount: T
 
       <section className="custom-topper-form__fonts" aria-labelledby="topper-fonts-title">
         <h2 id="topper-fonts-title">Optional font style</h2>
-        <p>Type your wording above to see it in 88 font styles. Choose one you like, or leave the style to us. You can also upload your own design photo below.</p>
+        <p>Type your wording above to see it in 34 font styles chosen by UDESIGN. Choose one you like, or leave the style to us. You can also upload your own design photo below.</p>
         {fontFamily && <div className="custom-topper-form__selected-font"><span>Selected: <strong>{fontFamily}</strong></span><button type="button" onClick={() => { setFontFamily(""); setAdded(false); }}>Leave font choice to UDESIGN</button></div>}
         {wording.trim() ? <>
-          <label className="custom-topper-form__field">Search the 88 fonts
+          <label className="custom-topper-form__field">Search the 34 fonts
             <input type="search" value={fontSearch} onChange={(event) => { setFontSearch(event.target.value); setShownFonts(12); }} placeholder="Search font names" />
           </label>
           <p className="custom-topper-form__font-count" role="status">Showing {visibleFonts.length} of {matchingFonts.length} fonts</p>

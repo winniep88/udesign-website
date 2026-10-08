@@ -133,7 +133,8 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
   if (!Array.isArray(item.wording) || item.wording.length !== item.lineCount) return undefined;
   if (item.wording.some((line) => typeof line !== "string" || !line.trim() || line.length > 60)) return undefined;
   if (item.details !== undefined && (typeof item.details !== "string" || item.details.length > 120)) return undefined;
-  if (item.fontFamily !== undefined && (typeof item.fontFamily !== "string" || !topperFontStyles.includes(item.fontFamily))) return undefined;
+  // Keep older cart selections when the public font list is curated again.
+  if (item.fontFamily !== undefined && (typeof item.fontFamily !== "string" || item.fontFamily.length > 80 || !/^[\p{L}\p{N} .'-]+$/u.test(item.fontFamily))) return undefined;
   return {
     eventSlug: item.eventSlug as TopperEventSlug,
     lineCount: item.lineCount,
