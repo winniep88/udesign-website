@@ -119,6 +119,14 @@ export function topperCharacterLimit(sizeCm: number): number | undefined {
   return ({ 10: 30, 13: 40, 15: 50, 18: 60, 20: 80 } as Record<number, number>)[sizeCm];
 }
 
+export function topperWordLimit(sizeCm: number): number | undefined {
+  return ({ 10: 2, 13: 5, 15: 8, 18: 10, 20: 14 } as Record<number, number>)[sizeCm];
+}
+
+export function topperWordCount(wording: readonly string[]): number {
+  return wording.join(" ").trim().split(/\s+/u).filter(Boolean).length;
+}
+
 export function topperChoicePriceSen(lineCount: TopperLineCount, material: TopperMaterial, finish: string, sizeCm: number): number | undefined {
   if (!topperLineCounts.includes(lineCount) || !topperSizes.some((size) => size.cm === sizeCm) || (lineCount === 3 && sizeCm < 13)) return undefined;
   const baseRm = topperBasePricesRm[material]?.[sizeCm];
