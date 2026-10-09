@@ -79,14 +79,12 @@ try {
   assert.deepEqual(await status.json(), { status: "paid", orderId });
   const topper = { brand: "winnie", product: "Custom Cake Topper", quantity: 1, notes: "", topper: { eventSlug: "birthday", lineCount: 1, material: "cardstock", finish: "Glitter Black", sizeCm: 10, wording: ["Happy Birthday Olivia"] } };
   const topperCheckout = (item) => paidFetch("/api/checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify({ ...checkoutBody, items: [item] }) });
-  assert.equal((await topperCheckout(topper)).status, 400, "10 cm must reject more than two words");
-  assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm: 13, wording: ["One Two Three Four Five Six"] } })).status, 400, "13 cm must reject more than five words");
-  for (const [sizeCm, limit] of [[15, 8], [18, 10], [20, 14]]) {
-    const wording = [Array.from({ length: limit + 1 }, () => "a").join(" ")];
-    assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm, wording } })).status, 400, `${sizeCm} cm must reject more than ${limit} words`);
+  for (const [sizeCm, limit] of [[10, 30], [13, 40], [15, 50], [18, 60], [20, 80]]) {
+    const wording = ["a".repeat(limit + 1)];
+    assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm, wording } })).status, 400, `${sizeCm} cm must reject more than ${limit} characters`);
   }
-  const validTopper = await topperCheckout({ ...topper, topper: { ...topper.topper, wording: ["Happy Birthday"] } });
-  assert.equal(validTopper.status, 200, "10 cm accepts two words");
-  assert.equal(createdPurchase.purchase.products[0].price, 1500);
+  const validTopper = await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm: 20, wording: ["a".repeat(80)] } });
+  assert.equal(validTopper.status, 200, "20 cm accepts 80 characters");
+  assert.equal(createdPurchase.purchase.products[0].price, 2000);
 } finally { globalThis.fetch = originalFetch; }
 console.log("Worker storefront, image upload and CHIP checkout checks passed.");

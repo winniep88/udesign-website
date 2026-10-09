@@ -25,11 +25,10 @@ function pricedLines(items) {
     if (item.topper && !item.productId && !item.variantId) {
       const t = item.topper;
       const validEvent = ["birthday", "wedding", "baby-shower", "bridal-shower", "anniversary", "celebration"].includes(t.eventSlug);
-      const validLines = [1, 2, 3].includes(t.lineCount) && Array.isArray(t.wording) && t.wording.length === t.lineCount && t.wording.every((s) => cleanString(s, 60));
+      const validLines = [1, 2, 3].includes(t.lineCount) && Array.isArray(t.wording) && t.wording.length === t.lineCount && t.wording.every((s) => cleanString(s, 80));
       const validSize = [10, 13, 15, 18, 20].includes(t.sizeCm) && (t.lineCount !== 3 || t.sizeCm >= 13);
-      const words = validLines ? t.wording.join(" ").trim().split(/\s+/u).length : 0;
-      const wordLimits = { 10: 2, 13: 5, 15: 8, 18: 10, 20: 14 };
-      const validWording = validLines && t.wording.join("").length <= 40 && words <= (wordLimits[t.sizeCm] ?? 0);
+      const characterLimits = { 10: 30, 13: 40, 15: 50, 18: 60, 20: 80 };
+      const validWording = validLines && t.wording.join("").length <= (characterLimits[t.sizeCm] ?? 0);
       const finishes = { cardstock: ["Glitter Black", "Glitter Dark Blue", "Glitter Green", "Glitter Gold", "Glitter Pink", "Glitter Purple", "Glitter Silver", "Matte Black", "Shiny Gold", "Shiny Rose Gold", "Shiny Silver"], acrylic: ["Black", "Blue", "Green", "Grey", "Matte gold", "Mirror Gold", "Mirror Rose Gold", "Mirror Silver", "Pink", "Red", "Yellow"], wood: ["Natural wood", "Brown wood"] };
       if (!validEvent || !validWording || !validSize || !finishes[t.material]?.includes(t.finish) || (t.details && !cleanString(t.details, 120)) || (t.fontFamily && (typeof t.fontFamily !== "string" || t.fontFamily.length > 80 || !/^[\p{L}\p{N} .'-]+$/u.test(t.fontFamily)))) throw new Error("Check the cake topper choices.");
       price = TOPPER_PRICES[t.material]?.[t.sizeCm] + (TOPPER_PRICES.finishExtras[t.finish] ?? 0);
