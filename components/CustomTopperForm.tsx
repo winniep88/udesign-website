@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { useCart } from "@/components/CartProvider";
 import { formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
-import { topperCharacterLimit, topperChoicePriceSen, topperFinishes, topperFontStyles, topperProductName, topperSizes, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
+import { topperCharacterLimit, topperChoicePriceSen, topperFinishes, topperFontStyles, topperProductName, topperSizes, topperWordCount, topperWordLimit, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
 export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: TopperEventSlug }) {
   const { addItem, ready } = useCart();
@@ -28,6 +28,8 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const lineCount = wordingLines.length as TopperLineCount;
   const wordingCharacters = wording.replace(/\r?\n/g, "").length;
   const characterLimit = topperCharacterLimit(sizeCm);
+  const wordCount = topperWordCount(wordingLines);
+  const wordLimit = topperWordLimit(sizeCm);
   const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm) : undefined;
   const matchingFonts = useMemo(() => topperFontStyles.filter((font) => font.toLowerCase().includes(fontSearch.trim().toLowerCase())), [fontSearch]);
   const visibleFonts = matchingFonts.slice(0, shownFonts);
@@ -77,6 +79,10 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
     if (submitting || !ready || !sizeCm || !material || !finish) return;
     if (!characterLimit || wordingCharacters > characterLimit || wordingLines.some((line) => !line.trim())) {
       setWordingError(`Please enter wording on every line, within ${characterLimit ?? 0} characters. Use up to 3 lines.`);
+      return;
+    }
+    if (wordLimit && wordCount > wordLimit) {
+      setWordingError(`${sizeCm} cm allows up to ${wordLimit} words. Shorten your wording or choose a larger size.`);
       return;
     }
     if (sizeCm === 10 && lineCount > 2) {
@@ -145,8 +151,9 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
         <label className="custom-topper-form__field">Your wording
           <textarea rows={4} required disabled={!sizeCm} value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
         </label>
-        {characterLimit && <p className="custom-topper-form__remaining" aria-live="polite">{sizeCm} cm: maximum {characterLimit} characters · {characterLimit - wordingCharacters} remaining</p>}
+        {characterLimit && wordLimit && <p className="custom-topper-form__remaining" aria-live="polite">{sizeCm} cm: maximum {characterLimit} characters and {wordLimit} words · {characterLimit - wordingCharacters} characters and {wordLimit - wordCount} words remaining</p>}
         {characterLimit && wordingCharacters > characterLimit && <p className="custom-topper-form__error" role="alert">Your wording is too long for {sizeCm} cm. Choose a larger size or shorten it.</p>}
+        {wordLimit && wordCount > wordLimit && <p className="custom-topper-form__error" role="alert">Your wording has too many words for {sizeCm} cm. Choose a larger size or shorten it.</p>}
         {sizeCm === 10 && lineCount > 2 && <p className="custom-topper-form__error" role="alert">Three lines need a 13 cm or larger topper.</p>}
         {wordingError && <p className="custom-topper-form__error" role="alert">{wordingError}</p>}
       </fieldset>
