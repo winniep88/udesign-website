@@ -83,6 +83,10 @@ try {
     const wording = ["a".repeat(limit + 1)];
     assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm, wording } })).status, 400, `${sizeCm} cm must reject more than ${limit} characters`);
   }
+  for (const [sizeCm, limit] of [[10, 2], [13, 5], [15, 8], [18, 10], [20, 14]]) {
+    const wording = [Array.from({ length: limit + 1 }, () => "a").join(" ")];
+    assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm, wording } })).status, 400, `${sizeCm} cm must reject more than ${limit} words`);
+  }
   const validTopper = await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm: 20, wording: ["a".repeat(80)] } });
   assert.equal(validTopper.status, 200, "20 cm accepts 80 characters");
   assert.equal(createdPurchase.purchase.products[0].price, 2000);
