@@ -11,7 +11,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const { addItem, ready } = useCart();
   const [material, setMaterial] = useState<TopperMaterial | "">("");
   const [finish, setFinish] = useState("");
-  const [sizeCm, setSizeCm] = useState(10);
+  const [sizeCm, setSizeCm] = useState(0);
   const [wording, setWording] = useState("");
   const [wordingError, setWordingError] = useState("");
   const [fontFamily, setFontFamily] = useState("");
@@ -75,7 +75,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting || !ready || !material || !finish) return;
+    if (submitting || !ready || !sizeCm || !material || !finish) return;
     if (wordingCharacters > 40 || wordingLines.some((line) => !line.trim())) {
       setWordingError("Please enter wording on every line, within 40 characters. Use up to 3 lines.");
       return;
@@ -133,13 +133,25 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
 
   return (
     <form className="custom-topper-form" id="customise" onSubmit={submit}>
+      <fieldset className="custom-topper-form__choices">
+        <legend>1. Choose the topper size</legend>
+        <p className="custom-topper-form__intro">Choose a size to see how many words will fit before you enter your wording.</p>
+        <div className="custom-topper-form__size-grid">
+          {topperSizes.map((size) => <label className={sizeCm === size.cm ? "is-selected" : ""} key={size.cm}>
+            <input type="radio" name="size" required checked={sizeCm === size.cm} onChange={() => { setSizeCm(size.cm); setWordingError(""); setAdded(false); }} />
+            <strong>{size.cm} cm</strong><small>{size.inch} inch</small><small>Max {topperWordLimit(size.cm)} words</small>
+          </label>)}
+        </div>
+        <p className="custom-topper-form__size-note">10 cm: 2 words and up to 2 lines. 13 cm: 5 words. 15 cm: 8 words. 18 cm: 10 words. 20 cm: 14 words. Up to 40 characters and 3 lines overall.</p>
+      </fieldset>
+
       <fieldset className="custom-topper-form__wording">
-        <legend>1. Name / Phrase</legend>
-        <p className="custom-topper-form__intro" id="topper-wording-help">Type the words exactly as you want them to appear. Press Enter for another line, up to 3 lines.</p>
+        <legend>2. Name / Phrase</legend>
+        <p className="custom-topper-form__intro" id="topper-wording-help">{sizeCm ? `Your ${sizeCm} cm topper allows up to ${wordLimit} words. Type the words exactly as you want them to appear. Press Enter for another line, up to 3 lines.` : "Choose a topper size above, then enter your wording."}</p>
         <p className="custom-topper-form__remaining" aria-live="polite">{40 - wordingCharacters} characters remaining</p>
         <p className="custom-topper-form__remaining" aria-live="polite">{wordCount} {wordCount === 1 ? "word" : "words"}{wordLimit ? ` · ${sizeCm} cm allows up to ${wordLimit} words` : ""}</p>
         <label className="custom-topper-form__field">Your wording
-          <textarea rows={4} required value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
+          <textarea rows={4} required disabled={!sizeCm} value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
         </label>
         {wordLimit && wordCount > wordLimit && <p className="custom-topper-form__error" role="alert">{sizeCm} cm allows up to {wordLimit} words. Choose a larger size or shorten your wording.</p>}
         {sizeCm === 10 && lineCount > 2 && <p className="custom-topper-form__error" role="alert">Three lines need a 13 cm or larger topper.</p>}
@@ -167,7 +179,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
         </> : <p className="custom-topper-form__font-note">Font previews will appear when you type your wording.</p>}
       </section>
 
-      <label className="custom-topper-form__field">2. Material Type
+      <label className="custom-topper-form__field">3. Material Type
         <select required value={material} onChange={(event) => chooseMaterial(event.target.value as TopperMaterial)}>
           <option value="" disabled>Please select Cardstock, Acrylic or Wood</option>
           <option value="cardstock">Cardstock</option>
@@ -176,24 +188,13 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
         </select>
       </label>
 
-      <label className="custom-topper-form__field">3. {material === "wood" ? "Wood finish" : "Colour or finish"}
+      <label className="custom-topper-form__field">4. {material === "wood" ? "Wood finish" : "Colour or finish"}
         <select required value={finish} disabled={!material} onChange={(event) => { setFinish(event.target.value); setAdded(false); }}>
           <option value="" disabled>{material ? "Choose a colour or finish" : "Choose a material first"}</option>
           {material && topperFinishes[material].map((option) => <option key={option.name} value={option.name}>{option.name}{option.extraRm ? ` (+RM${option.extraRm})` : ""}</option>)}
         </select>
       </label>
       <p className="custom-topper-form__hint">The finishes change with your material. Your price updates when you change a choice.</p>
-
-      <fieldset className="custom-topper-form__choices">
-        <legend>4. Choose the topper width</legend>
-        <div className="custom-topper-form__size-grid">
-          {topperSizes.map((size) => <label className={sizeCm === size.cm ? "is-selected" : ""} key={size.cm}>
-            <input type="radio" name="size" checked={sizeCm === size.cm} onChange={() => { setSizeCm(size.cm); setWordingError(""); setAdded(false); }} />
-            <strong>{size.cm} cm</strong><small>{size.inch} inch</small>{topperWordLimit(size.cm) && <small>Max {topperWordLimit(size.cm)} words</small>}
-          </label>)}
-        </div>
-        <p className="custom-topper-form__size-note">10 cm: 2 words and up to 2 lines. 13 cm: 5 words. 15 cm: 8 words. 18 cm: 10 words. 20 cm: 14 words. Up to 40 characters and 3 lines overall.</p>
-      </fieldset>
 
       <label className="custom-topper-form__field">Quantity
         <input type="number" min={1} max={99} required value={quantity} onChange={(event) => { setQuantity(Number(event.target.value)); setAdded(false); }} />
@@ -207,7 +208,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
       {referenceFile && <button className="custom-topper-form__remove-image" type="button" onClick={() => { setReferenceFile(null); setUploadError(""); setAdded(false); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove selected image</button>}
       <p className="custom-topper-form__hint">Upload a design you like and we can make something similar. The image link is included with your WhatsApp request and remains available for 30 days. Anyone with the link can view it.</p>
       {uploadError && <p className="custom-topper-form__error" role="alert">{uploadError} You can remove the image and send it to us in WhatsApp instead.</p>}
-      <div className="custom-topper-form__total"><span>{sizeCm} cm · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? lineCount === 3 && sizeCm === 10 ? "Choose 13 cm or larger" : "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
+      <div className="custom-topper-form__total"><span>{sizeCm ? `${sizeCm} cm` : "Choose a size"} · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? lineCount === 3 && sizeCm === 10 ? "Choose 13 cm or larger" : "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
       <p className="custom-topper-form__hint">This is the item price. Delivery, if selected, is added in your cart. We&apos;ll confirm the design and ready date before payment.</p>
       <p className="custom-topper-form__hint">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I need an urgent cake topper and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp</a> first. Pickup in Kuchai Lama, KL is available once we confirm your order.</p>
       <button className="custom-topper-form__submit" type="submit" disabled={!ready || submitting}>{submitting ? referenceFile ? "Uploading image…" : "Adding to cart…" : "Add to cart"} <span aria-hidden="true">＋</span></button>
