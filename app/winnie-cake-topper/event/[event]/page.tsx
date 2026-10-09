@@ -36,12 +36,12 @@ export default async function TopperEventPage({ params }: Props) {
         <section className="topper-line-products shell" aria-labelledby="topper-line-products-title">
           <p className="eyebrow">STEP 2 / CHOOSE A PRODUCT</p>
           <h2 id="topper-line-products-title">Make it yours.</h2>
-          <p>One custom product for every event. Type your wording, preview your font, then choose cardstock, acrylic or wood, its colour and the topper width.</p>
+          <p>One custom product for every event. Choose the size, type your wording, preview your font, then choose cardstock, acrylic or wood and its colour.</p>
           <div className="topper-line-products__grid topper-line-products__grid--single">
             <article>
               <span className="topper-line-products__number">CUSTOM MADE</span>
               <h3>{topperProductName()}</h3>
-              <p>Word limits by size: 10 cm (2), 13 cm (5), 15 cm (8), 18 cm (10), 20 cm (14). Up to 40 characters overall.</p>
+              <p>Choose your topper size and enter your personalised wording on the product page.</p>
               <small>10–20 cm / 4–8 inch</small>
               <small>From {formatRinggit(topperChoicePriceSen(1, "cardstock", topperFinishes.cardstock[0].name, 10)!)}</small>
               <Link href={topperProductHref(chosen.slug)}>Customise your cake topper <span aria-hidden="true">→</span></Link>

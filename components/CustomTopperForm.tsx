@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { useCart } from "@/components/CartProvider";
 import { formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
-import { topperChoicePriceSen, topperFinishes, topperFontStyles, topperProductName, topperSizes, topperWordCount, topperWordLimit, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
+import { topperCharacterLimit, topperChoicePriceSen, topperFinishes, topperFontStyles, topperProductName, topperSizes, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
 export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: TopperEventSlug }) {
   const { addItem, ready } = useCart();
@@ -27,8 +27,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const wordingLines = wording.split(/\r?\n/);
   const lineCount = wordingLines.length as TopperLineCount;
   const wordingCharacters = wording.replace(/\r?\n/g, "").length;
-  const wordCount = topperWordCount(wordingLines);
-  const wordLimit = topperWordLimit(sizeCm);
+  const characterLimit = topperCharacterLimit(sizeCm);
   const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm) : undefined;
   const matchingFonts = useMemo(() => topperFontStyles.filter((font) => font.toLowerCase().includes(fontSearch.trim().toLowerCase())), [fontSearch]);
   const visibleFonts = matchingFonts.slice(0, shownFonts);
@@ -54,7 +53,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
 
   function changeWording(value: string) {
     const next = value.replace(/\r\n?/g, "\n");
-    if (next.replace(/\n/g, "").length > 40 || next.split("\n").length > 3) return;
+    if (next.replace(/\n/g, "").length > (characterLimit ?? 0) || next.split("\n").length > 3) return;
     setWording(next);
     setWordingError("");
     setAdded(false);
@@ -76,12 +75,8 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting || !ready || !sizeCm || !material || !finish) return;
-    if (wordingCharacters > 40 || wordingLines.some((line) => !line.trim())) {
-      setWordingError("Please enter wording on every line, within 40 characters. Use up to 3 lines.");
-      return;
-    }
-    if (wordLimit && wordCount > wordLimit) {
-      setWordingError(`${sizeCm} cm allows up to ${wordLimit} words. Shorten your wording or choose a larger size.`);
+    if (!characterLimit || wordingCharacters > characterLimit || wordingLines.some((line) => !line.trim())) {
+      setWordingError(`Please enter wording on every line, within ${characterLimit ?? 0} characters. Use up to 3 lines.`);
       return;
     }
     if (sizeCm === 10 && lineCount > 2) {
@@ -135,25 +130,23 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
     <form className="custom-topper-form" id="customise" onSubmit={submit}>
       <fieldset className="custom-topper-form__choices">
         <legend>1. Choose the topper size</legend>
-        <p className="custom-topper-form__intro">Choose a size to see how many words will fit before you enter your wording.</p>
+        <p className="custom-topper-form__intro">Choose a size, then enter your wording below.</p>
         <div className="custom-topper-form__size-grid">
           {topperSizes.map((size) => <label className={sizeCm === size.cm ? "is-selected" : ""} key={size.cm}>
             <input type="radio" name="size" required checked={sizeCm === size.cm} onChange={() => { setSizeCm(size.cm); setWordingError(""); setAdded(false); }} />
-            <strong>{size.cm} cm</strong><small>{size.inch} inch</small><small>Max {topperWordLimit(size.cm)} words</small>
+            <strong>{size.cm} cm</strong><small>{size.inch} inch</small>
           </label>)}
         </div>
-        <p className="custom-topper-form__size-note">10 cm: 2 words and up to 2 lines. 13 cm: 5 words. 15 cm: 8 words. 18 cm: 10 words. 20 cm: 14 words. Up to 40 characters and 3 lines overall.</p>
       </fieldset>
 
       <fieldset className="custom-topper-form__wording">
         <legend>2. Name / Phrase</legend>
-        <p className="custom-topper-form__intro" id="topper-wording-help">{sizeCm ? `Your ${sizeCm} cm topper allows up to ${wordLimit} words. Type the words exactly as you want them to appear. Press Enter for another line, up to 3 lines.` : "Choose a topper size above, then enter your wording."}</p>
-        <p className="custom-topper-form__remaining" aria-live="polite">{40 - wordingCharacters} characters remaining</p>
-        <p className="custom-topper-form__remaining" aria-live="polite">{wordCount} {wordCount === 1 ? "word" : "words"}{wordLimit ? ` · ${sizeCm} cm allows up to ${wordLimit} words` : ""}</p>
+        <p className="custom-topper-form__intro" id="topper-wording-help">{sizeCm ? `Type the words exactly as you want them to appear. Press Enter for another line, up to ${sizeCm === 10 ? 2 : 3} lines.` : "Choose a topper size above, then enter your wording."}</p>
         <label className="custom-topper-form__field">Your wording
           <textarea rows={4} required disabled={!sizeCm} value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
         </label>
-        {wordLimit && wordCount > wordLimit && <p className="custom-topper-form__error" role="alert">{sizeCm} cm allows up to {wordLimit} words. Choose a larger size or shorten your wording.</p>}
+        {characterLimit && <p className="custom-topper-form__remaining" aria-live="polite">{sizeCm} cm: maximum {characterLimit} characters · {characterLimit - wordingCharacters} remaining</p>}
+        {characterLimit && wordingCharacters > characterLimit && <p className="custom-topper-form__error" role="alert">Your wording is too long for {sizeCm} cm. Choose a larger size or shorten it.</p>}
         {sizeCm === 10 && lineCount > 2 && <p className="custom-topper-form__error" role="alert">Three lines need a 13 cm or larger topper.</p>}
         {wordingError && <p className="custom-topper-form__error" role="alert">{wordingError}</p>}
       </fieldset>

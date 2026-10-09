@@ -115,12 +115,8 @@ export function topperProductName() {
   return "Custom Cake Topper";
 }
 
-export function topperWordLimit(sizeCm: number): number | undefined {
-  return ({ 10: 2, 13: 5, 15: 8, 18: 10, 20: 14 } as Record<number, number>)[sizeCm];
-}
-
-export function topperWordCount(wording: readonly string[]): number {
-  return wording.join(" ").trim().split(/\s+/u).filter(Boolean).length;
+export function topperCharacterLimit(sizeCm: number): number | undefined {
+  return ({ 10: 30, 13: 40, 15: 50, 18: 60, 20: 80 } as Record<number, number>)[sizeCm];
 }
 
 export function topperChoicePriceSen(lineCount: TopperLineCount, material: TopperMaterial, finish: string, sizeCm: number): number | undefined {
@@ -139,7 +135,7 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
   if (item.material !== "cardstock" && item.material !== "acrylic" && item.material !== "wood") return undefined;
   if (typeof item.finish !== "string" || typeof item.sizeCm !== "number" || topperChoicePriceSen(item.lineCount, item.material, item.finish, item.sizeCm) === undefined) return undefined;
   if (!Array.isArray(item.wording) || item.wording.length !== item.lineCount) return undefined;
-  if (item.wording.some((line) => typeof line !== "string" || !line.trim() || line.length > 60)) return undefined;
+  if (item.wording.some((line) => typeof line !== "string" || !line.trim() || line.length > 80)) return undefined;
   if (item.details !== undefined && (typeof item.details !== "string" || item.details.length > 120)) return undefined;
   // Keep older cart selections when the public font list is curated again.
   if (item.fontFamily !== undefined && (typeof item.fontFamily !== "string" || item.fontFamily.length > 80 || !/^[\p{L}\p{N} .'-]+$/u.test(item.fontFamily))) return undefined;
