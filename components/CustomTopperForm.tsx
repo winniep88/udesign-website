@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useCart } from "@/components/CartProvider";
 import { formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
@@ -15,8 +15,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const [wording, setWording] = useState("");
   const [wordingError, setWordingError] = useState("");
   const [fontFamily, setFontFamily] = useState("");
-  const [fontSearch, setFontSearch] = useState("");
-  const [shownFonts, setShownFonts] = useState(12);
+  const [fontDialogOpen, setFontDialogOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [details, setDetails] = useState("");
   const [referenceFile, setReferenceFile] = useState<File | null>(null);
@@ -24,6 +23,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const [submitting, setSubmitting] = useState(false);
   const [added, setAdded] = useState(false);
   const referenceInput = useRef<HTMLInputElement>(null);
+  const fontDialog = useRef<HTMLDialogElement>(null);
   const wordingLines = wording.split(/\r?\n/);
   const lineCount = wordingLines.length as TopperLineCount;
   const wordingCharacters = wording.replace(/\r?\n/g, "").length;
@@ -31,12 +31,9 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const wordCount = topperWordCount(wordingLines);
   const wordLimit = topperWordLimit(sizeCm);
   const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm) : undefined;
-  const matchingFonts = useMemo(() => topperFontStyles.filter((font) => font.toLowerCase().includes(fontSearch.trim().toLowerCase())), [fontSearch]);
-  const visibleFonts = matchingFonts.slice(0, shownFonts);
-
   useEffect(() => {
-    if (!wording.trim()) return;
-    for (const font of visibleFonts) {
+    if (!fontDialogOpen) return;
+    for (const font of topperFontStyles) {
       const id = `topper-font-${font.replace(/[^a-z0-9]/gi, "-").toLowerCase()}`;
       if (document.getElementById(id)) continue;
       const link = document.createElement("link");
@@ -45,7 +42,19 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
       link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font).replace(/%20/g, "+")}&display=swap`;
       document.head.appendChild(link);
     }
-  }, [visibleFonts, wording]);
+  }, [fontDialogOpen]);
+
+  function openFontDialog() {
+    if (!wording.trim()) return;
+    setFontDialogOpen(true);
+    fontDialog.current?.showModal();
+  }
+
+  function chooseFont(font: string) {
+    setFontFamily(font);
+    setAdded(false);
+    fontDialog.current?.close();
+  }
 
   function chooseMaterial(value: TopperMaterial) {
     setMaterial(value);
@@ -159,24 +168,26 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
       </fieldset>
 
       <section className="custom-topper-form__fonts" aria-labelledby="topper-fonts-title">
-        <h2 id="topper-fonts-title">Optional font style</h2>
-        <p>Type your wording above to see it in 34 font styles chosen by UDESIGN. Choose one you like, or leave the style to us. You can also upload your own design photo below.</p>
+        <h2 id="topper-fonts-title">Choose your font style <span>(optional)</span></h2>
+        <p>See your wording in all 34 UDESIGN font styles. You can also leave the style to us or upload your own design photo below.</p>
         {fontFamily && <div className="custom-topper-form__selected-font"><span>Selected: <strong>{fontFamily}</strong></span><button type="button" onClick={() => { setFontFamily(""); setAdded(false); }}>Leave font choice to UDESIGN</button></div>}
-        {wording.trim() ? <>
-          <label className="custom-topper-form__field">Search the 34 fonts
-            <input type="search" value={fontSearch} onChange={(event) => { setFontSearch(event.target.value); setShownFonts(12); }} placeholder="Search font names" />
-          </label>
-          <p className="custom-topper-form__font-count" role="status">Showing {visibleFonts.length} of {matchingFonts.length} fonts</p>
-          <div className="custom-topper-form__font-grid">
-            {visibleFonts.map((font) => <button type="button" key={font} className="custom-topper-form__font-card" aria-pressed={fontFamily === font} onClick={() => { setFontFamily(font); setAdded(false); }}>
-              <span className="custom-topper-form__font-preview" style={{ fontFamily: `"${font}", cursive` }}>{wording}</span>
-              <span className="custom-topper-form__font-name">{font}</span>
-            </button>)}
+        <button className="custom-topper-form__open-fonts" type="button" onClick={openFontDialog} disabled={!wording.trim()}>{fontFamily ? "Change font style" : "Choose your font style"} <span aria-hidden="true">↗</span></button>
+        {!wording.trim() && <p className="custom-topper-form__font-note">Type your wording above to preview the font styles.</p>}
+        <dialog className="custom-topper-form__font-dialog" ref={fontDialog} aria-labelledby="topper-font-dialog-title" onClose={() => setFontDialogOpen(false)}>
+          <div className="custom-topper-form__font-dialog-inner">
+            <header className="custom-topper-form__font-dialog-header">
+              <div><h3 id="topper-font-dialog-title">Choose your font style</h3><p>Preview your wording in all 34 styles. Tap one to select it.</p></div>
+              <button type="button" onClick={() => fontDialog.current?.close()} aria-label="Close font styles">Close ×</button>
+            </header>
+            <div className="custom-topper-form__font-grid">
+              {topperFontStyles.map((font) => <button type="button" key={font} className="custom-topper-form__font-card" aria-pressed={fontFamily === font} onClick={() => chooseFont(font)}>
+                <span className="custom-topper-form__font-preview" style={{ fontFamily: `"${font}", cursive` }}>{wording}</span>
+                <span className="custom-topper-form__font-name">{font}</span>
+              </button>)}
+            </div>
+            <p className="custom-topper-form__font-note">This is a font preview. We&apos;ll send a design mock-up for you to confirm before making the topper.</p>
           </div>
-          {matchingFonts.length === 0 && <p>No font names match. Try another search.</p>}
-          {shownFonts < matchingFonts.length && <button className="custom-topper-form__show-fonts" type="button" onClick={() => setShownFonts((current) => current + 12)}>Show more fonts</button>}
-          <p className="custom-topper-form__font-note">This is a font preview. We&apos;ll send a design mock-up for you to confirm before making the topper.</p>
-        </> : <p className="custom-topper-form__font-note">Font previews will appear when you type your wording.</p>}
+        </dialog>
       </section>
 
       <label className="custom-topper-form__field">3. Material Type
