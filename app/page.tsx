@@ -65,7 +65,6 @@ export default function Home() {
               <Image src="/images/winnie.webp" alt="Concept image of a cake decoration" fill sizes="(max-width: 750px) 40vw, 23vw" priority />
               <span>WINNIE <small>Cake toppers</small></span>
             </Link>
-            <span className="visual-sticker">ONE STUDIO<br />MANY POSSIBILITIES</span>
           </div>
         </section>
 
@@ -101,6 +100,10 @@ export default function Home() {
             <div><span>03</span><h3>Celebrate the result</h3><p>Once the design and order details are agreed, we bring it to life.</p></div>
           </div>
         </section>
+
+        <div className="scroll-sticker-band" aria-hidden="true">
+          <span className="scroll-sticker"><span>ONE STUDIO<br />MANY<br />POSSIBILITIES</span></span>
+        </div>
 
         <section className="closing-section"><div className="shell closing-section__inner"><div><p className="eyebrow">READY WHEN YOU ARE</p><h2>Have something in mind?</h2><p>Tell us what you&apos;re dreaming up and we&apos;ll help you find a place to start.</p></div><a className="button button--white" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Start a conversation <span aria-hidden="true">↗</span></a></div></section>
       </main>
