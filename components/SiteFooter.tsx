@@ -16,6 +16,7 @@ export function SiteFooter() {
             <Link href="/moments/">Moments</Link>
             <Link href="/winnie-cake-topper/">Winnie Cake Topper</Link>
             <Link href="/cart/">Cart</Link>
+            <Link href="/privacy/">Privacy</Link>
           </div>
           <div>
             <span className="footer-label">Find us</span>

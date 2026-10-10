@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
+import { useAccount } from "@/components/AccountProvider";
 import { whatsappLink } from "@/lib/contact";
 
 type SiteHeaderProps = {
@@ -18,6 +19,7 @@ const links = [
 
 export function SiteHeader({ active = "home", light = false, sectionPage = true }: SiteHeaderProps) {
   const { count } = useCart();
+  const { enabled, user } = useAccount();
   return (
     <header className={`site-header ${light ? "site-header--light" : ""}`}>
       <div className="site-header__inner shell">
@@ -37,6 +39,7 @@ export function SiteHeader({ active = "home", light = false, sectionPage = true 
             </Link>
           ))}
         </nav>
+        {enabled && <Link className="header-account" href="/account/">{user ? "My account" : "Sign in"}</Link>}
         <Link className={`header-cart ${active === "cart" ? "is-active" : ""}`} href="/cart/" aria-label={`Cart, ${count} ${count === 1 ? "item" : "items"}`} aria-current={active === "cart" ? "page" : undefined}>
           Cart <span className="header-cart__count">{count}</span>
         </Link>
@@ -48,6 +51,7 @@ export function SiteHeader({ active = "home", light = false, sectionPage = true 
           <nav aria-label="Mobile navigation">
             <Link href="/">Home</Link>
             {links.map((link) => <Link key={link.key} href={link.href}>{link.label}</Link>)}
+            {enabled && <Link href="/account/">{user ? "My account" : "Sign in"}</Link>}
             <Link href="/cart/">Cart ({count})</Link>
             <a href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">Contact on WhatsApp ↗</a>
           </nav>
