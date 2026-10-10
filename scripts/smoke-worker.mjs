@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
+import { generateKeyPairSync, sign } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 
 const worker = (await import(pathToFileURL(resolve("dist/server/index.js")).href)).default;
 const objects = new Map();
+const writes = new Map();
 const bucket = {
   async put(key, body, options = {}) {
+    writes.set(key, (writes.get(key) ?? 0) + 1);
     objects.set(key, {
       bytes: typeof body === "string" ? new TextEncoder().encode(body) : new Uint8Array(body),
       httpMetadata: options.httpMetadata,
@@ -60,18 +63,27 @@ assert.equal((await checkout(checkoutBody)).status, 503, "Payment remains closed
 const paidEnv = { ...env, CHIP_LIVE_ENABLED: "true", CHIP_SECRET_KEY: "mock-live-secret", CHIP_BRAND_ID: "brand-123" };
 const testToken = "mock-private-test-access-token-123456789";
 const testEnv = { ...env, CHIP_TEST_ENABLED: "true", CHIP_TEST_SECRET_KEY: "mock-test-secret", CHIP_TEST_ACCESS_TOKEN: testToken, CHIP_BRAND_ID: "brand-123" };
+const liveKeys = generateKeyPairSync("rsa", { modulusLength: 2048 });
+const testKeys = generateKeyPairSync("rsa", { modulusLength: 2048 });
+const signedCallback = (payload, keys) => {
+  const body = JSON.stringify(payload);
+  return { method: "POST", headers: { "content-type": "application/json", "x-signature": sign("RSA-SHA256", Buffer.from(body), keys.privateKey).toString("base64") }, body };
+};
 const originalFetch = globalThis.fetch;
 let createdPurchase;
 let purchaseTotal;
+let purchaseStatus = "paid";
+let lookupTotalOverride;
 globalThis.fetch = async (url, options) => {
-  assert.match(url, /^https:\/\/gate\.chip-in\.asia\/api\/v1\/purchases\//);
   const isTest = options.headers.authorization === "Bearer mock-test-secret";
+  if (url === "https://gate.chip-in.asia/api/v1/public_key/") return new Response((isTest ? testKeys : liveKeys).publicKey.export({ type: "spki", format: "pem" }));
+  assert.match(url, /^https:\/\/gate\.chip-in\.asia\/api\/v1\/purchases\//);
   if (options.method === "POST") {
     createdPurchase = JSON.parse(options.body);
     purchaseTotal = createdPurchase.purchase.products.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: isTest, reference: createdPurchase.reference, purchase: { total: purchaseTotal }, checkout_url: "https://gate.chip-in.asia/p/purchase-123/" });
+    return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: isTest, reference: createdPurchase.reference, purchase: { currency: "MYR", total: purchaseTotal }, checkout_url: "https://gate.chip-in.asia/p/purchase-123/" });
   }
-  return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: isTest, reference: createdPurchase.reference, purchase: { total: purchaseTotal }, status: "paid" });
+  return Response.json({ id: "purchase-123", brand_id: "brand-123", is_test: isTest, reference: createdPurchase.reference, purchase: { currency: "MYR", total: lookupTotalOverride ?? purchaseTotal }, status: purchaseStatus });
 };
 try {
   const paidFetch = (path, options) => worker.fetch(new Request(`https://udesign.example${path}`, options), paidEnv, context);
@@ -81,8 +93,37 @@ try {
   assert.equal(start.status, 200);
   const { orderId } = await start.json();
   assert.equal(createdPurchase.purchase.products[0].price, 1600, "Server must use catalog price, not browser price");
+  assert.equal(createdPurchase.success_callback, "https://udesign.example/api/chip/callback/");
+  const livePayload = { event_type: "purchase.paid", status: "paid", id: "purchase-123", reference: orderId, brand_id: "brand-123", is_test: false, purchase: { currency: "MYR", total: purchaseTotal } };
+  const liveOrderKey = `orders/${orderId}`;
+  const liveWritesBeforeCallback = writes.get(liveOrderKey);
+  assert.equal((await paidFetch("/api/chip/callback/", signedCallback(livePayload, testKeys))).status, 403, "A test signature cannot update a live order");
+  assert.equal(writes.get(liveOrderKey), liveWritesBeforeCallback);
+  const signedLive = signedCallback(livePayload, liveKeys);
+  assert.equal((await paidFetch("/api/chip/callback/", { ...signedLive, body: JSON.stringify({ ...livePayload, purchase: { total: 1 } }) })).status, 403, "Tampering with a signed payload must fail");
+  assert.equal((await paidFetch("/api/chip/callback/", signedCallback({ ...livePayload, purchase: { currency: "MYR", total: 1 } }, liveKeys))).status, 400, "A signed amount mismatch must fail");
+  lookupTotalOverride = 1;
+  assert.equal((await paidFetch("/api/chip/callback/", signedLive)).status, 400, "The authoritative CHIP amount must match the stored order");
+  lookupTotalOverride = undefined;
+  purchaseStatus = "pending_execute";
+  assert.equal((await paidFetch("/api/chip/callback/", signedLive)).status, 503, "CHIP should retry while the purchase is still processing");
+  assert.equal(writes.get(liveOrderKey), liveWritesBeforeCallback);
+  purchaseStatus = "paid";
+  assert.equal((await paidFetch("/api/chip/callback/", signedLive)).status, 200, "A signed paid callback records the order");
+  assert.equal((await (await bucket.get(liveOrderKey)).json()).status, "paid");
+  const liveWritesAfterCallback = writes.get(liveOrderKey);
+  assert.equal((await paidFetch("/api/chip/callback/", signedLive)).status, 200, "Duplicate callbacks are accepted");
+  assert.equal(writes.get(liveOrderKey), liveWritesAfterCallback, "Duplicate callbacks must not rewrite the order");
   const status = await paidFetch(`/api/orders/${orderId}/status/`);
   assert.deepEqual(await status.json(), { status: "paid", orderId, test: false });
+  purchaseStatus = "pending_refund";
+  assert.deepEqual(await (await paidFetch(`/api/orders/${orderId}/status/`)).json(), { status: "refunding", orderId, test: false });
+  purchaseStatus = "refunded";
+  assert.deepEqual(await (await paidFetch(`/api/orders/${orderId}/status/`)).json(), { status: "refunded", orderId, test: false });
+  const writesAfterRefund = writes.get(liveOrderKey);
+  assert.equal((await paidFetch("/api/chip/callback/", signedLive)).status, 200, "A delayed paid callback must not reverse a refund");
+  assert.equal(writes.get(liveOrderKey), writesAfterRefund);
+  purchaseStatus = "paid";
   const topper = { brand: "winnie", product: "Custom Cake Topper", quantity: 1, notes: "", topper: { eventSlug: "birthday", lineCount: 1, material: "cardstock", finish: "Glitter Black", sizeCm: 10, wording: ["Happy Birthday Olivia"] } };
   const topperCheckout = (item) => paidFetch("/api/checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify({ ...checkoutBody, items: [item] }) });
   for (const [sizeCm, limit] of [[10, 30], [13, 40], [15, 50], [18, 60], [20, 80]]) {
@@ -105,6 +146,8 @@ try {
   assert.equal(testOrder.test, true);
   assert.equal(createdPurchase.send_receipt, false, "Test purchases must not send payment receipts");
   assert.match(createdPurchase.purchase.notes, /^TEST ONLY — NO REAL ORDER\./);
+  const testPayload = { event_type: "purchase.paid", status: "paid", id: "purchase-123", reference: testOrder.orderId, brand_id: "brand-123", is_test: true, purchase: { currency: "MYR", total: purchaseTotal } };
+  assert.equal((await testFetch("/api/chip/callback/", signedCallback(testPayload, testKeys))).status, 200, "The test callback uses the separate test key");
   assert.deepEqual(await (await testFetch(`/api/orders/${testOrder.orderId}/status/`)).json(), { status: "paid", orderId: testOrder.orderId, test: true });
 } finally { globalThis.fetch = originalFetch; }
 console.log("Worker storefront, image upload and CHIP checkout checks passed.");
