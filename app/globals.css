@@ -25,8 +25,8 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 /* Shared navigation */
 .site-header { position:relative; z-index:30; background:var(--paper); border-bottom:1px solid #dcdcd5; }
 .site-header__inner { min-height:87px; display:flex; align-items:center; justify-content:space-between; gap:30px; }
-.wordmark { display:flex; flex-direction:column; color:var(--ink); line-height:1; flex:none; }
-.wordmark__main { font-size:28px; font-weight:950; letter-spacing:-.085em; }
+.wordmark { display:flex; flex-direction:column; color:#151515; line-height:1; flex:none; }
+.wordmark__main { font-family:var(--font-udesign-serif),Georgia,serif; font-size:30px; font-weight:900; letter-spacing:-.075em; }
 .wordmark__dot,.footer-wordmark span { color:#fa743b; }
 .wordmark__sub { margin-top:5px; font-size:8px; font-weight:800; letter-spacing:.31em; }
 .desktop-nav { display:flex; align-items:center; gap:38px; margin-left:auto; }
@@ -173,7 +173,7 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 /* Winnie world */
 .winnie-page { background:#fff8f5; color:#652640; }
 .winnie-page .site-header { background:#fff8f5; }
-.winnie-page .wordmark { color:#652640; }
+.winnie-page .wordmark { color:#151515; }
 .winnie-hero { background:#ffdbde; overflow:hidden; }
 .winnie-hero__inner { min-height:660px; display:grid; grid-template-columns:1fr 1fr; align-items:center; gap:6%; padding-block:65px; }
 .winnie-hero__copy { position:relative; z-index:2; }
@@ -206,7 +206,7 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 /* Footer */
 .site-footer { background:#1c282d; color:#fff; }
 .site-footer__top { display:flex; justify-content:space-between; gap:60px; padding-block:60px 70px; }
-.footer-wordmark { font-size:42px; font-weight:950; letter-spacing:-.085em; line-height:1; }
+.footer-wordmark { font-family:var(--font-udesign-serif),Georgia,serif; color:#f7e5e7; opacity:.5; font-size:44px; font-weight:900; letter-spacing:-.075em; line-height:1; }
 .site-footer__top p { margin:11px 0; color:#b7c0c2; font-size:14px; }
 .site-footer__links { display:flex; gap:100px; }
 .site-footer__links > div { display:flex; flex-direction:column; gap:13px; }

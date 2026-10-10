@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Bodoni_Moda } from "next/font/google";
 import "./globals.css";
 import "./cart.css";
 import "./catalog.css";
@@ -7,6 +8,13 @@ import "./custom-topper.css";
 import { CartProvider } from "@/components/CartProvider";
 import { AccountProvider } from "@/components/AccountProvider";
 import "./account.css";
+
+const udesignSerif = Bodoni_Moda({
+  subsets: ["latin"],
+  weight: "900",
+  display: "swap",
+  variable: "--font-udesign-serif",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -19,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body><AccountProvider><CartProvider>{children}</CartProvider></AccountProvider></body>
+      <body className={udesignSerif.variable}><AccountProvider><CartProvider>{children}</CartProvider></AccountProvider></body>
     </html>
   );
 }

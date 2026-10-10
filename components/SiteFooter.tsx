@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="shell site-footer__top">
         <div>
-          <Link href="/" className="footer-wordmark">UDESIGN<span>.</span></Link>
+          <Link href="/" className="footer-wordmark">UDesign<span>.</span></Link>
           <p>Designed by you, made to be yours.</p>
         </div>
         <div className="site-footer__links">

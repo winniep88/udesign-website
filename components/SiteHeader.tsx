@@ -24,7 +24,7 @@ export function SiteHeader({ active = "home", light = false, sectionPage = true 
     <header className={`site-header ${light ? "site-header--light" : ""}`}>
       <div className="site-header__inner shell">
         <Link href="/" className="wordmark" aria-label="UDESIGN PROJECTS STUDIO, home">
-          <span className="wordmark__main">UDESIGN<span className="wordmark__dot">.</span></span>
+          <span className="wordmark__main">UDesign<span className="wordmark__dot">.</span></span>
           <span className="wordmark__sub">PROJECTS STUDIO</span>
         </Link>
         <nav className="desktop-nav" aria-label="Main navigation">
