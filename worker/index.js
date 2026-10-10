@@ -51,14 +51,22 @@ function pricedLines(items) {
   });
 }
 
-async function chipRequest(env, path, options = {}) {
-  const response = await fetch(`${CHIP_API}${path}`, { ...options, headers: { authorization: `Bearer ${env.CHIP_SECRET_KEY}`, "content-type": "application/json" } });
+function chipConfig(env, mode) {
+  if (!env.BUCKET || !env.CHIP_BRAND_ID) return null;
+  if (mode === "live" && env.CHIP_LIVE_ENABLED === "true" && env.CHIP_SECRET_KEY) return { mode, secretKey: env.CHIP_SECRET_KEY, isTest: false };
+  if (mode === "test" && env.CHIP_TEST_ENABLED === "true" && env.CHIP_TEST_SECRET_KEY && typeof env.CHIP_TEST_ACCESS_TOKEN === "string" && env.CHIP_TEST_ACCESS_TOKEN.length >= 32) return { mode, secretKey: env.CHIP_TEST_SECRET_KEY, isTest: true };
+  return null;
+}
+
+async function chipRequest(secretKey, path, options = {}) {
+  const response = await fetch(`${CHIP_API}${path}`, { ...options, headers: { authorization: `Bearer ${secretKey}`, "content-type": "application/json" } });
   if (!response.ok) throw new Error(`CHIP API ${response.status}`);
   return response.json();
 }
 
-async function createCheckout(request, env) {
-  if (!env.CHIP_SECRET_KEY || !env.CHIP_BRAND_ID || !env.BUCKET) return errorJson("Online payment is awaiting CHIP approval. Please continue on WhatsApp for now.", 503);
+async function createCheckout(request, env, mode) {
+  const config = chipConfig(env, mode);
+  if (!config) return errorJson(mode === "test" ? "Test checkout is unavailable." : "Online payment is awaiting CHIP approval. Please continue on WhatsApp for now.", 503);
   if (request.headers.get("origin") !== new URL(request.url).origin || !request.headers.get("content-type")?.startsWith("application/json")) return errorJson("Please check out from the UDESIGN website.", 403);
   const length = Number(request.headers.get("content-length"));
   if (Number.isFinite(length) && length > 40_000) return errorJson("The cart is too large.", 413);
@@ -88,30 +96,32 @@ async function createCheckout(request, env) {
   const origin = new URL(request.url).origin;
   const products = lines.map((line) => ({ name: line.name, price: line.price, quantity: line.quantity }));
   if (shipping) products.push({ name: `Delivery · ${input.region}`, price: shipping, quantity: 1 });
-  const order = { id: orderId, createdAt: Date.now(), customer: { name, email, phone }, fulfilment, region: input.region ?? null, address, notes, lines, shipping, total, status: "creating" };
+  const order = { id: orderId, createdAt: Date.now(), chipMode: mode, customer: { name, email, phone }, fulfilment, region: input.region ?? null, address, notes, lines, shipping, total, status: "creating" };
   await env.BUCKET.put(`orders/${orderId}`, JSON.stringify(order));
   let purchase;
   try {
-    purchase = await chipRequest(env, "", { method: "POST", body: JSON.stringify({ brand_id: env.CHIP_BRAND_ID, client: { email, full_name: name, phone }, purchase: { currency: "MYR", products, notes: `UDESIGN order ${orderId}. ${fulfilment === "pickup" ? "Pickup Kuchai Lama, KL" : `Delivery ${input.region}: ${address}`}. ${lines.map((line) => `${line.quantity} x ${line.name}; ${line.notes}${line.reference ? `; reference ${origin}${line.reference}` : ""}`).join(" | ")}. ${notes}`.slice(0, 4000) }, reference: orderId, success_redirect: `${origin}/payment/return/?order=${orderId}`, failure_redirect: `${origin}/payment/return/?order=${orderId}`, cancel_redirect: `${origin}/cart/`, send_receipt: true }) });
+    purchase = await chipRequest(config.secretKey, "", { method: "POST", body: JSON.stringify({ brand_id: env.CHIP_BRAND_ID, client: { email, full_name: name, phone }, purchase: { currency: "MYR", products, notes: `${config.isTest ? "TEST ONLY — NO REAL ORDER. " : ""}UDESIGN order ${orderId}. ${fulfilment === "pickup" ? "Pickup Kuchai Lama, KL" : `Delivery ${input.region}: ${address}`}. ${lines.map((line) => `${line.quantity} x ${line.name}; ${line.notes}${line.reference ? `; reference ${origin}${line.reference}` : ""}`).join(" | ")}. ${notes}`.slice(0, 4000) }, reference: orderId, success_redirect: `${origin}/payment/return/?order=${orderId}`, failure_redirect: `${origin}/payment/return/?order=${orderId}`, cancel_redirect: `${origin}/cart/`, send_receipt: !config.isTest }) });
   } catch { return errorJson("CHIP checkout is temporarily unavailable. Please try again or contact us on WhatsApp.", 502); }
   let checkoutUrl;
   try { checkoutUrl = new URL(purchase.checkout_url); } catch { return errorJson("CHIP did not return a checkout page.", 502); }
-  if (checkoutUrl.protocol !== "https:" || checkoutUrl.hostname !== "gate.chip-in.asia" || !purchase.id || purchase.purchase?.total !== total || purchase.brand_id !== env.CHIP_BRAND_ID || purchase.is_test !== false) return errorJson("CHIP checkout could not be verified. Please contact us.", 502);
+  if (checkoutUrl.protocol !== "https:" || checkoutUrl.hostname !== "gate.chip-in.asia" || !purchase.id || purchase.purchase?.total !== total || purchase.brand_id !== env.CHIP_BRAND_ID || purchase.is_test !== config.isTest) return errorJson("CHIP checkout could not be verified. Please contact us.", 502);
   await env.BUCKET.put(`orders/${orderId}`, JSON.stringify({ ...order, purchaseId: purchase.id, status: "pending" }));
-  return Response.json({ checkoutUrl: checkoutUrl.href, orderId }, { headers: { "cache-control": "no-store" } });
+  return Response.json({ checkoutUrl: checkoutUrl.href, orderId, test: config.isTest }, { headers: { "cache-control": "no-store" } });
 }
 
 async function orderStatus(id, env) {
-  if (!ORDER_ID_PATTERN.test(id) || !env.BUCKET || !env.CHIP_SECRET_KEY) return errorJson("Order not found.", 404);
+  if (!ORDER_ID_PATTERN.test(id) || !env.BUCKET) return errorJson("Order not found.", 404);
   const stored = await env.BUCKET.get(`orders/${id}`);
   if (!stored) return errorJson("Order not found.", 404);
   const order = await stored.json();
-  if (!order.purchaseId) return Response.json({ status: "pending" }, { headers: { "cache-control": "no-store" } });
-  const purchase = await chipRequest(env, `${order.purchaseId}/`);
-  if (purchase.id !== order.purchaseId || purchase.reference !== id || purchase.brand_id !== env.CHIP_BRAND_ID || purchase.purchase?.total !== order.total || purchase.is_test !== false) return errorJson("Payment could not be verified. Please contact us.", 502);
+  const config = chipConfig(env, order.chipMode === "test" ? "test" : "live");
+  if (!config) return errorJson("Order status is unavailable.", 503);
+  if (!order.purchaseId) return Response.json({ status: "pending", test: config.isTest }, { headers: { "cache-control": "no-store" } });
+  const purchase = await chipRequest(config.secretKey, `${order.purchaseId}/`);
+  if (purchase.id !== order.purchaseId || purchase.reference !== id || purchase.brand_id !== env.CHIP_BRAND_ID || purchase.purchase?.total !== order.total || purchase.is_test !== config.isTest) return errorJson("Payment could not be verified. Please contact us.", 502);
   const status = ["paid", "cleared", "settled"].includes(purchase.status) ? "paid" : ["error", "cancelled", "expired", "blocked"].includes(purchase.status) ? "failed" : "pending";
   if (status !== order.status) await env.BUCKET.put(`orders/${id}`, JSON.stringify({ ...order, status, checkedAt: Date.now() }));
-  return Response.json({ status, orderId: id }, { headers: { "cache-control": "no-store" } });
+  return Response.json({ status, orderId: id, test: config.isTest }, { headers: { "cache-control": "no-store" } });
 }
 
 function imageType(bytes) {
@@ -252,11 +262,16 @@ export default {
     try {
       if (url.pathname === "/api/checkout/status/") {
         if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });
-        return Response.json({ available: Boolean(env.CHIP_SECRET_KEY && env.CHIP_BRAND_ID && env.BUCKET) }, { headers: { "cache-control": "no-store" } });
+        return Response.json({ available: Boolean(chipConfig(env, "live")) }, { headers: { "cache-control": "no-store" } });
       }
       if (url.pathname === "/api/checkout/") {
         if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
-        return await createCheckout(request, env);
+        return await createCheckout(request, env, "live");
+      }
+      if (url.pathname === "/api/test-checkout/") {
+        if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
+        if (!chipConfig(env, "test") || request.headers.get("x-udesign-test-token") !== env.CHIP_TEST_ACCESS_TOKEN) return errorJson("Not found.", 404);
+        return await createCheckout(request, env, "test");
       }
       const orderMatch = /^\/api\/orders\/([^/]+)\/status\/?$/.exec(url.pathname);
       if (orderMatch) {
