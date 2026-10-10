@@ -1,15 +1,25 @@
 // Operator-only test. Supply the private access token on stdin; never pass it on the command line.
 const site = process.env.UDESIGN_TEST_SITE_URL ?? "https://udesign-three-worlds.winniep88.chatgpt.site";
 const origin = new URL(site).origin;
-const token = (await new Promise((resolve) => {
+const token = await new Promise((resolve) => {
   let input = "";
-  process.stdin.setEncoding("utf8");
-  process.stdin.on("data", (chunk) => {
+  const finish = () => {
+    process.stdin.removeListener("data", onData);
+    process.stdin.removeListener("end", finish);
+    if (process.stdin.isTTY) process.stdin.setRawMode(false);
+    process.stdin.pause();
+    resolve(input.split(/[\r\n]/, 1)[0].trim());
+  };
+  const onData = (chunk) => {
     input += chunk;
-    if (input.includes("\n")) resolve(input.split("\n", 1)[0]);
-  });
-  process.stdin.on("end", () => resolve(input));
-})).trim();
+    if (/[\r\n]/.test(input)) finish();
+  };
+  process.stdin.setEncoding("utf8");
+  if (process.stdin.isTTY) process.stdin.setRawMode(true);
+  process.stdin.on("data", onData);
+  process.stdin.once("end", finish);
+  process.stdin.resume();
+});
 if (token.length < 32) throw new Error("A private test access token is required on stdin.");
 
 const response = await fetch(new URL("/api/test-checkout/", origin), {
