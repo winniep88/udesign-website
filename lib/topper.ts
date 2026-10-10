@@ -13,10 +13,10 @@ export const topperEvents = [
 
 export type TopperEvent = (typeof topperEvents)[number];
 export type TopperEventSlug = TopperEvent["slug"];
-export type TopperLineCount = 1 | 2 | 3;
+export type TopperLineCount = 1 | 2 | 3 | 4 | 5;
 export type TopperMaterial = "cardstock" | "acrylic" | "wood";
 
-export const topperLineCounts: TopperLineCount[] = [1, 2, 3];
+export const topperLineCounts: TopperLineCount[] = [1, 2, 3, 4, 5];
 
 export const topperSizes = [
   { cm: 10, inch: 4 },
@@ -128,7 +128,7 @@ export function topperWordCount(wording: readonly string[]): number {
 }
 
 export function topperChoicePriceSen(lineCount: TopperLineCount, material: TopperMaterial, finish: string, sizeCm: number): number | undefined {
-  if (!topperLineCounts.includes(lineCount) || !topperSizes.some((size) => size.cm === sizeCm) || (lineCount === 3 && sizeCm < 13)) return undefined;
+  if (!topperLineCounts.includes(lineCount) || !topperSizes.some((size) => size.cm === sizeCm)) return undefined;
   const baseRm = topperBasePricesRm[material]?.[sizeCm];
   const extraRm = topperFinishes[material]?.find((choice) => choice.name === finish)?.extraRm;
   if (baseRm === undefined || extraRm === undefined) return undefined;
@@ -139,7 +139,7 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
   if (!value || typeof value !== "object") return undefined;
   const item = value as Partial<TopperCartSelection>;
   if (typeof item.eventSlug !== "string" || !topperEvent(item.eventSlug)) return undefined;
-  if (item.lineCount !== 1 && item.lineCount !== 2 && item.lineCount !== 3) return undefined;
+  if (item.lineCount === undefined || !topperLineCounts.includes(item.lineCount)) return undefined;
   if (item.material !== "cardstock" && item.material !== "acrylic" && item.material !== "wood") return undefined;
   if (typeof item.finish !== "string" || typeof item.sizeCm !== "number" || topperChoicePriceSen(item.lineCount, item.material, item.finish, item.sizeCm) === undefined) return undefined;
   if (!Array.isArray(item.wording) || item.wording.length !== item.lineCount) return undefined;

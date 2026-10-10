@@ -193,6 +193,9 @@ try {
   const validTopper = await topperCheckout({ ...topper, topper: { ...topper.topper, sizeCm: 20, wording: ["a".repeat(80)] } });
   assert.equal(validTopper.status, 200, "20 cm accepts 80 characters");
   assert.equal(createdPurchase.purchase.products[0].price, 2000);
+  const fiveLineTopper = await topperCheckout({ ...topper, topper: { ...topper.topper, lineCount: 5, sizeCm: 13, wording: ["Happy", "Birthday", "To", "You", "Mia"] } });
+  assert.equal(fiveLineTopper.status, 200, "13 cm accepts five lines within its word limit");
+  assert.equal((await topperCheckout({ ...topper, topper: { ...topper.topper, lineCount: 6, sizeCm: 20, wording: ["A", "B", "C", "D", "E", "F"] } })).status, 400, "Six lines are rejected");
   assert.deepEqual(await (await testFetch("/api/checkout/status/")).json(), { available: false }, "Test credentials must not enable the public payment button");
   assert.equal((await testFetch("/api/checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify(checkoutBody) })).status, 503, "Public checkout must stay disabled in test mode");
   assert.equal((await testFetch("/api/test-checkout/", { method: "POST", headers: { origin: "https://udesign.example", "content-type": "application/json" }, body: JSON.stringify(checkoutBody) })).status, 404, "Test checkout requires private access");

@@ -64,7 +64,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
 
   function changeWording(value: string) {
     const next = value.replace(/\r\n?/g, "\n");
-    if (next.replace(/\n/g, "").length > (characterLimit ?? 0) || next.split("\n").length > 3) return;
+    if (next.replace(/\n/g, "").length > (characterLimit ?? 0) || next.split("\n").length > 5) return;
     setWording(next);
     setWordingError("");
     setAdded(false);
@@ -86,16 +86,12 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting || !ready || !sizeCm || !material || !finish) return;
-    if (!characterLimit || wordingCharacters > characterLimit || wordingLines.some((line) => !line.trim())) {
-      setWordingError(`Please enter wording on every line, within ${characterLimit ?? 0} characters. Use up to 3 lines.`);
+    if (!characterLimit || wordingCharacters > characterLimit || lineCount > 5 || wordingLines.some((line) => !line.trim())) {
+      setWordingError(`Please enter wording on every line, within ${characterLimit ?? 0} characters. Use up to 5 lines.`);
       return;
     }
     if (wordLimit && wordCount > wordLimit) {
       setWordingError(`${sizeCm} cm allows up to ${wordLimit} words. Shorten your wording or choose a larger size.`);
-      return;
-    }
-    if (sizeCm === 10 && lineCount > 2) {
-      setWordingError("Three lines need a 13 cm or larger topper.");
       return;
     }
     if (unitPriceSen === undefined) return;
@@ -156,14 +152,13 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
 
       <fieldset className="custom-topper-form__wording">
         <legend>2. Name / Phrase</legend>
-        <p className="custom-topper-form__intro" id="topper-wording-help">{sizeCm ? `Type the words exactly as you want them to appear. Press Enter for another line, up to ${sizeCm === 10 ? 2 : 3} lines.` : "Choose a topper size above, then enter your wording."}</p>
+        <p className="custom-topper-form__intro" id="topper-wording-help">{sizeCm ? "Type the words exactly as you want them to appear. Press Enter for another line, up to 5 lines." : "Choose a topper size above, then enter your wording."}</p>
         <label className="custom-topper-form__field">Your wording
-          <textarea rows={4} required disabled={!sizeCm} value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
+          <textarea rows={5} required disabled={!sizeCm} value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
         </label>
         {characterLimit && wordLimit && <p className="custom-topper-form__remaining" aria-live="polite">{sizeCm} cm: maximum {characterLimit} characters and {wordLimit} words · {characterLimit - wordingCharacters} characters and {wordLimit - wordCount} words remaining</p>}
         {characterLimit && wordingCharacters > characterLimit && <p className="custom-topper-form__error" role="alert">Your wording is too long for {sizeCm} cm. Choose a larger size or shorten it.</p>}
         {wordLimit && wordCount > wordLimit && <p className="custom-topper-form__error" role="alert">Your wording has too many words for {sizeCm} cm. Choose a larger size or shorten it.</p>}
-        {sizeCm === 10 && lineCount > 2 && <p className="custom-topper-form__error" role="alert">Three lines need a 13 cm or larger topper.</p>}
         {wordingError && <p className="custom-topper-form__error" role="alert">{wordingError}</p>}
       </fieldset>
 
@@ -219,7 +214,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
       {referenceFile && <button className="custom-topper-form__remove-image" type="button" onClick={() => { setReferenceFile(null); setUploadError(""); setAdded(false); if (referenceInput.current) referenceInput.current.value = ""; }}>Remove selected image</button>}
       <p className="custom-topper-form__hint">Upload a design you like and we can make something similar. The image link is included with your WhatsApp request and remains available for 30 days. Anyone with the link can view it.</p>
       {uploadError && <p className="custom-topper-form__error" role="alert">{uploadError} You can remove the image and send it to us in WhatsApp instead.</p>}
-      <div className="custom-topper-form__total"><span>{sizeCm ? `${sizeCm} cm` : "Choose a size"} · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? lineCount === 3 && sizeCm === 10 ? "Choose 13 cm or larger" : "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
+      <div className="custom-topper-form__total"><span>{sizeCm ? `${sizeCm} cm` : "Choose a size"} · {quantity} {quantity === 1 ? "piece" : "pieces"}</span><strong>{unitPriceSen === undefined ? "Choose your options" : formatRinggit(unitPriceSen * Math.max(1, quantity || 1))}</strong></div>
       <p className="custom-topper-form__hint">This is the item price. Delivery, if selected, is added in your cart. We&apos;ll confirm the design and ready date before payment.</p>
       <p className="custom-topper-form__hint">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I need an urgent cake topper and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp</a> first. Pickup in Kuchai Lama, KL is available once we confirm your order.</p>
       <button className="custom-topper-form__submit" type="submit" disabled={!ready || submitting}>{submitting ? referenceFile ? "Uploading image…" : "Adding to cart…" : "Add to cart"} <span aria-hidden="true">＋</span></button>

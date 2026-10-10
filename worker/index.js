@@ -300,8 +300,8 @@ function pricedLines(items) {
     if (item.topper && !item.productId && !item.variantId) {
       const t = item.topper;
       const validEvent = ["birthday", "wedding", "baby-shower", "bridal-shower", "anniversary", "celebration"].includes(t.eventSlug);
-      const validLines = [1, 2, 3].includes(t.lineCount) && Array.isArray(t.wording) && t.wording.length === t.lineCount && t.wording.every((s) => cleanString(s, 80));
-      const validSize = [10, 13, 15, 18, 20].includes(t.sizeCm) && (t.lineCount !== 3 || t.sizeCm >= 13);
+      const validLines = [1, 2, 3, 4, 5].includes(t.lineCount) && Array.isArray(t.wording) && t.wording.length === t.lineCount && t.wording.every((s) => cleanString(s, 80));
+      const validSize = [10, 13, 15, 18, 20].includes(t.sizeCm);
       const characterLimits = { 10: 30, 13: 40, 15: 50, 18: 60, 20: 80 };
       const wordLimits = { 10: 2, 13: 5, 15: 8, 18: 10, 20: 14 };
       const wordCount = validLines ? t.wording.join(" ").trim().split(/\s+/u).filter(Boolean).length : 0;
