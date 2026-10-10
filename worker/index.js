@@ -7,6 +7,8 @@ const ID_PATTERN = /^\d{4}-\d{2}-\d{2}-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 const ORDER_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f-]{27,28}$/;
 const SHIPPING = { west: 800, east: 1500, singapore: 2000 };
 const CHIP_API = "https://gate.chip-in.asia/api/v1/purchases/";
+const CHIP_PUBLIC_KEY_API = "https://gate.chip-in.asia/api/v1/public_key/";
+const MAX_CALLBACK_BYTES = 256 * 1024;
 
 function errorJson(message, status) {
   return Response.json({ error: message }, { status, headers: { "cache-control": "no-store" } });
@@ -64,6 +66,70 @@ async function chipRequest(secretKey, path, options = {}) {
   return response.json();
 }
 
+async function chipPublicKey(secretKey) {
+  const response = await fetch(CHIP_PUBLIC_KEY_API, { headers: { authorization: `Bearer ${secretKey}` } });
+  if (!response.ok) throw new Error(`CHIP public key ${response.status}`);
+  const pem = await response.text();
+  const match = /^-----BEGIN PUBLIC KEY-----\s+([A-Za-z0-9+/=\s]+)\s+-----END PUBLIC KEY-----\s*$/.exec(pem);
+  if (!match) throw new Error("Invalid CHIP public key");
+  const binary = atob(match[1].replace(/\s/g, ""));
+  const der = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return crypto.subtle.importKey("spki", der, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+}
+
+async function readCallbackBody(request) {
+  const reader = request.body?.getReader();
+  if (!reader) return null;
+  const chunks = [];
+  let length = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    length += value.byteLength;
+    if (length > MAX_CALLBACK_BYTES) { await reader.cancel(); return null; }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { body.set(chunk, offset); offset += chunk.byteLength; }
+  return body;
+}
+
+async function chipSuccessCallback(request, env) {
+  if (!env.BUCKET) return new Response("Unavailable", { status: 503 });
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_CALLBACK_BYTES) return new Response("Too large", { status: 413 });
+  const signatureHeader = request.headers.get("x-signature");
+  if (!signatureHeader || !/^[A-Za-z0-9+/]+={0,2}$/.test(signatureHeader)) return new Response("Invalid signature", { status: 403 });
+  const body = await readCallbackBody(request);
+  if (!body?.length) return new Response("Invalid payload", { status: 400 });
+  let payload;
+  try { payload = JSON.parse(new TextDecoder().decode(body)); } catch { return new Response("Invalid payload", { status: 400 }); }
+  const id = payload?.reference;
+  if (typeof id !== "string" || !ORDER_ID_PATTERN.test(id)) return new Response("Unknown order", { status: 404 });
+  const stored = await env.BUCKET.get(`orders/${id}`);
+  if (!stored) return new Response("Unknown order", { status: 404 });
+  const order = await stored.json();
+  if (order.chipMode !== "test" && order.chipMode !== "live") return new Response("Unknown order", { status: 404 });
+  const config = chipConfig(env, order.chipMode);
+  if (!config || !order.purchaseId) return new Response("Unavailable", { status: 503 });
+  let verified;
+  try {
+    const key = await chipPublicKey(config.secretKey);
+    const binary = atob(signatureHeader);
+    const signature = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    verified = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, signature, body);
+  } catch { return new Response("Unavailable", { status: 503 }); }
+  if (!verified) return new Response("Invalid signature", { status: 403 });
+  if (payload.event_type !== "purchase.paid" || payload.status !== "paid" || payload.id !== order.purchaseId || payload.brand_id !== env.CHIP_BRAND_ID || payload.is_test !== config.isTest || payload.purchase?.currency !== "MYR" || payload.purchase?.total !== order.total) return new Response("Invalid purchase", { status: 400 });
+  const purchase = await chipRequest(config.secretKey, `${order.purchaseId}/`);
+  if (purchase.id !== order.purchaseId || purchase.reference !== id || purchase.brand_id !== env.CHIP_BRAND_ID || purchase.is_test !== config.isTest || purchase.purchase?.currency !== "MYR" || purchase.purchase?.total !== order.total) return new Response("Invalid purchase", { status: 400 });
+  const status = ["paid", "cleared", "settled"].includes(purchase.status) ? "paid" : purchase.status === "pending_refund" ? "refunding" : purchase.status === "refunded" ? "refunded" : null;
+  if (!status) return new Response("Still processing", { status: 503 });
+  if (order.status !== status) await env.BUCKET.put(`orders/${id}`, JSON.stringify({ ...order, status, checkedAt: Date.now() }));
+  return new Response("OK");
+}
+
 async function createCheckout(request, env, mode) {
   const config = chipConfig(env, mode);
   if (!config) return errorJson(mode === "test" ? "Test checkout is unavailable." : "Online payment is awaiting CHIP approval. Please continue on WhatsApp for now.", 503);
@@ -100,7 +166,7 @@ async function createCheckout(request, env, mode) {
   await env.BUCKET.put(`orders/${orderId}`, JSON.stringify(order));
   let purchase;
   try {
-    purchase = await chipRequest(config.secretKey, "", { method: "POST", body: JSON.stringify({ brand_id: env.CHIP_BRAND_ID, client: { email, full_name: name, phone }, purchase: { currency: "MYR", products, notes: `${config.isTest ? "TEST ONLY — NO REAL ORDER. " : ""}UDESIGN order ${orderId}. ${fulfilment === "pickup" ? "Pickup Kuchai Lama, KL" : `Delivery ${input.region}: ${address}`}. ${lines.map((line) => `${line.quantity} x ${line.name}; ${line.notes}${line.reference ? `; reference ${origin}${line.reference}` : ""}`).join(" | ")}. ${notes}`.slice(0, 4000) }, reference: orderId, success_redirect: `${origin}/payment/return/?order=${orderId}`, failure_redirect: `${origin}/payment/return/?order=${orderId}`, cancel_redirect: `${origin}/cart/`, send_receipt: !config.isTest }) });
+    purchase = await chipRequest(config.secretKey, "", { method: "POST", body: JSON.stringify({ brand_id: env.CHIP_BRAND_ID, client: { email, full_name: name, phone }, purchase: { currency: "MYR", products, notes: `${config.isTest ? "TEST ONLY — NO REAL ORDER. " : ""}UDESIGN order ${orderId}. ${fulfilment === "pickup" ? "Pickup Kuchai Lama, KL" : `Delivery ${input.region}: ${address}`}. ${lines.map((line) => `${line.quantity} x ${line.name}; ${line.notes}${line.reference ? `; reference ${origin}${line.reference}` : ""}`).join(" | ")}. ${notes}`.slice(0, 4000) }, reference: orderId, success_redirect: `${origin}/payment/return/?order=${orderId}`, failure_redirect: `${origin}/payment/return/?order=${orderId}`, cancel_redirect: `${origin}/cart/`, success_callback: `${origin}/api/chip/callback/`, send_receipt: !config.isTest }) });
   } catch { return errorJson("CHIP checkout is temporarily unavailable. Please try again or contact us on WhatsApp.", 502); }
   let checkoutUrl;
   try { checkoutUrl = new URL(purchase.checkout_url); } catch { return errorJson("CHIP did not return a checkout page.", 502); }
@@ -119,7 +185,7 @@ async function orderStatus(id, env) {
   if (!order.purchaseId) return Response.json({ status: "pending", test: config.isTest }, { headers: { "cache-control": "no-store" } });
   const purchase = await chipRequest(config.secretKey, `${order.purchaseId}/`);
   if (purchase.id !== order.purchaseId || purchase.reference !== id || purchase.brand_id !== env.CHIP_BRAND_ID || purchase.purchase?.total !== order.total || purchase.is_test !== config.isTest) return errorJson("Payment could not be verified. Please contact us.", 502);
-  const status = ["paid", "cleared", "settled"].includes(purchase.status) ? "paid" : ["error", "cancelled", "expired", "blocked"].includes(purchase.status) ? "failed" : "pending";
+  const status = ["paid", "cleared", "settled"].includes(purchase.status) ? "paid" : purchase.status === "refunded" ? "refunded" : purchase.status === "pending_refund" ? "refunding" : ["error", "cancelled", "expired", "blocked"].includes(purchase.status) ? "failed" : "pending";
   if (status !== order.status) await env.BUCKET.put(`orders/${id}`, JSON.stringify({ ...order, status, checkedAt: Date.now() }));
   return Response.json({ status, orderId: id, test: config.isTest }, { headers: { "cache-control": "no-store" } });
 }
@@ -272,6 +338,10 @@ export default {
         if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
         if (!chipConfig(env, "test") || request.headers.get("x-udesign-test-token") !== env.CHIP_TEST_ACCESS_TOKEN) return errorJson("Not found.", 404);
         return await createCheckout(request, env, "test");
+      }
+      if (url.pathname === "/api/chip/callback/") {
+        if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
+        return await chipSuccessCallback(request, env);
       }
       const orderMatch = /^\/api\/orders\/([^/]+)\/status\/?$/.exec(url.pathname);
       if (orderMatch) {
