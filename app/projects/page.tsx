@@ -23,7 +23,7 @@ const categories = [
 export default function ProjectsPage() {
   return (
     <div className="projects-page">
-      <SiteHeader active="projects" light />
+      <SiteHeader active="projects" />
       <main>
         <section className="projects-hero">
           <div className="shell projects-hero__grid">
