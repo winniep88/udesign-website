@@ -6,10 +6,10 @@ import { SiteFooter } from "@/components/SiteFooter";
 const brands = [
   {
     number: "01",
-    eyebrow: "For spaces & statements",
+    eyebrow: "Business logos & signs",
     name: "UDESIGN PROJECTS",
-    text: "Logos and signs with presence. From polished acrylic to the warmth of wood, make your idea impossible to miss.",
-    categories: "LOGO · ACRYLIC · WOOD · PVC",
+    text: "Custom logos and signs for your business or space, made in acrylic, wood or PVC.",
+    categories: "LOGO SIGNS · ACRYLIC SIGNS · WOOD SIGNS · PVC SIGNS",
     href: "/projects/",
     image: "/images/projects.webp",
     imageAlt: "Concept image of layered acrylic and wood signage",
@@ -17,10 +17,10 @@ const brands = [
   },
   {
     number: "02",
-    eyebrow: "For people & occasions",
+    eyebrow: "Gifts & event décor",
     name: "UDESIGN MOMENTS",
-    text: "The little details people remember. Personal pieces for a wedding, a new arrival, a heartfelt gift or your whole team.",
-    categories: "WEDDING · GIFTS · CORPORATE · BABY & KIDS",
+    text: "Personalised decorations and keepsakes for weddings, celebrations, gifting and little ones.",
+    categories: "WEDDING DÉCOR · GIFTS · CORPORATE GIFTS · BABY KEEPSAKES",
     href: "/moments/",
     image: "/images/moments.webp",
     imageAlt: "Concept image of an elegant acrylic wedding sign",
@@ -28,10 +28,10 @@ const brands = [
   },
   {
     number: "03",
-    eyebrow: "For the best days",
+    eyebrow: "Custom cake toppers",
     name: "WINNIE CAKE TOPPER",
-    text: "A little bit of magic for the big moment. Cake toppers and celebration pieces made to match your story.",
-    categories: "CAKE TOPPERS · CELEBRATION PIECES",
+    text: "Personalised cake toppers for birthdays, weddings and every reason to celebrate. Find us at @winniecaketopper.",
+    categories: "BIRTHDAY · WEDDING · BABY SHOWER · CELEBRATIONS",
     href: "/winnie-cake-topper/",
     image: "/images/winnie.webp",
     imageAlt: "Concept image of a colourful acrylic cake decoration",
@@ -48,22 +48,22 @@ export default function Home() {
           <div className="home-hero__copy">
             <p className="eyebrow">CUSTOM MADE IN MALAYSIA <span className="eyebrow-line" /></p>
             <h1 id="home-title">Designed by you,<br /><em>made to be yours.</em></h1>
-            <p className="home-hero__lead">One creative studio. Three different worlds. Discover custom pieces for your space, your people and your celebrations.</p>
+            <p className="home-hero__lead">Need a business sign, a personal gift or a cake topper? Find what you&apos;re looking for across our three collections.</p>
             <Link className="button button--dark" href="#our-worlds">Find your world <span aria-hidden="true">↘</span></Link>
             <div className="home-hero__index" aria-hidden="true"><span>01 / 03</span><span>YOUR IDEA STARTS HERE</span></div>
           </div>
           <div className="home-hero__visual" aria-label="Preview of UDESIGN's three brand worlds">
             <Link href="/projects/" className="hero-tile hero-tile--projects">
               <Image src="/images/projects.webp" alt="Concept image of a custom acrylic and wood sign" fill sizes="(max-width: 750px) 55vw, 35vw" priority />
-              <span>PROJECTS</span>
+              <span>PROJECTS <small>Logos &amp; signs</small></span>
             </Link>
             <Link href="/moments/" className="hero-tile hero-tile--moments">
               <Image src="/images/moments.webp" alt="Concept image of a wedding sign" fill sizes="(max-width: 750px) 40vw, 23vw" priority />
-              <span>MOMENTS</span>
+              <span>MOMENTS <small>Gifts &amp; event décor</small></span>
             </Link>
             <Link href="/winnie-cake-topper/" className="hero-tile hero-tile--winnie">
               <Image src="/images/winnie.webp" alt="Concept image of a cake decoration" fill sizes="(max-width: 750px) 40vw, 23vw" priority />
-              <span>WINNIE</span>
+              <span>WINNIE <small>Cake toppers</small></span>
             </Link>
             <span className="visual-sticker">ONE STUDIO<br />MANY POSSIBILITIES</span>
           </div>
@@ -73,8 +73,8 @@ export default function Home() {
 
         <section className="worlds-section" id="our-worlds" aria-labelledby="worlds-title">
           <div className="shell section-intro">
-            <div><p className="eyebrow">EXPLORE UDESIGN</p><h2 id="worlds-title">Where will your idea take you?</h2></div>
-            <p>Choose the space that feels like what you&apos;re making. Every piece begins with your idea.</p>
+            <div><p className="eyebrow">EXPLORE UDESIGN</p><h2 id="worlds-title">What are you looking for?</h2></div>
+            <p>Choose a collection by the item you need. Each has its own style, with one UDESIGN checkout.</p>
           </div>
           <div className="shell world-list">
             {brands.map((brand) => (
