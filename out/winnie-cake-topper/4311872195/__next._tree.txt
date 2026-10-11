@@ -1,3 +1,0 @@
-:HL["/_next/static/chunks/1rwc8jd7t1-3r.css","style"]
-:HL["/_next/static/media/9f59b797495706a5-s.p.2x9u-47xavznm.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"winnie-cake-topper","param":null,"prefetchHints":4192,"slots":{"children":{"name":"id","param":{"type":"d","key":"4311872195","siblings":["custom-topper","event","topper"]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"OD3iZMSU0YoMkjNvT0qHf"}
