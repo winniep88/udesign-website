@@ -44,7 +44,7 @@ export function SiteHeader({ active = "home", light = false, sectionPage = true 
           Cart <span className="header-cart__count">{count}</span>
         </Link>
         <a className="header-contact" href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">
-          Let&apos;s talk <span aria-hidden="true">↗</span>
+          Let&apos;s talk
         </a>
         <details className="mobile-menu">
           <summary aria-label="Open menu"><span></span><span></span></summary>
@@ -53,7 +53,7 @@ export function SiteHeader({ active = "home", light = false, sectionPage = true 
             {links.map((link) => <Link key={link.key} href={link.href}>{link.label}</Link>)}
             {enabled && <Link href="/account/">{user ? "My account" : "Sign in"}</Link>}
             <Link href="/cart/">Cart ({count})</Link>
-            <a href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">Contact on WhatsApp ↗</a>
+            <a href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
           </nav>
         </details>
       </div>

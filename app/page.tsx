@@ -10,6 +10,7 @@ const brands = [
     name: "UDESIGN PROJECTS",
     text: "Custom logos and signs for your business or space, made in acrylic, wood or PVC.",
     categories: "LOGO SIGNS · ACRYLIC SIGNS · WOOD SIGNS · PVC SIGNS",
+    cta: "UDesign Projects — Explore Our Projects",
     href: "/projects/",
     image: "/images/projects.webp",
     imageAlt: "Concept image of layered acrylic and wood signage",
@@ -21,6 +22,7 @@ const brands = [
     name: "UDESIGN MOMENTS",
     text: "Personalised decorations and keepsakes for weddings, celebrations, gifting and little ones.",
     categories: "WEDDING DÉCOR · GIFTS · CORPORATE GIFTS · BABY KEEPSAKES",
+    cta: "UDesign Moments — Discover Our Creations",
     href: "/moments/",
     image: "/images/moments.webp",
     imageAlt: "Concept image of an elegant acrylic wedding sign",
@@ -32,6 +34,7 @@ const brands = [
     name: "WINNIE CAKE TOPPER",
     text: "Personalised cake toppers for birthdays, weddings and every reason to celebrate. Find us at @winniecaketopper.",
     categories: "BIRTHDAY · WEDDING · BABY SHOWER · CELEBRATIONS",
+    cta: "Winnie Cake Topper — Find Your Perfect Topper",
     href: "/winnie-cake-topper/",
     image: "/images/winnie.webp",
     imageAlt: "Concept image of a colourful acrylic cake decoration",
@@ -49,7 +52,7 @@ export default function Home() {
             <p className="eyebrow">CUSTOM MADE IN MALAYSIA <span className="eyebrow-line" /></p>
             <h1 id="home-title">Designed by you,<br /><em>made to be yours.</em></h1>
             <p className="home-hero__lead">Need a business sign, a personal gift or a cake topper? Find what you&apos;re looking for across our three collections.</p>
-            <Link className="button button--dark" href="#our-worlds">Find your world <span aria-hidden="true">↘</span></Link>
+            <Link className="button button--dark" href="#our-worlds">Explore Our Creations</Link>
             <div className="home-hero__index" aria-hidden="true"><span>01 / 03</span><span>YOUR IDEA STARTS HERE</span></div>
           </div>
           <div className="home-hero__visual" aria-label="Preview of UDESIGN's three brand worlds">
@@ -84,7 +87,7 @@ export default function Home() {
                   <h3>{brand.name}</h3>
                   <p>{brand.text}</p>
                   <span className="world-card__categories">{brand.categories}</span>
-                  <span className="world-card__link">Enter this world <span aria-hidden="true">↗</span></span>
+                  <span className="world-card__link">{brand.cta}</span>
                 </div>
               </Link>
             ))}
@@ -105,7 +108,7 @@ export default function Home() {
           <span className="scroll-sticker"><span>ONE STUDIO<br />MANY<br />POSSIBILITIES</span></span>
         </div>
 
-        <section className="closing-section"><div className="shell closing-section__inner"><div><p className="eyebrow">READY WHEN YOU ARE</p><h2>Have something in mind?</h2><p>Tell us what you&apos;re dreaming up and we&apos;ll help you find a place to start.</p></div><a className="button button--white" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Start a conversation <span aria-hidden="true">↗</span></a></div></section>
+        <section className="closing-section"><div className="shell closing-section__inner"><div><p className="eyebrow">READY WHEN YOU ARE</p><h2>Have something in mind?</h2><p>Tell us what you&apos;re dreaming up and we&apos;ll help you find a place to start.</p></div><a className="button button--white" href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Start a conversation</a></div></section>
       </main>
       <SiteFooter />
     </>

@@ -20,8 +20,8 @@ export function SiteFooter() {
         <div className="site-footer__contact">
           <span className="footer-label">Stay in touch</span>
           <p>Questions about a design or an order? We&apos;re happy to help.</p>
-          <a href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Instagram ↗</a>
-          <a href="https://shopee.com.my/udesignprojectsstudio" target="_blank" rel="noopener noreferrer">Shopee ↗</a>
+          <a href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Instagram</a>
+          <a href="https://shopee.com.my/udesignprojectsstudio" target="_blank" rel="noopener noreferrer">Shopee</a>
         </div>
       </div>
       <div className="shell site-footer__wordmark" aria-hidden="true">UDesign.</div>
