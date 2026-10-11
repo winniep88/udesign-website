@@ -48,6 +48,14 @@ export default function AccountPage() {
     setPoints(0);
   }, [user?.id]);
 
+  useEffect(() => {
+    const errorCode = new URLSearchParams(window.location.hash.slice(1)).get("error_code");
+    if (errorCode === "otp_expired") {
+      setMessage("That sign-in link has expired or was already used. Please request a new code below.");
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, []);
+
   const loadAccount = useCallback(async () => {
     if (!client || !user) return;
     setAccountLoading(true);
@@ -84,7 +92,7 @@ export default function AccountPage() {
     const { error } = await client.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { emailRedirectTo: `${window.location.origin}/account/` } });
     setBusy(false);
     if (error) setMessage(error.message);
-    else { setSent(true); setMessage("Check your email for a sign-in code or link. It may take a minute to arrive."); }
+    else { setSent(true); setMessage("Check your email and enter the newest sign-in code below. It may take a minute to arrive."); }
   }
 
   async function verifyCode(event: FormEvent) {
@@ -93,7 +101,7 @@ export default function AccountPage() {
     setBusy(true); setMessage("");
     const { error } = await client.auth.verifyOtp({ email: email.trim().toLowerCase(), token: otp.trim(), type: "email" });
     setBusy(false);
-    if (error) setMessage(error.message);
+    if (error) setMessage("That code has expired or is incorrect. Check the newest email, or request another code.");
     else { setOtp(""); setSent(false); await refreshUser(); setMessage("You are signed in."); }
   }
 
@@ -151,7 +159,7 @@ export default function AccountPage() {
 
   return <div className="account-page"><SiteHeader /><main className="shell account-main">
     <div className="account-heading"><p className="eyebrow">UDESIGN PROJECTS STUDIO</p><h1>My account<span>.</span></h1><p>Keep your details, addresses, orders and rewards in one place.</p></div>
-    {loading ? <p role="status">Loading account…</p> : !enabled ? <section className="account-card"><h2>Accounts are coming soon</h2><p>Shopping and WhatsApp requests are still available while we finish setup.</p><Link href="/cart/">Go to cart →</Link></section> : !user ? <section className="account-card account-signin"><h2>Sign in with email</h2><p>We&apos;ll email you a one-time code or sign-in link. No password needed.</p><form onSubmit={sendCode}><label>Email address<input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label><button type="submit" disabled={busy}>{busy ? "Sending…" : sent ? "Send another code" : "Email me a code"}</button></form>{sent && <form onSubmit={verifyCode}><label>Code from your email<input inputMode="numeric" autoComplete="one-time-code" required value={otp} onChange={(event) => setOtp(event.target.value)} /></label><button type="submit" disabled={busy}>{busy ? "Checking…" : "Verify and sign in"}</button></form>}<p className="account-small">You can also shop as a guest. Creating an account never signs you up for promotions automatically.</p></section> : <>
+    {loading ? <p role="status">Loading account…</p> : !enabled ? <section className="account-card"><h2>Accounts are coming soon</h2><p>Shopping and WhatsApp requests are still available while we finish setup.</p><Link href="/cart/">Go to cart →</Link></section> : !user ? <section className="account-card account-signin"><h2>Sign in with email</h2><p>We&apos;ll email you a one-time code. Return to this page and type it below. No password needed.</p><form onSubmit={sendCode}><label>Email address<input type="email" required autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label><button type="submit" disabled={busy}>{busy ? "Sending…" : sent ? "Send another code" : "Email me a code"}</button></form>{sent && <form onSubmit={verifyCode}><label>Code from your email<input inputMode="numeric" autoComplete="one-time-code" required value={otp} onChange={(event) => setOtp(event.target.value)} /></label><button type="submit" disabled={busy}>{busy ? "Checking…" : "Verify and sign in"}</button></form>}<p className="account-small">You can also shop as a guest. Creating an account never signs you up for promotions automatically.</p></section> : <>
       <div className="account-welcome"><div><p>Signed in as</p><strong>{user.email}</strong></div><button type="button" onClick={async () => { await client?.auth.signOut(); setMessage("You are signed out."); }}>Sign out</button></div>
       {accountLoading && <p role="status">Loading your details…</p>}
       <div className="account-grid">

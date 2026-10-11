@@ -36,19 +36,21 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     let unsubscribe: (() => void) | undefined;
     fetch("/api/account/config/", { cache: "no-store" })
       .then(async (response) => response.ok ? response.json() : null)
-      .then(async (config: unknown) => {
-        if (!active || !validConfig(config)) return;
+      .then((config: unknown) => {
+        if (!active) return;
+        if (!validConfig(config)) { setLoading(false); return; }
         const supabase = createClient(config.url, config.publishableKey, {
           auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
         });
         setClient(supabase);
-        const { data } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (!active) return;
+          setUser(session?.user ?? null);
+          setLoading(false);
+        });
         unsubscribe = () => data.subscription.unsubscribe();
-        const result = await supabase.auth.getUser();
-        if (active) setUser(result.data.user ?? null);
       })
-      .catch(() => {})
-      .finally(() => { if (active) setLoading(false); });
+      .catch(() => { if (active) setLoading(false); });
     return () => { active = false; unsubscribe?.(); };
   }, []);
 
