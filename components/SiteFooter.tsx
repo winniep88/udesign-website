@@ -24,7 +24,7 @@ export function SiteFooter() {
           <a href="https://shopee.com.my/udesignprojectsstudio" target="_blank" rel="noopener noreferrer">Shopee</a>
         </div>
       </div>
-      <div className="shell site-footer__wordmark" aria-hidden="true">UDesign.</div>
+      <div className="shell site-footer__wordmark" aria-hidden="true">UDesign<span>.</span></div>
       <div className="shell site-footer__bottom"><span>© {new Date().getFullYear()} UDESIGN PROJECTS STUDIO</span><span>Designed by you, made to be yours.</span><span>Made in Malaysia</span></div>
     </footer>
   );
