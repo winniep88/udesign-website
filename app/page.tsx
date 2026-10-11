@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { WelcomePopup } from "@/components/WelcomePopup";
 
 const brands = [
   {
@@ -46,6 +47,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader active="home" />
+      <WelcomePopup />
       <main>
         <section className="home-hero shell" aria-labelledby="home-title">
           <div className="home-hero__copy">
