@@ -7,9 +7,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useCart, type CartItem } from "@/components/CartProvider";
 import { useAccount } from "@/components/AccountProvider";
 import { addressText, type SavedAddress, type WelcomeVoucher } from "@/lib/account";
-import { findVariant, formatRinggit } from "@/lib/catalog";
+import { findVariant, formatRinggit, type CatalogProduct } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
-import { topperEvent, topperSelectionPriceSen, topperSizes } from "@/lib/topper";
+import { topperEvent, topperSelectionPriceSen, topperSizes, type TopperPricing } from "@/lib/topper";
 
 type Fulfilment = "pickup" | "delivery";
 const deliveryRegions = {
@@ -30,13 +30,13 @@ function brandName(item: CartItem) {
   return "WINNIE CAKE TOPPER";
 }
 
-function selectedOption(item: CartItem) {
-  return item.productId && item.variantId ? findVariant(item.productId, item.variantId) : undefined;
+function selectedOption(item: CartItem, catalog: CatalogProduct[]) {
+  return item.productId && item.variantId ? findVariant(item.productId, item.variantId, catalog) : undefined;
 }
 
-function itemUnitPriceSen(item: CartItem) {
-  if (item.topper) return topperSelectionPriceSen(item.topper);
-  return selectedOption(item)?.priceSen;
+function itemUnitPriceSen(item: CartItem, catalog: CatalogProduct[], topperPrices: TopperPricing | null) {
+  if (item.topper) return topperSelectionPriceSen(item.topper, topperPrices ?? undefined);
+  return selectedOption(item, catalog)?.priceSen;
 }
 
 function topperDetails(item: CartItem) {
@@ -55,7 +55,7 @@ function topperDetails(item: CartItem) {
 }
 
 export default function CartPage() {
-  const { items, count, ready, setQuantity, setNotes, removeItem, clearCart } = useCart();
+  const { items, catalog: liveCatalog, topperPrices, count, ready, setQuantity, setNotes, removeItem, clearCart } = useCart();
   const { enabled: accountEnabled, client: accountClient, user } = useAccount();
   const [fulfilment, setFulfilment] = useState<Fulfilment>("pickup");
   const [deliveryRegion, setDeliveryRegion] = useState<DeliveryRegion | "">("");
@@ -127,11 +127,11 @@ export default function CartPage() {
   }, [accountClient, user]);
 
   const pricing = useMemo(() => items.reduce((result, item) => {
-    const unitPriceSen = itemUnitPriceSen(item);
+    const unitPriceSen = itemUnitPriceSen(item, liveCatalog, topperPrices);
     if (unitPriceSen !== undefined) result.subtotalSen += unitPriceSen * item.quantity;
     else result.needsQuote = true;
     return result;
-  }, { subtotalSen: 0, needsQuote: false }), [items]);
+  }, { subtotalSen: 0, needsQuote: false }), [items, liveCatalog, topperPrices]);
   const cakeTopperOnly = items.length > 0 && items.every((item) => item.brand === "winnie");
   const region = deliveryRegion ? deliveryRegions[deliveryRegion] : null;
   const deliveryFeeSen = fulfilment === "delivery" && cakeTopperOnly && region ? region.feeSen : 0;
@@ -149,8 +149,8 @@ export default function CartPage() {
   const summary = useMemo(() => {
     const lines = ["Hi UDESIGN, I'd like to request these items:", ""];
     items.forEach((item, index) => {
-      const option = selectedOption(item);
-      const unitPriceSen = itemUnitPriceSen(item);
+      const option = selectedOption(item, liveCatalog);
+      const unitPriceSen = itemUnitPriceSen(item, liveCatalog, topperPrices);
       lines.push(`${index + 1}. ${brandName(item)} — ${item.product}`);
       if (option) lines.push(`   Option: ${option.name}`);
       topperDetails(item).forEach((detail) => lines.push(`   ${detail}`));
@@ -172,7 +172,7 @@ export default function CartPage() {
     if (extraNotes.trim()) lines.push(`Other notes: ${extraNotes.trim()}`);
     lines.push("", "Please confirm the design, ready date, final total and payment instructions. Thank you!");
     return lines.join("\n");
-  }, [items, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, address, extraNotes, voucherDiscountSen, appliedPoints, checkoutTotalSen]);
+  }, [items, liveCatalog, topperPrices, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, address, extraNotes, voucherDiscountSen, appliedPoints, checkoutTotalSen]);
 
   function validateRequest() {
     if (fulfilment === "delivery" && !deliveryRegion) {
@@ -250,14 +250,14 @@ export default function CartPage() {
                 {items.map((item) => (
                   <article className={`cart-item cart-item--${item.brand}`} key={item.id}>
                     <div className="cart-item__heading"><div><p>{brandName(item)}</p><h3>{item.product}</h3></div><button type="button" onClick={() => removeItem(item.id)} aria-label={`Remove ${item.product} from cart`}>Remove</button></div>
-                    {selectedOption(item) && <p className="cart-item__option"><span>Selected option</span><strong>{selectedOption(item)!.name}</strong></p>}
+                    {selectedOption(item, liveCatalog) && <p className="cart-item__option"><span>Selected option</span><strong>{selectedOption(item, liveCatalog)!.name}</strong></p>}
                     {item.topper && <div className="cart-item__topper-details">{topperDetails(item).map((detail) => <p key={detail}>{detail}</p>)}</div>}
                     {item.referenceImage && <p className="cart-item__reference">Reference image: <a href={item.referenceImage.url} target="_blank" rel="noopener noreferrer">{item.referenceImage.name} ↗</a></p>}
                     <div className="cart-item__fields">
                       <div className="cart-item__quantity"><span>Quantity</span><div><button type="button" aria-label={`Decrease ${item.product} quantity`} disabled={item.quantity <= 1} onClick={() => setQuantity(item.id, item.quantity - 1)}>−</button><output aria-label={`${item.product} quantity`}>{item.quantity}</output><button type="button" aria-label={`Increase ${item.product} quantity`} disabled={item.quantity >= 99} onClick={() => setQuantity(item.id, item.quantity + 1)}>+</button></div></div>
                       <label className="cart-field">Personalisation or idea<textarea rows={3} maxLength={1000} placeholder="Names, colours, theme, size or other details" value={item.notes} onChange={(event) => setNotes(item.id, event.target.value)} /></label>
                     </div>
-                    <p className="cart-item__price"><span>{itemUnitPriceSen(item) !== undefined ? `Unit price ${formatRinggit(itemUnitPriceSen(item)!)}` : "Custom item price"}</span><strong>{itemUnitPriceSen(item) !== undefined ? formatRinggit(itemUnitPriceSen(item)! * item.quantity) : "To confirm"}</strong></p>
+                    <p className="cart-item__price"><span>{itemUnitPriceSen(item, liveCatalog, topperPrices) !== undefined ? `Unit price ${formatRinggit(itemUnitPriceSen(item, liveCatalog, topperPrices)!)}` : "Custom item price"}</span><strong>{itemUnitPriceSen(item, liveCatalog, topperPrices) !== undefined ? formatRinggit(itemUnitPriceSen(item, liveCatalog, topperPrices)! * item.quantity) : "To confirm"}</strong></p>
                   </article>
                 ))}
               </div>

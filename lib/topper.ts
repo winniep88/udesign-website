@@ -127,12 +127,15 @@ export function topperWordCount(wording: readonly string[]): number {
   return wording.join(" ").trim().split(/\s+/u).filter(Boolean).length;
 }
 
-export function topperChoicePriceSen(lineCount: TopperLineCount, material: TopperMaterial, finish: string, sizeCm: number): number | undefined {
+export type TopperPricing = Record<TopperMaterial, Record<number, number>> & { finishExtras: Record<string, number> };
+
+export function topperChoicePriceSen(lineCount: TopperLineCount, material: TopperMaterial, finish: string, sizeCm: number, prices?: TopperPricing): number | undefined {
   if (!topperLineCounts.includes(lineCount) || !topperSizes.some((size) => size.cm === sizeCm)) return undefined;
   const baseRm = topperBasePricesRm[material]?.[sizeCm];
+  const baseSen = prices?.[material]?.[sizeCm] ?? (baseRm === undefined ? undefined : baseRm * 100);
   const extraRm = topperFinishes[material]?.find((choice) => choice.name === finish)?.extraRm;
-  if (baseRm === undefined || extraRm === undefined) return undefined;
-  return (baseRm + extraRm) * 100;
+  if (baseSen === undefined || extraRm === undefined) return undefined;
+  return baseSen + (prices?.finishExtras?.[finish] ?? extraRm * 100);
 }
 
 export function normaliseTopperSelection(value: unknown): TopperCartSelection | undefined {
@@ -159,7 +162,7 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
   };
 }
 
-export function topperSelectionPriceSen(selection: TopperCartSelection): number | undefined {
-  return topperChoicePriceSen(selection.lineCount, selection.material, selection.finish, selection.sizeCm);
+export function topperSelectionPriceSen(selection: TopperCartSelection, prices?: TopperPricing): number | undefined {
+  return topperChoicePriceSen(selection.lineCount, selection.material, selection.finish, selection.sizeCm, prices);
 }
 

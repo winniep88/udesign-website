@@ -14,6 +14,9 @@ export type CatalogProduct = {
   name: string;
   brand: Brand;
   category: string;
+  description?: string;
+  imageSrc?: string;
+  active?: boolean;
   variants: CatalogVariant[];
 };
 
@@ -35,12 +38,12 @@ export function productsForBrand(brand: Brand) {
   return catalog.filter((product) => product.brand === brand);
 }
 
-export function findProduct(productId: string) {
-  return catalog.find((product) => product.id === productId);
+export function findProduct(productId: string, products: CatalogProduct[] = catalog) {
+  return products.find((product) => product.id === productId);
 }
 
-export function findVariant(productId: string, variantId: string) {
-  return findProduct(productId)?.variants.find((variant) => variant.id === variantId);
+export function findVariant(productId: string, variantId: string, products: CatalogProduct[] = catalog) {
+  return findProduct(productId, products)?.variants.find((variant) => variant.id === variantId);
 }
 
 export function productPriceRange(product: CatalogProduct) {

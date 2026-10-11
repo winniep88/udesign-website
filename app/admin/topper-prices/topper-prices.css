@@ -1,0 +1,11 @@
+.topper-price-editor { max-width:980px; display:grid; gap:22px; }
+.topper-price-editor>p { margin:0; color:#5e687a; line-height:1.6; }
+.topper-price-editor section { padding:24px; border:1px solid #dce0e8; background:#fff; }
+.topper-price-editor h2 { margin:0 0 20px; font-size:27px; }
+.topper-price-editor__grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+.topper-price-editor__grid label { display:grid; gap:10px; font-size:13px; font-weight:800; }
+.topper-price-editor__grid label>span:last-child { display:flex; align-items:center; gap:7px; }
+.topper-price-editor__grid input { width:100%; min-width:0; min-height:44px; padding:8px; border:1px solid #cbd1dc; color:#18223d; font:14px Arial,Helvetica,sans-serif; }
+.topper-price-editor>button { width:fit-content; min-height:48px; padding:10px 24px; border:0; background:#23345f; color:#fff; font:800 14px Arial,Helvetica,sans-serif; cursor:pointer; }
+.topper-price-editor>button:disabled { opacity:.5; cursor:wait; }
+@media(max-width:700px) { .topper-price-editor__grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }

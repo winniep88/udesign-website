@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { findProduct, findVariant, type Brand } from "@/lib/catalog";
-import { normaliseTopperSelection, topperProductName, type TopperCartSelection } from "@/lib/topper";
+import { catalog as bundledCatalog, findProduct, findVariant, type Brand, type CatalogProduct } from "@/lib/catalog";
+import { normaliseTopperSelection, topperProductName, type TopperCartSelection, type TopperPricing } from "@/lib/topper";
 
 export type CartBrand = Brand;
 export type ReferenceImage = { id: string; url: string; name: string };
@@ -23,6 +23,8 @@ type NewCartItem = Pick<CartItem, "brand" | "product" | "quantity" | "notes" | "
 
 type CartContextValue = {
   items: CartItem[];
+  catalog: CatalogProduct[];
+  topperPrices: TopperPricing | null;
   count: number;
   ready: boolean;
   addItem: (item: NewCartItem) => void;
@@ -54,7 +56,7 @@ function normaliseReferenceImage(value: unknown): ReferenceImage | undefined {
   }
 }
 
-function readStoredCart(value: string | null): CartItem[] {
+function readStoredCart(value: string | null, products: CatalogProduct[]): CartItem[] {
   if (!value) return [];
 
   try {
@@ -64,9 +66,9 @@ function readStoredCart(value: string | null): CartItem[] {
       if (!entry || typeof entry !== "object") return [];
       const item = entry as Partial<CartItem>;
       if (typeof item.id !== "string" || typeof item.quantity !== "number") return [];
-      const product = typeof item.productId === "string" ? findProduct(item.productId) : undefined;
+      const product = typeof item.productId === "string" ? findProduct(item.productId, products) : undefined;
       const variant = product && typeof item.variantId === "string"
-        ? findVariant(product.id, item.variantId)
+        ? findVariant(product.id, item.variantId, products)
         : undefined;
       const topper = item.topper === undefined ? undefined : normaliseTopperSelection(item.topper);
       if (item.topper !== undefined && !topper) return [];
@@ -101,21 +103,38 @@ function makeId() {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [catalog, setCatalog] = useState<CatalogProduct[]>(bundledCatalog);
+  const [topperPrices, setTopperPrices] = useState<TopperPricing | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      setItems(readStoredCart(localStorage.getItem(STORAGE_KEY)));
-    } catch {
-      setItems([]);
-    }
-    setReady(true);
+    let active = true;
+    let currentCatalog = bundledCatalog;
+    const catalogRequest = fetch("/api/catalog/", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) throw new Error("Catalog unavailable");
+      const data = await response.json();
+      if (!Array.isArray(data.products)) throw new Error("Catalog unavailable");
+      return data.products as CatalogProduct[];
+    }).then((products) => { currentCatalog = products; }).catch(() => {});
+    const pricingRequest = fetch("/api/topper-prices/", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) throw new Error("Topper prices unavailable");
+      const data = await response.json();
+      if (typeof data.prices !== "object" || !data.prices) throw new Error("Topper prices unavailable");
+      return data.prices as TopperPricing;
+    }).then((prices) => { if (active) setTopperPrices(prices); }).catch(() => {});
+    Promise.all([catalogRequest, pricingRequest]).finally(() => {
+      if (!active) return;
+      setCatalog(currentCatalog);
+      try { setItems(readStoredCart(localStorage.getItem(STORAGE_KEY), currentCatalog)); }
+      catch { setItems([]); }
+      setReady(true);
+    });
 
     function syncFromAnotherTab(event: StorageEvent) {
-      if (event.key === STORAGE_KEY) setItems(readStoredCart(event.newValue));
+      if (event.key === STORAGE_KEY) setItems(readStoredCart(event.newValue, currentCatalog));
     }
     window.addEventListener("storage", syncFromAnotherTab);
-    return () => window.removeEventListener("storage", syncFromAnotherTab);
+    return () => { active = false; window.removeEventListener("storage", syncFromAnotherTab); };
   }, []);
 
   useEffect(() => {
@@ -129,11 +148,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<CartContextValue>(() => ({
     items,
+    catalog,
+    topperPrices,
     count: items.reduce((total, item) => total + item.quantity, 0),
     ready,
     addItem: (item) => setItems((current) => {
-      const product = item.productId ? findProduct(item.productId) : undefined;
-      const variant = product && item.variantId ? findVariant(product.id, item.variantId) : undefined;
+      const product = item.productId ? findProduct(item.productId, catalog) : undefined;
+      const variant = product && item.variantId ? findVariant(product.id, item.variantId, catalog) : undefined;
       const topper = item.topper === undefined ? undefined : normaliseTopperSelection(item.topper);
       if (item.topper !== undefined && !topper) return current;
       if (topper && item.productId) return current;
@@ -158,7 +179,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     )),
     removeItem: (id) => setItems((current) => current.filter((item) => item.id !== id)),
     clearCart: () => setItems([]),
-  }), [items, ready]);
+  }), [items, catalog, topperPrices, ready]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

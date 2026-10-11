@@ -8,7 +8,7 @@ import { whatsappLink } from "@/lib/contact";
 import { topperCharacterLimit, topperChoicePriceSen, topperFinishes, topperFontStyles, topperProductName, topperSizes, topperWordCount, topperWordLimit, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
 export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: TopperEventSlug }) {
-  const { addItem, ready } = useCart();
+  const { addItem, topperPrices, ready } = useCart();
   const [material, setMaterial] = useState<TopperMaterial | "">("");
   const [finish, setFinish] = useState("");
   const [sizeCm, setSizeCm] = useState(0);
@@ -30,7 +30,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const characterLimit = topperCharacterLimit(sizeCm);
   const wordCount = topperWordCount(wordingLines);
   const wordLimit = topperWordLimit(sizeCm);
-  const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm) : undefined;
+  const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm, topperPrices ?? undefined) : undefined;
   useEffect(() => {
     if (!fontDialogOpen) return;
     for (const font of topperFontStyles) {

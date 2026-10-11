@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { TopperStartingPrice } from "@/components/TopperStartingPrice";
 import { formatRinggit } from "@/lib/catalog";
 import { topperChoicePriceSen, topperEvent, topperEventDesigns, topperEvents, topperFinishes, topperProductHref, topperProductName } from "@/lib/topper";
 
@@ -43,7 +44,7 @@ export default async function TopperEventPage({ params }: Props) {
               <h3>{topperProductName()}</h3>
               <p>Choose your topper size and enter your personalised wording on the product page.</p>
               <small>10–20 cm / 4–8 inch</small>
-              <small>From {formatRinggit(topperChoicePriceSen(1, "cardstock", topperFinishes.cardstock[0].name, 10)!)}</small>
+              <small><TopperStartingPrice /></small>
               <Link href={topperProductHref(chosen.slug)}>Customise your cake topper <span aria-hidden="true">→</span></Link>
             </article>
           </div>

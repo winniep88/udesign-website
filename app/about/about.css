@@ -1,0 +1,24 @@
+.about-page { background:#f8f3ee; color:#52213a; }
+.about-hero { background:#f7e5e7; }
+.about-hero__inner { padding-block:115px 120px; }
+.about-hero h1 { max-width:1100px; margin:22px 0 30px; font-family:var(--font-udesign-serif),Georgia,serif; font-size:clamp(54px,8vw,116px); font-weight:900; line-height:.99; letter-spacing:-.075em; }
+.about-hero h1 em { color:#f4763c; font-weight:900; font-style:normal; }
+.about-hero__inner > p:last-child { max-width:620px; font-size:19px; line-height:1.65; }
+.about-story { display:grid; grid-template-columns:.38fr .62fr; gap:9%; padding-block:110px 125px; }
+.about-story__aside { display:flex; flex-direction:column; gap:30px; }
+.about-story__aside span { font-size:11px; font-weight:900; letter-spacing:.2em; }
+.about-story__aside strong { max-width:260px; font-size:26px; line-height:1.2; }
+.about-story__body h2 { max-width:690px; margin:0 0 28px; font-family:Georgia,serif; font-size:clamp(40px,4.7vw,68px); font-weight:400; line-height:1.1; letter-spacing:-.06em; }
+.about-story__body p { max-width:690px; font-size:17px; line-height:1.8; color:#654d59; }
+.about-quote { background:#762740; color:#fff5f2; }
+.about-quote .shell { padding-block:100px 110px; }
+.about-quote p { margin:0 0 28px; font-family:var(--font-udesign-serif),Georgia,serif; font-size:clamp(45px,7vw,102px); line-height:1.06; letter-spacing:-.065em; }
+.about-quote em { color:#ff8a56; font-style:normal; }
+.about-quote span { font-size:11px; font-weight:900; letter-spacing:.2em; }
+.about-closing { padding-block:110px 125px; text-align:center; }
+.about-closing .eyebrow { justify-content:center; }
+.about-closing h2 { margin:25px auto; font-family:Georgia,serif; font-size:clamp(43px,5vw,75px); font-weight:400; line-height:1.08; letter-spacing:-.06em; }
+.about-closing > p:not(.eyebrow) { max-width:600px; margin:0 auto 35px; font-size:17px; line-height:1.7; }
+.about-closing .button { color:white; }
+.about-closing small { display:block; margin-top:60px; font-size:11px; font-weight:800; letter-spacing:.12em; }
+@media(max-width:750px) { .about-hero__inner { padding-block:80px; } .about-story { grid-template-columns:1fr; gap:35px; padding-block:70px; } .about-story__aside { gap:14px; } .about-quote .shell { padding-block:75px; } .about-closing { padding-block:75px; } }

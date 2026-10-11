@@ -15,6 +15,8 @@
 .product-catalog--moments .catalog-card { border-top:5px solid #aa8d75; }
 .product-catalog--winnie .catalog-card { border-top:5px solid #eb477d; }
 .catalog-card__category { margin:0 0 18px; color:#677175; font-size:12px; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
+.catalog-card__image { display:block; width:100%; aspect-ratio:4/3; margin:0 0 16px; object-fit:cover; background:#f7f3f0; }
+.catalog-card__description { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; margin:12px 0 0; color:#647074; font-size:14px; line-height:1.5; }
 .catalog-card h3 { margin:0; font-size:clamp(22px,2.5vw,31px); line-height:1.15; letter-spacing:-.045em; }
 .catalog-card__options { margin:14px 0 0; color:#647074; font-size:14px; }
 .catalog-card__price { margin:auto 0 18px; padding-top:22px; font-size:20px; font-weight:900; }

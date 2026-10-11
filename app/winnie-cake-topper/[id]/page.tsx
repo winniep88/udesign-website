@@ -4,8 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { WinnieProductForm } from "@/components/WinnieProductForm";
-import { findProduct, formatRinggit, productPriceRange, productsForBrand } from "@/lib/catalog";
+import { WinnieProductForm, WinnieProductLiveHeading } from "@/components/WinnieProductForm";
+import { findProduct, productsForBrand } from "@/lib/catalog";
 
 type ProductPageProps = { params: Promise<{ id: string }> };
 
@@ -26,7 +26,6 @@ export default async function WinnieProductPage({ params }: ProductPageProps) {
   const { id } = await params;
   const product = findProduct(id);
   if (!product || product.brand !== "winnie") notFound();
-  const { min, max } = productPriceRange(product);
   const material = /cardstock/i.test(product.name) ? "Cardstock" : /acrylic/i.test(product.name) ? "Acrylic" : null;
 
   return (
@@ -42,8 +41,7 @@ export default async function WinnieProductPage({ params }: ProductPageProps) {
           </div>
           <div className="winnie-product__content">
             <p className="eyebrow">WINNIE CAKE TOPPER BY UDESIGN</p>
-            <h1>{product.name}</h1>
-            <p className="winnie-product__price">{min === max ? formatRinggit(min) : `From ${formatRinggit(min)}`}</p>
+            <WinnieProductLiveHeading product={product} />
             <p className="winnie-product__lead">Choose a listed option and tell us how to make it yours. Your exact item price appears before you add it to your cart.</p>
             <a className="winnie-product__jump" href="#customise">Choose options &amp; add to cart <span aria-hidden="true">↓</span></a>
             {(id === "15839023675" || id === "14939532339") && <p className="winnie-product__style-note">We have two wedding topper listings with different size choices. Please send us a reference photo on WhatsApp so we can confirm the exact design.</p>}

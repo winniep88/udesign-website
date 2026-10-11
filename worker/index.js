@@ -69,6 +69,145 @@ async function ownerAccount(request, env) {
   return { config, user };
 }
 
+const CATALOG_ID = /^[A-Za-z0-9:_-]{1,100}$/;
+const TOPPER_PRICE_PRODUCT_ID = "custom-topper-prices";
+const CATALOG_IMAGE = /^\/api\/catalog\/images\/([0-9a-f-]{36})\.(png|jpg|webp)$/;
+const WINNIE_NAMES = {
+  "4911844020": "Custom Acrylic Name Cake Topper",
+  "14941102410": "First Birthday Acrylic Cake Topper",
+  "15839023675": "Wedding Acrylic Cake Topper (13–20 cm)",
+  "14939532339": "Wedding Acrylic Cake Topper (15–20 cm)",
+  "4306939371": "Custom Cardstock Name Cake Topper",
+  "7862577165": "Custom Theme Cake Topper",
+};
+
+async function catalogSnapshot(env, includeInactive = false) {
+  const base = CATALOG.map((product) => ({ ...product, name: WINNIE_NAMES[product.id] ?? product.name, description: "", imageSrc: "", active: true }));
+  const config = accountBackendConfig(env);
+  if (!config) return base;
+  const [overrides, variants] = await Promise.all([
+    accountRows(config, "catalog_products?select=id,brand,event_slug,name,description,image_path,active,sort_order&order=sort_order.asc&limit=1000"),
+    accountRows(config, "catalog_variants?select=id,product_id,name,price_sen,available,sort_order&order=sort_order.asc&limit=5000"),
+  ]);
+  const byProduct = new Map();
+  for (const variant of variants) {
+    if (variant.sort_order < 0) continue;
+    if (!byProduct.has(variant.product_id)) byProduct.set(variant.product_id, []);
+    byProduct.get(variant.product_id).push({ id: variant.id, name: variant.name, priceSen: variant.price_sen, available: variant.available });
+  }
+  const merged = new Map(base.map((product) => [product.id, product]));
+  for (const product of overrides) {
+    if (!CATALOG_ID.test(product.id) || product.id === TOPPER_PRICE_PRODUCT_ID) continue;
+    merged.set(product.id, {
+      id: product.id, brand: product.brand, name: product.name, category: product.event_slug || (merged.get(product.id)?.category ?? "Other"),
+      description: product.description || "", imageSrc: CATALOG_IMAGE.test(product.image_path || "") ? product.image_path : "",
+      active: product.active, variants: byProduct.get(product.id) || [],
+    });
+  }
+  const result = [...merged.values()];
+  return includeInactive ? result : result.filter((product) => product.active);
+}
+
+async function topperPricingSnapshot(env) {
+  const prices = structuredClone(TOPPER_PRICES);
+  const config = accountBackendConfig(env);
+  if (!config) return prices;
+  const rows = await accountRows(config, `catalog_variants?select=id,price_sen,available&product_id=eq.${TOPPER_PRICE_PRODUCT_ID}&limit=30`);
+  for (const row of rows) {
+    const match = /^custom-topper-prices:(cardstock|acrylic|wood):(10|13|15|18|20)$/.exec(row.id);
+    if (match && row.available && Number.isInteger(row.price_sen) && row.price_sen > 0) prices[match[1]][match[2]] = row.price_sen;
+  }
+  return prices;
+}
+
+async function saveTopperPrices(request, env) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) return errorJson("Please use the UDESIGN owner dashboard.", 403);
+  const owner = await ownerAccount(request, env);
+  if (owner.error) return owner.error;
+  if (!request.headers.get("content-type")?.startsWith("application/json")) return errorJson("Check the cake topper prices.", 400);
+  let input;
+  try { const body = await request.text(); if (body.length > 5000) return errorJson("Request too large.", 413); input = JSON.parse(body); }
+  catch { return errorJson("Check the cake topper prices.", 400); }
+  const variants = [];
+  for (const material of ["cardstock", "acrylic", "wood"]) for (const size of [10, 13, 15, 18, 20]) {
+    const price = input?.[material]?.[size];
+    if (!Number.isInteger(price) || price <= 0 || price > 1_000_000) return errorJson("Enter a valid price for every material and size.", 400);
+    variants.push({ id: `${TOPPER_PRICE_PRODUCT_ID}:${material}:${size}`, product_id: TOPPER_PRICE_PRODUCT_ID, name: `${material} · ${size} cm`, price_sen: price, available: true, sort_order: 0 });
+  }
+  await accountUpsert(owner.config, "catalog_products", [{ id: TOPPER_PRICE_PRODUCT_ID, brand: "winnie", event_slug: "Internal pricing", name: "Custom Cake Topper price matrix", description: "Private pricing configuration", active: false, sort_order: 0 }]);
+  await accountUpsert(owner.config, "catalog_variants", variants);
+  return Response.json({ saved: true }, { headers: { "cache-control": "no-store" } });
+}
+
+async function accountUpsert(config, table, rows) {
+  const response = await fetch(`${config.url}/rest/v1/${table}?on_conflict=id`, {
+    method: "POST",
+    headers: { apikey: config.secretKey, "content-type": "application/json", prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify(rows),
+  });
+  if (!response.ok) throw new Error(`Catalog write ${table} ${response.status}`);
+}
+
+async function saveCatalogProduct(request, env) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) return errorJson("Please use the UDESIGN owner dashboard.", 403);
+  const owner = await ownerAccount(request, env);
+  if (owner.error) return owner.error;
+  if (!request.headers.get("content-type")?.startsWith("application/json")) return errorJson("Check the product details.", 400);
+  let product;
+  try { const body = await request.text(); if (body.length > 40_000) return errorJson("Product details are too large.", 413); product = JSON.parse(body); }
+  catch { return errorJson("Check the product details.", 400); }
+  const id = product?.id;
+  const name = cleanString(product?.name, 200);
+  const category = cleanString(product?.category, 100);
+  const description = typeof product?.description === "string" && product.description.length <= 2000 ? product.description.trim() : null;
+  const imageSrc = product?.imageSrc || "";
+  if (!CATALOG_ID.test(id || "") || !["projects", "moments", "winnie"].includes(product?.brand) || !name || !category || description === null || (imageSrc && !CATALOG_IMAGE.test(imageSrc)) || typeof product.active !== "boolean") return errorJson("Check the product name, brand, category and image.", 400);
+  if (!Array.isArray(product.variants) || !product.variants.length || product.variants.length > 100) return errorJson("Add at least one priced option.", 400);
+  const seen = new Set();
+  const variants = product.variants.map((variant) => ({
+    id: variant?.id, product_id: id, name: cleanString(variant?.name, 200), price_sen: variant?.priceSen,
+    available: variant?.available, sort_order: 0,
+  }));
+  if (variants.some((variant) => !CATALOG_ID.test(variant.id || "") || !variant.id.startsWith(`${id}:`) || !variant.name || !Number.isInteger(variant.price_sen) || variant.price_sen <= 0 || variant.price_sen > 1_000_000 || typeof variant.available !== "boolean" || seen.has(variant.id) || !seen.add(variant.id))) return errorJson("Check each option and price.", 400);
+  const current = await catalogSnapshot(env, true);
+  const existing = current.find((item) => item.id === id);
+  if (existing && existing.brand !== product.brand) return errorJson("A product cannot move to a different brand. Create a new product instead.", 400);
+  const oldVariants = existing?.variants || [];
+  const missing = oldVariants.filter((variant) => !seen.has(variant.id)).map((variant) => ({ id: variant.id, product_id: id, name: variant.name, price_sen: variant.priceSen, available: false, sort_order: -1 }));
+  // Keep the product hidden while a new listing's options are being created.
+  await accountUpsert(owner.config, "catalog_products", [{ id, brand: product.brand, event_slug: category, name, description, image_path: imageSrc || null, active: existing?.active ?? false, sort_order: 0 }]);
+  await accountUpsert(owner.config, "catalog_variants", [...variants, ...missing]);
+  await accountUpsert(owner.config, "catalog_products", [{ id, brand: product.brand, event_slug: category, name, description, image_path: imageSrc || null, active: product.active, sort_order: 0 }]);
+  return Response.json({ saved: true, id }, { headers: { "cache-control": "no-store" } });
+}
+
+async function uploadCatalogImage(request, env) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) return errorJson("Please use the UDESIGN owner dashboard.", 403);
+  const owner = await ownerAccount(request, env);
+  if (owner.error) return owner.error;
+  if (!env.BUCKET) return errorJson("Image storage is unavailable.", 503);
+  const size = Number(request.headers.get("content-length") || 0);
+  if (size > MAX_IMAGE_BYTES) return errorJson("Choose an image under 5 MB.", 413);
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) return errorJson("Choose an image under 5 MB.", 413);
+  const type = request.headers.get("content-type")?.split(";")[0];
+  const valid = type === "image/png" && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71 ||
+    type === "image/jpeg" && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 ||
+    type === "image/webp" && new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" && new TextDecoder().decode(bytes.slice(8, 12)) === "WEBP";
+  if (!valid) return errorJson("Upload a PNG, JPG or WebP image.", 400);
+  const extension = type === "image/png" ? "png" : type === "image/jpeg" ? "jpg" : "webp";
+  const file = `${crypto.randomUUID()}.${extension}`;
+  await env.BUCKET.put(`catalog/${file}`, bytes, { httpMetadata: { contentType: type } });
+  return Response.json({ imageSrc: `/api/catalog/images/${file}` }, { headers: { "cache-control": "no-store" } });
+}
+
+async function catalogImage(file, env, method) {
+  if (!env.BUCKET || !/^[0-9a-f-]{36}\.(png|jpg|webp)$/.test(file)) return new Response("Not found", { status: 404 });
+  const item = await env.BUCKET.get(`catalog/${file}`);
+  if (!item) return new Response("Not found", { status: 404 });
+  return new Response(method === "HEAD" ? null : item.body, { headers: { "content-type": item.httpMetadata?.contentType || "application/octet-stream", "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" } });
+}
+
 function ownerOrderSummary(row) {
   return {
     ...row,
@@ -291,7 +430,7 @@ function cleanString(value, limit) {
   return typeof value === "string" && value.trim() && value.trim().length <= limit ? value.trim() : null;
 }
 
-function pricedLines(items) {
+function pricedLines(items, catalog, topperPrices) {
   if (!Array.isArray(items) || !items.length || items.length > 20) throw new Error("Choose 1–20 priced items.");
   return items.map((item) => {
     if (!item || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99) throw new Error("Check the item quantity.");
@@ -308,11 +447,11 @@ function pricedLines(items) {
       const validWording = validLines && t.wording.join("").length <= (characterLimits[t.sizeCm] ?? 0) && wordCount <= (wordLimits[t.sizeCm] ?? 0);
       const finishes = { cardstock: ["Glitter Black", "Glitter Dark Blue", "Glitter Green", "Glitter Gold", "Glitter Pink", "Glitter Purple", "Glitter Silver", "Matte Black", "Shiny Gold", "Shiny Rose Gold", "Shiny Silver"], acrylic: ["Black", "Blue", "Green", "Grey", "Matte gold", "Mirror Gold", "Mirror Rose Gold", "Mirror Silver", "Pink", "Red", "Yellow"], wood: ["Natural wood", "Brown wood"] };
       if (!validEvent || !validWording || !validSize || !finishes[t.material]?.includes(t.finish) || (t.details && !cleanString(t.details, 120)) || (t.fontFamily && (typeof t.fontFamily !== "string" || t.fontFamily.length > 80 || !/^[\p{L}\p{N} .'-]+$/u.test(t.fontFamily)))) throw new Error("Check the cake topper choices.");
-      price = TOPPER_PRICES[t.material]?.[t.sizeCm] + (TOPPER_PRICES.finishExtras[t.finish] ?? 0);
+      price = topperPrices[t.material]?.[t.sizeCm] + (topperPrices.finishExtras[t.finish] ?? 0);
       name = `Custom Cake Topper · ${t.material}, ${t.finish}, ${t.sizeCm}cm${t.fontFamily ? ` · ${t.fontFamily}` : ""}`;
       brand = "winnie";
     } else {
-      const product = CATALOG.find((p) => p.id === item.productId);
+      const product = catalog.find((p) => p.id === item.productId);
       const variant = product?.variants.find((v) => v.id === item.variantId);
       if (!variant?.available || !Number.isInteger(variant.priceSen) || variant.priceSen <= 0) throw new Error("An item needs a price confirmation on WhatsApp.");
       name = `${product.name} · ${variant.name}`.slice(0, 200);
@@ -474,7 +613,10 @@ async function createCheckout(request, env, mode) {
   let input;
   try { const body = await request.text(); if (body.length > 40_000) return errorJson("The cart is too large.", 413); input = JSON.parse(body); } catch { return errorJson("Please check your order details.", 400); }
   let lines;
-  try { lines = pricedLines(input.items); } catch (error) { return errorJson(error.message, 400); }
+  try {
+    const [catalog, topperPrices] = await Promise.all([catalogSnapshot(env), topperPricingSnapshot(env)]);
+    lines = pricedLines(input.items, catalog, topperPrices);
+  } catch (error) { return errorJson(error.message, 400); }
   const customer = input.customer;
   const name = cleanString(customer?.name, 100);
   const email = cleanString(customer?.email, 150);
@@ -760,6 +902,41 @@ export default {
         if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });
         const account = accountPublicConfig(env);
         return Response.json(account ? { enabled: true, url: account.url, publishableKey: account.publishableKey } : { enabled: false, url: null, publishableKey: null }, { headers: { "cache-control": "no-store" } });
+      }
+      if (url.pathname === "/api/catalog/") {
+        if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });
+        return Response.json({ products: await catalogSnapshot(env) }, { headers: { "cache-control": "no-store" } });
+      }
+      if (url.pathname === "/api/topper-prices/") {
+        if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });
+        return Response.json({ prices: await topperPricingSnapshot(env) }, { headers: { "cache-control": "no-store" } });
+      }
+      if (url.pathname === "/api/admin/topper-prices/") {
+        if (request.method === "GET") {
+          const owner = await ownerAccount(request, env);
+          if (owner.error) return owner.error;
+          return Response.json({ prices: await topperPricingSnapshot(env) }, { headers: { "cache-control": "no-store" } });
+        }
+        if (request.method === "POST") return await saveTopperPrices(request, env);
+        return new Response("Method not allowed", { status: 405, headers: { allow: "GET, POST" } });
+      }
+      if (url.pathname === "/api/admin/catalog/") {
+        if (request.method === "GET") {
+          const owner = await ownerAccount(request, env);
+          if (owner.error) return owner.error;
+          return Response.json({ products: await catalogSnapshot(env, true) }, { headers: { "cache-control": "no-store" } });
+        }
+        if (request.method === "POST") return await saveCatalogProduct(request, env);
+        return new Response("Method not allowed", { status: 405, headers: { allow: "GET, POST" } });
+      }
+      if (url.pathname === "/api/admin/catalog/image/") {
+        if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
+        return await uploadCatalogImage(request, env);
+      }
+      const catalogImageMatch = /^\/api\/catalog\/images\/([^/]+)$/.exec(url.pathname);
+      if (catalogImageMatch) {
+        if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: { allow: "GET, HEAD" } });
+        return await catalogImage(catalogImageMatch[1], env, request.method);
       }
       if (url.pathname === "/api/admin/customers/lookup/") {
         if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });

@@ -15,6 +15,7 @@ export function SiteFooter() {
           <span className="footer-label">Customer service</span>
           <a href={whatsappLink("Hi UDESIGN, I'd like to ask about your products.")} target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
           <Link href="/cart/">Your cart</Link>
+          <Link href="/about/">About us</Link>
           <Link href="/privacy/">Privacy</Link>
         </div>
         <div className="site-footer__contact">

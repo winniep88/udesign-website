@@ -118,6 +118,7 @@ globalThis.fetch = async (url, options) => {
       return Response.json({ ok: true });
     }
     if (path === "/rest/v1/admin_members") return Response.json(accountMember ? [{ user_id: userId }] : []);
+    if (path === "/rest/v1/catalog_products" || path === "/rest/v1/catalog_variants") return Response.json([]);
     if (path === "/rest/v1/customer_orders") return Response.json(new URL(url).searchParams.has("user_id") ? previousPendingOrder ? [previousPendingOrder] : [] : accountOrder ? [accountOrder] : []);
     if (path === "/rest/v1/customer_order_items") return Response.json([{ order_id: accountOrder?.id, product_name: "Test product", quantity: 7 }]);
     throw new Error(`Unexpected Supabase path: ${path}`);

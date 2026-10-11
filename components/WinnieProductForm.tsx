@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, type FormEvent } from "react";
 import { useCart } from "@/components/CartProvider";
-import { formatRinggit, type CatalogProduct, type CatalogVariant } from "@/lib/catalog";
+import { formatRinggit, productPriceRange, type CatalogProduct, type CatalogVariant } from "@/lib/catalog";
 
 type Option = { variant: CatalogVariant; finish: string; size: string };
 
@@ -21,8 +21,9 @@ function byPriceThenName(a: Option, b: Option) {
 }
 
 export function WinnieProductForm({ product }: { product: CatalogProduct }) {
-  const { addItem, ready } = useCart();
-  const options = useMemo(() => product.variants.filter((item) => item.available).map(parseOption), [product]);
+  const { addItem, catalog, ready } = useCart();
+  const currentProduct = ready ? catalog.find((item) => item.id === product.id) : product;
+  const options = useMemo(() => currentProduct?.variants.filter((item) => item.available).map(parseOption) ?? [], [currentProduct]);
   const cheapest = useMemo(() => [...options].sort(byPriceThenName)[0], [options]);
   const [variantId, setVariantId] = useState(cheapest?.variant.id ?? "");
   const [wording, setWording] = useState("");
@@ -51,15 +52,15 @@ export function WinnieProductForm({ product }: { product: CatalogProduct }) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selected || !ready) return;
+    if (!selected || !ready || !currentProduct) return;
     const personalisation = [
       wording.trim() ? `Topper text or idea: ${wording.trim()}` : "Topper wording: to confirm with studio",
       notes.trim() ? `Other details: ${notes.trim()}` : "",
     ].filter(Boolean).join("\n");
     addItem({
       brand: "winnie",
-      product: product.name,
-      productId: product.id,
+      product: currentProduct.name,
+      productId: currentProduct.id,
       variantId: selected.variant.id,
       quantity,
       notes: personalisation,
@@ -106,4 +107,12 @@ export function WinnieProductForm({ product }: { product: CatalogProduct }) {
       {added && <p className="winnie-product-form__success" role="status">Added to cart. <Link href="/cart/">View your cart →</Link></p>}
     </form>
   );
+}
+
+export function WinnieProductLiveHeading({ product }: { product: CatalogProduct }) {
+  const { catalog, ready } = useCart();
+  const current = ready ? catalog.find((item) => item.id === product.id) : product;
+  if (!current) return <><h1>Product unavailable</h1><p className="winnie-product__price">This product is no longer in the shop.</p></>;
+  const { min, max } = productPriceRange(current);
+  return <><h1>{current.name}</h1><p className="winnie-product__price">{min === max ? formatRinggit(min) : `From ${formatRinggit(min)}`}</p></>;
 }

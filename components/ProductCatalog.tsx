@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { useCart } from "@/components/CartProvider";
+import { TopperStartingPrice } from "@/components/TopperStartingPrice";
 import { formatRinggit, productPriceRange, type Brand, type CatalogProduct } from "@/lib/catalog";
 
 const BRAND_LABELS: Record<Brand, string> = {
@@ -72,15 +73,21 @@ function ProductAddButton({ product }: { product: CatalogProduct }) {
 }
 
 export function ProductCatalog({ brand, products }: { brand: Brand; products: CatalogProduct[] }) {
+  const { catalog: liveCatalog, ready } = useCart();
+  const visibleProducts = ready ? liveCatalog.filter((product) => product.brand === brand && (brand !== "winnie" || !["4911844020", "4306939371"].includes(product.id))) : products;
   const [category, setCategory] = useState("all");
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(24);
-  const categories = useMemo(() => Array.from(new Set(products.map((product) => product.category))).sort(), [products]);
-  const filtered = useMemo(() => products.filter((product) => {
+  useEffect(() => {
+    const searchedProduct = new URLSearchParams(window.location.search).get("q");
+    if (searchedProduct) setQuery(searchedProduct);
+  }, []);
+  const categories = useMemo(() => Array.from(new Set(visibleProducts.map((product) => product.category))).sort(), [visibleProducts]);
+  const filtered = useMemo(() => visibleProducts.filter((product) => {
     const matchesCategory = category === "all" || product.category === category;
     const text = `${product.name} ${product.category}`.toLocaleLowerCase();
     return matchesCategory && text.includes(query.trim().toLocaleLowerCase());
-  }), [products, category, query]);
+  }), [visibleProducts, category, query]);
   const visible = filtered.slice(0, visibleCount);
   const customTopperVisible = brand === "winnie" && (category === "all" || category === "Cake toppers")
     && "custom cake topper cardstock acrylic wood birthday wedding baby shower bridal shower anniversary celebration".includes(query.trim().toLocaleLowerCase());
@@ -91,7 +98,7 @@ export function ProductCatalog({ brand, products }: { brand: Brand; products: Ca
       <div className="shell">
         <div className="product-catalog__heading">
           <div><p className="eyebrow">SHOP THE COLLECTION</p><h2 id={`${brand}-products-title`}>Explore the pieces.</h2></div>
-          <p>{brand === "winnie" ? "Browse the toppers. For a custom cake topper, choose your event first. We&apos;ll confirm its price before payment." : "Choose a listed size or option at its displayed price. We&apos;ll confirm availability and any delivery fee before payment."}</p>
+          <p>{brand === "winnie" ? "Browse the toppers. For a custom cake topper, choose your event first and see the price as you personalise it." : "Choose a listed size or option at its displayed price. We&apos;ll confirm availability and any delivery fee before payment."}</p>
         </div>
         <div className="product-catalog__tools">
           <label>Find a product<input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setVisibleCount(24); }} placeholder="Search products" /></label>
@@ -105,19 +112,19 @@ export function ProductCatalog({ brand, products }: { brand: Brand; products: Ca
                 <p className="catalog-card__category">Cake toppers · Personalise</p>
                 <h3>Custom Cake Topper</h3>
                 <p className="catalog-card__options">Choose an event · Cardstock · Acrylic · Wood</p>
-                <p className="catalog-card__price">Price to confirm</p>
+                <p className="catalog-card__price"><TopperStartingPrice /></p>
                 <Link className="catalog-card__add" href="/winnie-cake-topper/#choose-event">Choose your event <span aria-hidden="true">→</span></Link>
               </article>}
               {visible.map((product) => {
                 const { min, max } = productPriceRange(product);
                 return <article className="catalog-card" key={product.id}>
                   <p className="catalog-card__category">{product.category}</p>
+                  {product.imageSrc && <img className="catalog-card__image" src={product.imageSrc} alt={product.name} loading="lazy" />}
                   <h3>{product.name}</h3>
+                  {product.description && <p className="catalog-card__description">{product.description}</p>}
                   <p className="catalog-card__options">{product.variants.filter((variant) => variant.available).length} {product.variants.filter((variant) => variant.available).length === 1 ? "option" : "options"}</p>
                   <p className="catalog-card__price">{min === max ? formatRinggit(min) : `From ${formatRinggit(min)}`}</p>
-                  {brand === "winnie" ? (
-                    <Link className="catalog-card__add" href={`/winnie-cake-topper/${product.id}/`}>View details &amp; add to cart <span aria-hidden="true">→</span></Link>
-                  ) : <ProductAddButton product={product} />}
+                  <ProductAddButton product={product} />
                 </article>;
               })}
             </div>

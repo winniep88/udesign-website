@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CustomTopperForm } from "@/components/CustomTopperForm";
+import { TopperStartingPrice } from "@/components/TopperStartingPrice";
 import { formatRinggit } from "@/lib/catalog";
 import { topperChoicePriceSen, topperEvent, topperEvents, topperFinishes, topperProductName } from "@/lib/topper";
 
@@ -39,7 +40,7 @@ export default async function TopperProductPage({ params }: Props) {
             <p className="eyebrow">WINNIE CAKE TOPPER BY UDESIGN / {chosen.name.toUpperCase()}</p>
             <h1>{topperProductName()}</h1>
             <p className="custom-topper__lead">A perfect addition to your {chosen.name.toLowerCase()} celebration. Personalise one cardstock, acrylic or wooden cake topper with your wording, font, colour and size.</p>
-            <p className="custom-topper__price">From {formatRinggit(topperChoicePriceSen(1, "cardstock", topperFinishes.cardstock[0].name, 10)!)}</p>
+            <p className="custom-topper__price"><TopperStartingPrice /></p>
             <CustomTopperForm key={chosen.slug} initialEventSlug={chosen.slug} />
           </div>
         </div>
