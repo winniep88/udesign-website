@@ -82,7 +82,12 @@ export default function CartPage() {
   const [welcomeVoucher, setWelcomeVoucher] = useState<WelcomeVoucher | null>(null);
   const [availablePoints, setAvailablePoints] = useState(0);
   const [useVoucher, setUseVoucher] = useState(false);
+  const [voucherInput, setVoucherInput] = useState("");
+  const [voucherMessage, setVoucherMessage] = useState("");
   const [redeemPoints, setRedeemPoints] = useState(0);
+  const [billingDifferent, setBillingDifferent] = useState(false);
+  const [billingAddress, setBillingAddress] = useState("");
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [emailOptIn, setEmailOptIn] = useState(false);
   const [whatsappOptIn, setWhatsappOptIn] = useState(false);
   const [shipNameError, setShipNameError] = useState("");
@@ -106,6 +111,8 @@ export default function CartPage() {
       setWelcomeVoucher(null);
       setAvailablePoints(0);
       setUseVoucher(false);
+      setVoucherInput("");
+      setVoucherMessage("");
       setRedeemPoints(0);
       setCustomerName("");
       setCustomerEmail("");
@@ -132,6 +139,7 @@ export default function CartPage() {
       setSavedAddresses(addressList);
       const currentVoucher = ((voucher.data ?? []) as WelcomeVoucher[]).find((item) => !item.redeemed_at && !item.reserved_at && !item.forfeited_at && new Date(item.expires_at).getTime() > Date.now());
       setWelcomeVoucher(currentVoucher ?? null);
+      if (currentVoucher) setVoucherInput((current) => current || currentVoucher.code);
       setAvailablePoints(Math.max(0, (ledger.data ?? []).reduce((sum, entry) => sum + Number(entry.points_delta ?? entry.points ?? 0), 0)));
       setEmailOptIn(prefs.data?.email_opt_in === true);
       setWhatsappOptIn(prefs.data?.whatsapp_opt_in === true);
@@ -158,6 +166,7 @@ export default function CartPage() {
   const maxRedeemPoints = Math.max(0, Math.min(availablePoints, Math.floor((pricing.subtotalSen - voucherDiscountSen) / 5)));
   const appliedPoints = !paymentAvailable || totalToConfirm || voucherDiscountSen > 0 ? 0 : Math.min(Math.max(0, redeemPoints), maxRedeemPoints);
   const checkoutTotalSen = Math.max(0, pricing.subtotalSen + deliveryFeeSen - voucherDiscountSen - appliedPoints * 5);
+  const checkoutNotes = [extraNotes.trim(), fulfilment === "delivery" && billingDifferent ? `Different billing name/address: ${billingAddress.trim()}` : ""].filter(Boolean).join(" | ");
   const itemSubtotalText = pricing.needsQuote
     ? pricing.subtotalSen ? `${formatRinggit(pricing.subtotalSen)} + item price to confirm` : "To confirm"
     : formatRinggit(pricing.subtotalSen);
@@ -186,11 +195,26 @@ export default function CartPage() {
     } else if (cakeTopperOnly) lines.push("Pickup: cake toppers are usually ready about 3 hours after design confirmation, during collection hours. We will confirm the time on WhatsApp.");
     if (voucherDiscountSen) lines.push("Welcome voucher: -RM10.00 (subject to checkout confirmation)");
     if (appliedPoints) lines.push(`Points selected: ${appliedPoints} (subject to checkout confirmation)`);
-    lines.push(`Estimated total: ${totalToConfirm ? "To confirm" : formatRinggit(checkoutTotalSen)}`);
+    lines.push(`Total to pay: ${totalToConfirm ? "To confirm" : formatRinggit(checkoutTotalSen)}`);
+    if (fulfilment === "delivery" && billingDifferent && billingAddress.trim()) lines.push(`Different billing name/address: ${billingAddress.trim()}`);
     if (extraNotes.trim()) lines.push(`Other notes: ${extraNotes.trim()}`);
     lines.push("", "Please confirm the design, ready date, final total and payment instructions. Thank you!");
     return lines.join("\n");
-  }, [items, liveCatalog, topperPrices, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, shippingName, customerPhone, address, extraNotes, voucherDiscountSen, appliedPoints, checkoutTotalSen]);
+  }, [items, liveCatalog, topperPrices, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, shippingName, customerPhone, address, extraNotes, voucherDiscountSen, appliedPoints, checkoutTotalSen, billingDifferent, billingAddress]);
+
+  function redeemVoucher() {
+    setVoucherMessage("");
+    setUseVoucher(false);
+    const code = voucherInput.trim();
+    if (!code) { setVoucherMessage("Enter your voucher code first."); return; }
+    if (!user) { setVoucherMessage("Sign in to your account first to redeem your welcome voucher."); return; }
+    if (!welcomeVoucher || code.toUpperCase() !== welcomeVoucher.code.toUpperCase()) { setVoucherMessage("This voucher is not available in your account. Check the code shown in My account."); return; }
+    if (pricing.subtotalSen < 10000) { setVoucherMessage("Add products worth at least RM100 before delivery charges to use this voucher."); return; }
+    if (!paymentAvailable || totalToConfirm) { setVoucherMessage("We need to confirm this order's price before applying a voucher. Please contact us on WhatsApp."); return; }
+    setRedeemPoints(0);
+    setUseVoucher(true);
+    setVoucherMessage("RM10 welcome voucher applied.");
+  }
 
   function validateRequest() {
     if (fulfilment === "delivery" && !deliveryRegion) {
@@ -232,6 +256,9 @@ export default function CartPage() {
     setPaymentError("");
     if (!validateRequest()) return;
     if (!checkoutName || !customerEmail.trim() || !customerPhone.trim()) { setPaymentError("Please enter your name, email and WhatsApp number."); return; }
+    if (fulfilment === "delivery" && billingDifferent && !billingAddress.trim()) { setPaymentError("Enter the different billing name and address, or choose Same as delivery address."); return; }
+    if (checkoutNotes.length > 500) { setPaymentError("Please shorten your order remark or billing address to continue."); return; }
+    if (!orderConfirmed) { setPaymentError("Please confirm that you have checked your order details before paying."); return; }
     setPaying(true);
     try {
       const session = user ? (await accountClient?.auth.getSession())?.data.session : null;
@@ -246,7 +273,7 @@ export default function CartPage() {
         setSavedAddresses((current) => [saved as SavedAddress, ...current]);
         setSelectedAddressId(saved.id);
       }
-      const response = await fetch("/api/checkout/", { method: "POST", headers: { "content-type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) }, body: JSON.stringify({ items, fulfilment, region: deliveryRegion, address, extraNotes, customer: { name: checkoutName, email: customerEmail, phone: customerPhone }, marketing: { emailOptIn, whatsappOptIn }, ...(voucherDiscountSen && welcomeVoucher ? { voucherCode: welcomeVoucher.code } : {}), ...(appliedPoints ? { redeemPoints: appliedPoints } : {}) }) });
+      const response = await fetch("/api/checkout/", { method: "POST", headers: { "content-type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) }, body: JSON.stringify({ items, fulfilment, region: deliveryRegion, address, extraNotes: checkoutNotes, customer: { name: checkoutName, email: customerEmail, phone: customerPhone }, marketing: { emailOptIn, whatsappOptIn }, ...(voucherDiscountSen && welcomeVoucher ? { voucherCode: welcomeVoucher.code } : {}), ...(appliedPoints ? { redeemPoints: appliedPoints } : {}) }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Payment checkout is unavailable. Please try again.");
       if (typeof data.checkoutUrl !== "string" || new URL(data.checkoutUrl).hostname !== "gate.chip-in.asia") throw new Error("Payment checkout is unavailable. Please contact us.");
@@ -334,28 +361,40 @@ export default function CartPage() {
               </div>}
               {fulfilment === "pickup" && <div className="cart-pickup-card"><p>1 pickup location for your order</p><div><h3>UDESIGN PROJECTS STUDIO · Kuchai Lama</h3><strong>FREE</strong></div><address>18, Jalan Rukun 1, Taman Continental, Kuchai Jaya, Kuchai Lama, 58200 Kuala Lumpur</address><p>Collection hours: Monday–Friday, 9:00 am–4:00 pm. We&apos;ll confirm your pickup time on WhatsApp.</p>{cakeTopperOnly && <p>Cake toppers are usually ready in about 3 hours after we confirm your design, during collection hours.</p>}</div>}
               <p className="cart-urgent">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I have an urgent order and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp ↗</a> We&apos;ll confirm availability before you travel.</p>
-              <div className="cart-checkout__extra"><label className="cart-field">Anything else? <span>(optional)</span><textarea rows={3} maxLength={500} placeholder="Any other request we should know" value={extraNotes} onChange={(event) => setExtraNotes(event.target.value)} /></label></div>
               <div className="cart-quote">
+                <h3>Order summary</h3>
+                <div className="cart-quote__items">{items.map((item) => <div className="cart-quote__item" key={item.id}><span>{item.product} <small>× {item.quantity}</small></span><strong>{itemUnitPriceSen(item, liveCatalog, topperPrices) !== undefined ? formatRinggit(itemUnitPriceSen(item, liveCatalog, topperPrices)! * item.quantity) : "To confirm"}</strong></div>)}</div>
                 <div className="cart-quote__row"><h3>Item subtotal</h3><strong>{itemSubtotalText}</strong></div>
                 {fulfilment === "delivery" && <div className="cart-quote__row"><span>Delivery</span><strong>{cakeTopperOnly && region ? formatRinggit(region.feeSen) : "To confirm"}</strong></div>}
-                {voucherCanApply && <label className="cart-reward"><input type="checkbox" checked={useVoucher} onChange={(event) => { setUseVoucher(event.target.checked); if (event.target.checked) setRedeemPoints(0); }} /><span><strong>Use my RM10 welcome voucher</strong><small>First order · RM100 minimum in products · expires {new Date(welcomeVoucher!.expires_at).toLocaleDateString("en-MY")}</small></span></label>}
                 {paymentAvailable && !totalToConfirm && user && availablePoints > 0 && voucherDiscountSen === 0 && <label className="cart-field cart-redeem">Use reward points <span>(optional, 1 point = RM0.05)</span><input type="number" min={0} max={maxRedeemPoints} step={1} value={redeemPoints} onChange={(event) => setRedeemPoints(Math.min(maxRedeemPoints, Math.max(0, Math.floor(Number(event.target.value) || 0))))} /><small>{availablePoints} available · up to {maxRedeemPoints} for this order</small></label>}
                 {voucherDiscountSen > 0 && <div className="cart-quote__row"><span>Welcome voucher</span><strong>−RM10.00</strong></div>}
                 {appliedPoints > 0 && <div className="cart-quote__row"><span>{appliedPoints} points</span><strong>−{formatRinggit(appliedPoints * 5)}</strong></div>}
-                <div className="cart-quote__row cart-quote__row--total"><span>Estimated total</span><strong>{totalToConfirm ? "To confirm" : formatRinggit(checkoutTotalSen)}</strong></div>
+                <div className="cart-quote__row cart-quote__row--total"><span>Total to pay</span><strong>{totalToConfirm ? "To confirm" : formatRinggit(checkoutTotalSen)}</strong></div>
                 <p>{fulfilment === "delivery" && cakeTopperOnly && region ? `${region.label}: estimated ${region.transit} after dispatch. ` : fulfilment === "pickup" ? "Pickup in Kuchai Lama, Kuala Lumpur; we'll confirm your collection time. " : "Delivery timing to confirm. "}We&apos;ll send a design confirmation on WhatsApp. If we need to change or cannot make an order, we&apos;ll contact you first and agree on a replacement or refund.</p>
               </div>
+              <section className="cart-voucher" aria-labelledby="cart-voucher-title">
+                <h3 id="cart-voucher-title">Voucher</h3>
+                <p>Enter your welcome voucher code and tap Redeem. RM10 off your first order with at least RM100 in products before delivery.</p>
+                {user && welcomeVoucher && <p className="cart-voucher__available">Your code: <strong>{welcomeVoucher.code}</strong> · expires {new Date(welcomeVoucher.expires_at).toLocaleDateString("en-MY")}</p>}
+                <form className="cart-voucher__entry" onSubmit={(event) => { event.preventDefault(); redeemVoucher(); }}><label htmlFor="cart-voucher-code">Voucher code</label><div><input id="cart-voucher-code" type="text" autoComplete="off" maxLength={40} value={voucherInput} onChange={(event) => { setVoucherInput(event.target.value); setUseVoucher(false); setVoucherMessage(""); }} /><button type="submit">Redeem</button></div></form>
+                {useVoucher && !voucherCanApply ? <p className="cart-voucher__message" role="status">The voucher is no longer applied. Check the RM100 product minimum and order price.</p> : voucherMessage && <p className="cart-voucher__message" role="status">{voucherMessage}</p>}
+                {!user && accountEnabled && <p><Link href="/account/">Sign in to use your voucher</Link>. Guest checkout remains available.</p>}
+                {useVoucher && <button className="cart-voucher__remove" type="button" onClick={() => { setUseVoucher(false); setVoucherMessage(""); }}>Remove voucher</button>}
+              </section>
+              <div className="cart-checkout__extra"><label className="cart-field">Order remark <span>(optional)</span><textarea rows={3} maxLength={500} placeholder="Any other request we should know" value={extraNotes} onChange={(event) => setExtraNotes(event.target.value)} /></label></div>
             </section>
 
             <section className="cart-request" aria-labelledby="cart-request-title">
               <div className="cart-section-heading"><div><span>03 / PLACE YOUR ORDER</span><h2 id="cart-request-title">Ready to order?</h2></div></div>
               {paymentAvailable && !totalToConfirm && <div className="cart-delivery-fields">
-                <p>Pay {formatRinggit(checkoutTotalSen)} now through CHIP. You&apos;ll enter payment details on CHIP&apos;s secure page. The final rewards amount is checked before payment opens.</p>
                 {fulfilment === "pickup" && <label className="cart-field">Full name<input type="text" value={customerName} maxLength={100} autoComplete="name" onChange={(event) => setCustomerName(event.target.value)} /></label>}
                 <label className="cart-field">Email<input type="email" value={customerEmail} maxLength={150} autoComplete="email" onChange={(event) => setCustomerEmail(event.target.value)} /></label>
                 {fulfilment === "pickup" && <label className="cart-field">WhatsApp number<input type="tel" value={customerPhone} maxLength={30} autoComplete="tel" onChange={(event) => setCustomerPhone(event.target.value)} /></label>}
+                <section className="cart-payment" aria-labelledby="cart-payment-title"><h3 id="cart-payment-title">Payment</h3><p>Payment details are entered on CHIP&apos;s secure page.</p><div className="cart-payment__method"><div><span className="cart-payment__radio" aria-hidden="true" /><strong>Online banking / DuitNow QR</strong></div><p>After clicking Pay Now, you&apos;ll go to CHIP to complete your payment securely.</p></div></section>
+                {fulfilment === "delivery" && <fieldset className="cart-billing"><legend>Billing address</legend><label><input type="radio" name="billing-address" checked={!billingDifferent} onChange={() => setBillingDifferent(false)} /> Same as delivery address</label><label><input type="radio" name="billing-address" checked={billingDifferent} onChange={() => setBillingDifferent(true)} /> Use a different billing address</label>{billingDifferent && <label className="cart-field">Billing name and full address<textarea rows={3} maxLength={400} value={billingAddress} onChange={(event) => setBillingAddress(event.target.value)} placeholder="Full name, street, postcode, city, state and country" /></label>}</fieldset>}
                 <div className="cart-marketing"><p>Optional promotions</p><label><input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} /> Email me offers and news</label><label><input type="checkbox" checked={whatsappOptIn} onChange={(event) => setWhatsappOptIn(event.target.checked)} /> Send me offers on WhatsApp</label><small>We may still contact you about this order and your design.</small></div>
-                <button className="cart-request__whatsapp" type="button" disabled={paying} onClick={payNow}>{paying ? "Opening secure checkout…" : `Pay ${formatRinggit(checkoutTotalSen)} with CHIP ↗`}</button>
+                <label className="cart-confirm"><input type="checkbox" checked={orderConfirmed} onChange={(event) => { setOrderConfirmed(event.target.checked); setPaymentError(""); }} /><span>I have checked my order details and understand UDESIGN will confirm the custom design and fulfilment timing before making it. I have read the <Link href="/privacy/" target="_blank">Privacy Policy</Link>.</span></label>
+                <button className="cart-pay-now" type="button" disabled={paying} onClick={payNow}>{paying ? "Opening secure checkout…" : `Pay Now · ${formatRinggit(checkoutTotalSen)}`}</button>
                 {paymentError && <p className="cart-field__error" role="alert">{paymentError}</p>}
               </div>}
               {!paymentAvailable && <p>Online payment will open once our CHIP account is approved. For now, send us your request on WhatsApp.</p>}
