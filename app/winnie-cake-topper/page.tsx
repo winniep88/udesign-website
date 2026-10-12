@@ -30,9 +30,9 @@ export default function WinniePage() {
               <h1>What are we<br /><em>celebrating?</em></h1>
               <p>Choose your event first. Then personalise your custom cake topper with wording, font, material, colour and size.</p>
               <TopperEventPicker />
-              <a className="winnie-instagram-link" href="https://www.instagram.com/winniecaketopper/" target="_blank" rel="noopener noreferrer">See our real toppers on Instagram ↗</a>
+              <a className="winnie-instagram-link" href="https://www.instagram.com/winniecaketopper/" target="_blank" rel="noopener noreferrer">See our real toppers on Instagram</a>
             </div>
-            <div className="winnie-hero__image"><Image src="/images/topper-designs/f002.jpeg" alt="First birthday cake topper design inspiration" fill sizes="(max-width: 750px) 100vw, 50vw" priority /><span className="winnie-spark winnie-spark--one" aria-hidden="true">✳</span><span className="winnie-spark winnie-spark--two" aria-hidden="true">✦</span><span className="image-label">CAKE TOPPER DESIGN INSPIRATION</span></div>
+            <div className="winnie-hero__image"><Image src="/images/winnie-hero-geode.png" alt="Blush geode cake with gold floral custom cake topper" fill sizes="(max-width: 750px) 100vw, 50vw" priority /></div>
           </div>
         </section>
 

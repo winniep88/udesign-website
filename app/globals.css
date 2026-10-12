@@ -215,10 +215,6 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 .winnie-hero .button { margin-top:24px; }
 .winnie-hero__image { height:555px; position:relative; border-radius:51% 49% 49% 51% / 47% 47% 53% 53%; background:#fbaec8; }
 .winnie-hero__image img { object-fit:cover; border-radius:inherit; }
-.winnie-hero__image .image-label { bottom:20px; left:50%; transform:translateX(-50%); white-space:nowrap; }
-.winnie-spark { position:absolute; z-index:2; color:#eb477d; line-height:1; text-shadow:2px 3px #fff; }
-.winnie-spark--one { left:-46px; top:45px; font-size:100px; }
-.winnie-spark--two { right:-50px; bottom:40px; font-size:100px; }
 .winnie-collections { padding-block:110px 125px; }
 .winnie-ideas { padding-block:90px 35px; }
 .winnie-ideas h2 { margin:17px 0 10px; font-size:clamp(45px,5vw,75px); line-height:1; letter-spacing:-.07em; }
@@ -325,8 +321,6 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
   .moments-inspiration__grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .moments-quote { padding-block:80px; }
   .winnie-hero h1 { font-size:clamp(82px,15vw,130px); }
-  .winnie-spark--one { left:-10px; font-size:70px; }
-  .winnie-spark--two { right:-10px; font-size:70px; }
   .winnie-collections { padding-block:75px; }
   .winnie-ideas { padding-block:65px 15px; }
   .winnie-ideas__grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
