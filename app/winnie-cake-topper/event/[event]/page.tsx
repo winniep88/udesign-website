@@ -54,10 +54,7 @@ export default async function TopperEventPage({ params }: Props) {
             <h2 id="topper-designs-title">Design ideas for {chosen.name.toLowerCase()}.</h2>
             <p>Choose a look you like, then personalise the wording, size, material and colour. We&apos;ll send you a mock-up to confirm before making it.</p>
             <div className="topper-designs__grid">{designs.map((design) => <article className="topper-designs__card" key={design.id}>
-              <div className="topper-designs__image">
-                <Image className="topper-photo-backdrop" src={design.imageSrc} alt="" aria-hidden="true" fill sizes="(max-width: 650px) 48vw, (max-width: 1000px) 30vw, 22vw" />
-                <Image className="topper-photo-foreground" src={design.imageSrc} alt={`${design.name} cake topper design inspiration`} fill sizes="(max-width: 650px) 48vw, (max-width: 1000px) 30vw, 22vw" />
-              </div>
+              <div className="topper-designs__image"><Image src={design.imageSrc} alt={`${design.name} cake topper design inspiration`} fill sizes="(max-width: 650px) 48vw, (max-width: 1000px) 30vw, 22vw" /></div>
               <div className="topper-designs__caption"><span>{design.id}</span><h3>{design.name}</h3><Link href={`${topperProductHref(chosen.slug)}?design=${encodeURIComponent(design.id)}`}>Choose this style <span aria-hidden="true">→</span></Link></div>
             </article>)}</div>
           </section>}
