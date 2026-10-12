@@ -67,18 +67,39 @@ export const topperFinishes: Record<TopperMaterial, readonly { name: string; ext
   ],
 };
 
-// Add curated event designs here later. The custom product remains shared.
 export type TopperEventDesign = {
   id: string;
   name: string;
-  description: string;
   imageSrc: string;
-  lineCount: TopperLineCount;
 };
 export const topperEventDesigns: Record<TopperEventSlug, readonly TopperEventDesign[]> = {
-  birthday: [],
-  wedding: [],
-  "baby-shower": [],
+  birthday: [
+    { id: "F001", name: "First birthday name", imageSrc: "/images/topper-designs/f001.jpeg" },
+    { id: "F002", name: "First birthday animals", imageSrc: "/images/topper-designs/f002.jpeg" },
+    { id: "F003", name: "First birthday numeral", imageSrc: "/images/topper-designs/f003.jpeg" },
+    { id: "A001-C001", name: "Milestone number", imageSrc: "/images/topper-designs/a001-c001.jpeg" },
+    { id: "B001", name: "Milestone celebration", imageSrc: "/images/topper-designs/b001.jpeg" },
+    { id: "B001-F004", name: "Floral birthday", imageSrc: "/images/topper-designs/b001-f004.jpeg" },
+    { id: "B002", name: "Ballerina birthday", imageSrc: "/images/topper-designs/b002.jpeg" },
+  ],
+  wedding: [
+    { id: "W001", name: "Mr & Mrs script", imageSrc: "/images/topper-designs/w001.jpeg" },
+    { id: "W002", name: "Floral initials", imageSrc: "/images/topper-designs/w002.jpeg" },
+    { id: "W003", name: "Couple names", imageSrc: "/images/topper-designs/w003.jpeg" },
+    { id: "W004", name: "Golden initials", imageSrc: "/images/topper-designs/w004.png" },
+    { id: "W005", name: "Floral names", imageSrc: "/images/topper-designs/w005.jpeg" },
+    { id: "W006", name: "Floral names, full setting", imageSrc: "/images/topper-designs/w006.jpeg" },
+    { id: "W007", name: "Names in a circle", imageSrc: "/images/topper-designs/w007.jpeg" },
+    { id: "W008", name: "Names with leaves", imageSrc: "/images/topper-designs/w008.jpeg" },
+    { id: "W009", name: "Names in a frame", imageSrc: "/images/topper-designs/w009.jpeg" },
+    { id: "W010", name: "Script names", imageSrc: "/images/topper-designs/w010-natural-wood.jpeg" },
+    { id: "W011", name: "Floral wreath", imageSrc: "/images/topper-designs/w011-natural-wood.jpeg" },
+  ],
+  "baby-shower": [
+    { id: "S001", name: "Mum and baby outline", imageSrc: "/images/topper-designs/s001.jpeg" },
+    { id: "S002", name: "Baby name", imageSrc: "/images/topper-designs/s002.jpeg" },
+    { id: "S003", name: "Welcome baby", imageSrc: "/images/topper-designs/s003.jpeg" },
+  ],
   "bridal-shower": [],
   anniversary: [],
   celebration: [],

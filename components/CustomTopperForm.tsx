@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { useCart } from "@/components/CartProvider";
 import { formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
-import { topperCharacterLimit, topperChoicePriceSen, topperFinishes, topperFontStyles, topperProductName, topperSizes, topperWordCount, topperWordLimit, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
+import { topperCharacterLimit, topperChoicePriceSen, topperEventDesigns, topperEventHref, topperFinishes, topperFontStyles, topperProductName, topperSizes, topperWordCount, topperWordLimit, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
 
 export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: TopperEventSlug }) {
   const { addItem, topperPrices, ready } = useCart();
@@ -18,6 +18,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const [fontDialogOpen, setFontDialogOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [details, setDetails] = useState("");
+  const [selectedDesignId, setSelectedDesignId] = useState("");
   const [referenceFile, setReferenceFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -31,6 +32,11 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const wordCount = topperWordCount(wordingLines);
   const wordLimit = topperWordLimit(sizeCm);
   const unitPriceSen = material && finish ? topperChoicePriceSen(lineCount, material, finish, sizeCm, topperPrices ?? undefined) : undefined;
+  const selectedDesign = topperEventDesigns[initialEventSlug].find((item) => item.id === selectedDesignId);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("design") ?? "";
+    if (topperEventDesigns[initialEventSlug].some((item) => item.id === id)) setSelectedDesignId(id);
+  }, [initialEventSlug]);
   useEffect(() => {
     if (!fontDialogOpen) return;
     for (const font of topperFontStyles) {
@@ -126,7 +132,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
           sizeCm,
           wording: wordingLines.map((line) => line.trim()),
           ...(fontFamily ? { fontFamily } : {}),
-          ...(details.trim() ? { details: details.trim() } : {}),
+          ...(selectedDesign || details.trim() ? { details: `${selectedDesign ? `Style ${selectedDesign.id}` : ""}${selectedDesign && details.trim() ? "; " : ""}${details.trim()}` } : {}),
         },
       });
       setAdded(true);
@@ -139,6 +145,11 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
 
   return (
     <form className="custom-topper-form" id="customise" onSubmit={submit}>
+      {topperEventDesigns[initialEventSlug].length > 0 && <div className="custom-topper-form__design">
+        <strong>{selectedDesign ? `Your inspiration: ${selectedDesign.name} (${selectedDesign.id})` : "Have a design in mind?"}</strong>
+        <p>{selectedDesign ? "We'll use this look as a starting point and send you a mock-up to confirm." : "You can choose one of our design ideas, upload a reference photo below, or leave the design to us."}</p>
+        <Link href={`${topperEventHref(initialEventSlug)}#topper-designs-title`}>{selectedDesign ? "See other design ideas" : "Browse design ideas"} →</Link>
+      </div>}
       <fieldset className="custom-topper-form__choices">
         <legend>1. Choose the topper size</legend>
         <p className="custom-topper-form__intro">Choose a size, then enter your wording below.</p>

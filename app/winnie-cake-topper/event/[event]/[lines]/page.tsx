@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CustomTopperForm } from "@/components/CustomTopperForm";
 import { TopperStartingPrice } from "@/components/TopperStartingPrice";
-import { formatRinggit } from "@/lib/catalog";
-import { topperChoicePriceSen, topperEvent, topperEvents, topperFinishes, topperProductName } from "@/lib/topper";
+import { TopperHeroImage } from "@/components/TopperHeroImage";
+import { topperEvent, topperEvents, topperProductName } from "@/lib/topper";
 
 type Props = { params: Promise<{ event: string; lines: string }> };
 
@@ -33,7 +32,7 @@ export default async function TopperProductPage({ params }: Props) {
         <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><Link href={`/winnie-cake-topper/event/${chosen.slug}/`}>{chosen.name}</Link><span aria-hidden="true">/</span><span>Custom Cake Topper</span></nav>
         <div className="custom-topper__layout">
           <div className="custom-topper__visual">
-            <div className="custom-topper__image"><Image src="/images/winnie.webp" alt="Colourful cake topper style inspiration; this is a concept image, not a product photo" fill sizes="(max-width: 900px) 100vw, 42vw" priority /><span>STYLE INSPIRATION · NOT A PRODUCT PHOTO</span></div>
+            <TopperHeroImage eventSlug={chosen.slug} />
             <p>See finished work at <a href="https://www.instagram.com/winniecaketopper/" target="_blank" rel="noopener noreferrer">@winniecaketopper ↗</a></p>
           </div>
           <div className="custom-topper__content">

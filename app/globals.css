@@ -184,6 +184,16 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 .moment-category--gifts { background:#dbc8bd; }
 .moment-category--corporate { background:#b8aba0; }
 .moment-category--baby { background:#e7dce8; }
+.moments-inspiration { padding-block:105px 115px; }
+.moments-inspiration h2 { max-width:800px; margin:18px 0 15px; font-family:Georgia,serif; font-size:clamp(42px,5vw,76px); font-weight:400; line-height:1.05; letter-spacing:-.06em; }
+.moments-inspiration > p:not(.eyebrow) { max-width:650px; margin:0 0 35px; color:#6d6660; font-size:16px; line-height:1.65; }
+.moments-inspiration__grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.moments-inspiration__grid a { color:inherit; }
+.moments-inspiration__grid a > div { position:relative; aspect-ratio:4/5; overflow:hidden; background:#e9dbcf; }
+.moments-inspiration__grid img { object-fit:cover; transition:transform .3s ease; }
+.moments-inspiration__grid a:hover img { transform:scale(1.04); }
+.moments-inspiration__grid span { display:block; padding-top:13px; font-size:11px; font-weight:900; letter-spacing:.07em; }
+.moments-inspiration > small { display:block; margin-top:20px; color:#6d6660; font-size:12px; line-height:1.5; }
 .moments-quote { padding-block:115px 135px; text-align:center; }
 .moments-quote > span { color:#a67d72; font-size:34px; }
 .moments-quote blockquote { font-family:Georgia,serif; font-size:clamp(47px,5.4vw,86px); letter-spacing:-.068em; line-height:1.1; font-weight:400; margin:22px 0 24px; }
@@ -210,6 +220,15 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 .winnie-spark--one { left:-46px; top:45px; font-size:100px; }
 .winnie-spark--two { right:-50px; bottom:40px; font-size:100px; }
 .winnie-collections { padding-block:110px 125px; }
+.winnie-ideas { padding-block:90px 35px; }
+.winnie-ideas h2 { margin:17px 0 10px; font-size:clamp(45px,5vw,75px); line-height:1; letter-spacing:-.07em; }
+.winnie-ideas > p:not(.eyebrow) { margin:0 0 30px; font-size:16px; line-height:1.6; }
+.winnie-ideas__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.winnie-ideas__grid a { color:inherit; }
+.winnie-ideas__grid a > div { position:relative; aspect-ratio:4/5; overflow:hidden; background:#f9dbe4; }
+.winnie-ideas__grid img { object-fit:cover; transition:transform .3s ease; }
+.winnie-ideas__grid a:hover img { transform:scale(1.04); }
+.winnie-ideas__grid a > span { display:flex; align-items:center; justify-content:space-between; padding-top:16px; font-size:17px; font-weight:900; }
 .winnie-collections h2 { font-size:clamp(46px,5vw,80px); line-height:1.03; letter-spacing:-.075em; font-weight:900; margin:20px 0 50px; }
 .winnie-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .winnie-grid article { min-height:340px; display:flex; flex-direction:column; padding:30px; background:#f9b8c9; }
@@ -302,11 +321,16 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
   .moments-hero__brand { margin-top:38px; }
   .moments-hero h1 { font-size:clamp(60px,11vw,90px); }
   .moments-categories { padding-block:75px; }
+  .moments-inspiration { padding-block:75px; }
+  .moments-inspiration__grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .moments-quote { padding-block:80px; }
   .winnie-hero h1 { font-size:clamp(82px,15vw,130px); }
   .winnie-spark--one { left:-10px; font-size:70px; }
   .winnie-spark--two { right:-10px; font-size:70px; }
   .winnie-collections { padding-block:75px; }
+  .winnie-ideas { padding-block:65px 15px; }
+  .winnie-ideas__grid { grid-template-columns:1fr; gap:35px; }
+  .winnie-ideas__grid a > div { aspect-ratio:4/3; }
   .site-footer__top { grid-template-columns:1fr 1fr; gap:38px; }
   .site-footer__contact { grid-column:1 / -1; justify-self:start; }
   .site-footer__wordmark { font-size:clamp(72px,16vw,160px); }

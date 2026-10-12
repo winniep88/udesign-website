@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   description: "Choose an event, then personalise a custom cake topper with Winnie Cake Topper by UDESIGN.",
 };
 
+const featuredIdeas = [
+  { event: "Birthday", href: "/winnie-cake-topper/event/birthday/#topper-designs-title", image: "/images/topper-designs/f001.jpeg" },
+  { event: "Wedding", href: "/winnie-cake-topper/event/wedding/#topper-designs-title", image: "/images/topper-designs/w001.jpeg" },
+  { event: "Baby Shower", href: "/winnie-cake-topper/event/baby-shower/#topper-designs-title", image: "/images/topper-designs/s003.jpeg" },
+] as const;
+
 export default function WinniePage() {
   return (
     <div className="winnie-page">
@@ -29,7 +35,7 @@ export default function WinniePage() {
               <TopperEventPicker />
               <a className="winnie-instagram-link" href="https://www.instagram.com/winniecaketopper/" target="_blank" rel="noopener noreferrer">See our real toppers on Instagram ↗</a>
             </div>
-            <div className="winnie-hero__image"><Image src="/images/winnie.webp" alt="Concept image of a colourful acrylic cake decoration" fill sizes="(max-width: 750px) 100vw, 50vw" priority /><span className="winnie-spark winnie-spark--one" aria-hidden="true">✳</span><span className="winnie-spark winnie-spark--two" aria-hidden="true">✦</span><span className="image-label">STYLE INSPIRATION / NOT A PRODUCT PHOTO</span></div>
+            <div className="winnie-hero__image"><Image src="/images/topper-designs/f002.jpeg" alt="First birthday cake topper design inspiration" fill sizes="(max-width: 750px) 100vw, 50vw" priority /><span className="winnie-spark winnie-spark--one" aria-hidden="true">✳</span><span className="winnie-spark winnie-spark--two" aria-hidden="true">✦</span><span className="image-label">CAKE TOPPER DESIGN INSPIRATION</span></div>
           </div>
         </section>
 
@@ -37,6 +43,8 @@ export default function WinniePage() {
           <div><p className="eyebrow">YOUR TOPPER, YOUR WAY</p><h2 id="custom-topper-feature-title">One custom topper. Your choices.</h2><p>For every event, choose your wording, font, cardstock, acrylic or wood, its matching colour or finish, and your topper width.</p></div>
           <a href="#choose-event">Choose your event <span aria-hidden="true">↑</span></a>
         </section>
+
+        <section className="winnie-ideas shell" aria-labelledby="winnie-ideas-title"><p className="eyebrow">CHOOSE AN OCCASION</p><h2 id="winnie-ideas-title">Find your starting point.</h2><p>Browse topper ideas for your celebration, or create one entirely your own.</p><div className="winnie-ideas__grid">{featuredIdeas.map((idea) => <Link key={idea.event} href={idea.href}><div><Image src={idea.image} alt={`${idea.event} cake topper design inspiration`} fill sizes="(max-width: 650px) 100vw, 30vw" /></div><span>{idea.event} <span aria-hidden="true">→</span></span></Link>)}</div></section>
 
         <section className="winnie-collections shell" aria-labelledby="winnie-collections-title"><p className="eyebrow">MORE TO EXPLORE</p><h2 id="winnie-collections-title">Little pieces, big celebrations.</h2><p className="collection-note">Browse other listed pieces below, or start above with your event for a custom cake topper.</p><div className="winnie-grid"><article><span className="winnie-icon" aria-hidden="true">✳</span><span>01 / THE TOPPING</span><h3>Cake toppers</h3><p>Names, themes and joyful finishing touches for the cake at the centre of it all.</p><a className="collection-browse" href="#products">Browse toppers ↓</a></article><article><span className="winnie-icon" aria-hidden="true">✦</span><span>02 / THE LITTLE EXTRAS</span><h3>Celebration pieces</h3><p>Personal details to make birthdays, parties and special days feel more like yours.</p><a className="collection-browse" href="#products">Browse pieces ↓</a></article></div></section>
 

@@ -5,8 +5,7 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TopperStartingPrice } from "@/components/TopperStartingPrice";
-import { formatRinggit } from "@/lib/catalog";
-import { topperChoicePriceSen, topperEvent, topperEventDesigns, topperEvents, topperFinishes, topperProductHref, topperProductName } from "@/lib/topper";
+import { topperEvent, topperEventDesigns, topperEvents, topperProductHref, topperProductName } from "@/lib/topper";
 
 type Props = { params: Promise<{ event: string }> };
 
@@ -22,6 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TopperEventPage({ params }: Props) {
   const chosen = topperEvent((await params).event);
   if (!chosen) notFound();
+  const designs = topperEventDesigns[chosen.slug];
 
   return (
     <div className="winnie-page topper-event-page">
@@ -31,7 +31,7 @@ export default async function TopperEventPage({ params }: Props) {
           <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><span>{chosen.name}</span></nav>
           <div className="topper-event-hero__grid">
             <div><p className="eyebrow">CHOOSE YOUR EVENT / {chosen.name.toUpperCase()}</p><h1>{chosen.name} cake toppers</h1><p>{chosen.description} Personalise one custom cake topper with your wording, material, colour and size.</p><Link className="topper-event-hero__change" href="/winnie-cake-topper/#choose-event">← Choose another event</Link></div>
-            <div className="topper-event-hero__image"><Image src="/images/winnie.webp" alt="Cake topper style inspiration; concept image rather than a product photo" fill sizes="(max-width: 800px) 100vw, 42vw" priority /><span>STYLE INSPIRATION · NOT A PRODUCT PHOTO</span></div>
+            <div className="topper-event-hero__image"><Image src={designs[0]?.imageSrc ?? "/images/winnie.webp"} alt={designs.length ? `${chosen.name} cake topper design inspiration` : "Cake topper style inspiration"} fill sizes="(max-width: 800px) 100vw, 42vw" priority /><span>DESIGN INSPIRATION · FINAL MOCK-UP TO CONFIRM</span></div>
           </div>
         </section>
         <section className="topper-line-products shell" aria-labelledby="topper-line-products-title">
@@ -49,9 +49,14 @@ export default async function TopperEventPage({ params }: Props) {
             </article>
           </div>
           <p className="topper-line-products__price-note">Your exact item price appears as you choose material, finish and width. We&apos;ll confirm the design and ready date before payment.</p>
-          {topperEventDesigns[chosen.slug].length > 0 && <section aria-label={`${chosen.name} design ideas`}>
-            <h2>Design ideas for {chosen.name.toLowerCase()}</h2>
-            <p>Choose a design you like, then personalise it.</p>
+          {designs.length > 0 && <section className="topper-designs" aria-labelledby="topper-designs-title">
+            <p className="eyebrow">NEED AN IDEA?</p>
+            <h2 id="topper-designs-title">Design ideas for {chosen.name.toLowerCase()}.</h2>
+            <p>Choose a look you like, then personalise the wording, size, material and colour. We&apos;ll send you a mock-up to confirm before making it.</p>
+            <div className="topper-designs__grid">{designs.map((design) => <article className="topper-designs__card" key={design.id}>
+              <div className="topper-designs__image"><Image src={design.imageSrc} alt={`${design.name} cake topper design inspiration`} fill sizes="(max-width: 650px) 48vw, (max-width: 1000px) 30vw, 22vw" /></div>
+              <div className="topper-designs__caption"><span>{design.id}</span><h3>{design.name}</h3><Link href={`${topperProductHref(chosen.slug)}?design=${encodeURIComponent(design.id)}`}>Choose this style <span aria-hidden="true">→</span></Link></div>
+            </article>)}</div>
           </section>}
         </section>
       </main>

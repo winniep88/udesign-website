@@ -20,6 +20,8 @@ const moments = [
   { name: "Baby & Kids", detail: "Sweet name signs, milestone pieces and keepsakes for little beginnings.", className: "moment-category--baby", number: "04" },
 ] as const;
 
+const weddingSettings = ["W001", "W002", "W003", "W004"] as const;
+
 export default function MomentsPage() {
   return (
     <div className="moments-page">
@@ -31,6 +33,8 @@ export default function MomentsPage() {
         </section>
 
         <section className="moments-categories" id="moments-categories" aria-labelledby="moments-categories-title"><div className="shell"><div className="moments-section-heading"><p className="eyebrow">THE COLLECTIONS</p><h2 id="moments-categories-title">A detail for every story.</h2><p>Each one begins with a person, a feeling or a day worth remembering.</p><p className="collection-note">Browse the products below to choose an option and see its price.</p></div><div className="moments-grid">{moments.map((item) => <article key={item.name} className={`moment-category ${item.className}`}><span>{item.number} / MOMENTS</span><div><h3>{item.name}</h3><p>{item.detail}</p></div><a className="collection-browse" href="#products">Browse products ↓</a></article>)}</div></div></section>
+
+        <section className="moments-inspiration shell" aria-labelledby="moments-inspiration-title"><p className="eyebrow">WEDDING IDEAS</p><h2 id="moments-inspiration-title">A setting made for your story.</h2><p>Explore these wedding setting ideas. Tell us which look you like and we&apos;ll discuss the details and price with you.</p><div className="moments-inspiration__grid">{weddingSettings.map((code) => <a key={code} href={whatsappLink(`Hi UDESIGN, I like wedding setting idea ${code}. Could you tell me about the options and price?`)} target="_blank" rel="noopener noreferrer"><div><Image src={`/images/wedding-settings/package-${code.toLowerCase()}.png`} alt={`Wedding setting design idea ${code}`} fill sizes="(max-width: 650px) 48vw, 25vw" /></div><span>IDEA {code} · ASK ABOUT THIS LOOK ↗</span></a>)}</div><small>Design inspiration. We&apos;ll confirm the materials, layout and final price with you before an order.</small></section>
 
         <ProductCatalog brand="moments" products={productsForBrand("moments")} />
         <CustomRequest brand="Moments" />
