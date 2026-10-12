@@ -72,6 +72,73 @@ async function ownerAccount(request, env) {
 const CATALOG_ID = /^[A-Za-z0-9:_-]{1,100}$/;
 const TOPPER_PRICE_PRODUCT_ID = "custom-topper-prices";
 const CATALOG_IMAGE = /^\/api\/catalog\/images\/([0-9a-f-]{36})\.(png|jpg|webp)$/;
+const SITE_CONTENT_IMAGE = /^\/api\/site-content\/images\/[0-9a-f-]{36}\.(png|jpg|webp)$/;
+const SITE_CONTENT_KEY = "site-content/v1.json";
+const SITE_CONTENT_BY_KEY = new Map(SITE_CONTENT_FIELDS.map((field) => [field.key, field]));
+
+async function siteContentSnapshot(env) {
+  if (!env.BUCKET) return {};
+  const item = await env.BUCKET.get(SITE_CONTENT_KEY);
+  if (!item) return {};
+  const saved = await item.json();
+  if (!saved || typeof saved !== "object" || !saved.values || typeof saved.values !== "object") return {};
+  const values = {};
+  for (const [key, value] of Object.entries(saved.values)) {
+    const field = SITE_CONTENT_BY_KEY.get(key);
+    if (!field || typeof value !== "string" || !value.trim()) continue;
+    if (field.type === "text" && value.length <= field.maxLength || field.type === "image" && (value === field.default || SITE_CONTENT_IMAGE.test(value))) values[key] = value;
+  }
+  return values;
+}
+
+async function saveSiteContent(request, env) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) return errorJson("Please use the UDESIGN owner dashboard.", 403);
+  const owner = await ownerAccount(request, env);
+  if (owner.error) return owner.error;
+  if (!env.BUCKET) return errorJson("Site editor storage is unavailable.", 503);
+  if (!request.headers.get("content-type")?.startsWith("application/json")) return errorJson("Check the page content.", 400);
+  let input;
+  try { const body = await request.text(); if (body.length > 30_000) return errorJson("Page content is too large.", 413); input = JSON.parse(body); }
+  catch { return errorJson("Check the page content.", 400); }
+  if (!input || typeof input !== "object" || !input.values || typeof input.values !== "object" || Array.isArray(input.values)) return errorJson("Check the page content.", 400);
+  const values = {};
+  for (const [key, value] of Object.entries(input.values)) {
+    const field = SITE_CONTENT_BY_KEY.get(key);
+    if (!field || typeof value !== "string" || !value.trim()) return errorJson("Check each field before saving.", 400);
+    const normalized = value.trim();
+    if (field.type === "text" && normalized.length <= field.maxLength || field.type === "image" && (normalized === field.default || SITE_CONTENT_IMAGE.test(normalized))) values[key] = normalized;
+    else return errorJson("Check each field before saving.", 400);
+  }
+  await env.BUCKET.put(SITE_CONTENT_KEY, JSON.stringify({ values, updatedAt: new Date().toISOString() }), { httpMetadata: { contentType: "application/json" } });
+  return Response.json({ saved: true, values }, { headers: { "cache-control": "no-store" } });
+}
+
+async function uploadSiteContentImage(request, env) {
+  if (request.headers.get("origin") !== new URL(request.url).origin) return errorJson("Please use the UDESIGN owner dashboard.", 403);
+  const owner = await ownerAccount(request, env);
+  if (owner.error) return owner.error;
+  if (!env.BUCKET) return errorJson("Image storage is unavailable.", 503);
+  const size = Number(request.headers.get("content-length") || 0);
+  if (size > MAX_IMAGE_BYTES) return errorJson("Choose an image under 5 MB.", 413);
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) return errorJson("Choose an image under 5 MB.", 413);
+  const type = request.headers.get("content-type")?.split(";")[0];
+  const valid = type === "image/png" && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71 ||
+    type === "image/jpeg" && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 ||
+    type === "image/webp" && new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" && new TextDecoder().decode(bytes.slice(8, 12)) === "WEBP";
+  if (!valid) return errorJson("Upload a PNG, JPG or WebP image.", 400);
+  const extension = type === "image/png" ? "png" : type === "image/jpeg" ? "jpg" : "webp";
+  const file = `${crypto.randomUUID()}.${extension}`;
+  await env.BUCKET.put(`site-content/images/${file}`, bytes, { httpMetadata: { contentType: type } });
+  return Response.json({ imageSrc: `/api/site-content/images/${file}` }, { headers: { "cache-control": "no-store" } });
+}
+
+async function siteContentImage(file, env, method) {
+  if (!env.BUCKET || !/^[0-9a-f-]{36}\.(png|jpg|webp)$/.test(file)) return new Response("Not found", { status: 404 });
+  const item = await env.BUCKET.get(`site-content/images/${file}`);
+  if (!item) return new Response("Not found", { status: 404 });
+  return new Response(method === "HEAD" ? null : item.body, { headers: { "content-type": item.httpMetadata?.contentType || "application/octet-stream", "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" } });
+}
 const WINNIE_NAMES = {
   "4911844020": "Custom Acrylic Name Cake Topper",
   "14941102410": "First Birthday Acrylic Cake Topper",
@@ -906,6 +973,28 @@ export default {
       if (url.pathname === "/api/catalog/") {
         if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });
         return Response.json({ products: await catalogSnapshot(env) }, { headers: { "cache-control": "no-store" } });
+      }
+      if (url.pathname === "/api/site-content/") {
+        if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });
+        return Response.json({ values: await siteContentSnapshot(env) }, { headers: { "cache-control": "no-store" } });
+      }
+      if (url.pathname === "/api/admin/site-content/") {
+        if (request.method === "GET") {
+          const owner = await ownerAccount(request, env);
+          if (owner.error) return owner.error;
+          return Response.json({ values: await siteContentSnapshot(env) }, { headers: { "cache-control": "no-store" } });
+        }
+        if (request.method === "POST") return await saveSiteContent(request, env);
+        return new Response("Method not allowed", { status: 405, headers: { allow: "GET, POST" } });
+      }
+      if (url.pathname === "/api/admin/site-content/image/") {
+        if (request.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { allow: "POST" } });
+        return await uploadSiteContentImage(request, env);
+      }
+      const siteContentImageMatch = /^\/api\/site-content\/images\/([^/]+)$/.exec(url.pathname);
+      if (siteContentImageMatch) {
+        if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405, headers: { allow: "GET, HEAD" } });
+        return await siteContentImage(siteContentImageMatch[1], env, request.method);
       }
       if (url.pathname === "/api/topper-prices/") {
         if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { allow: "GET" } });

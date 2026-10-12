@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SiteImage } from "@/components/SiteContent";
 import { TopperStartingPrice } from "@/components/TopperStartingPrice";
 import { topperEvent, topperEventDesigns, topperEvents, topperProductHref, topperProductName } from "@/lib/topper";
 
@@ -31,7 +31,7 @@ export default async function TopperEventPage({ params }: Props) {
           <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><span>{chosen.name}</span></nav>
           <div className="topper-event-hero__grid">
             <div><p className="eyebrow">CHOOSE YOUR EVENT / {chosen.name.toUpperCase()}</p><h1>{chosen.name} cake toppers</h1><p>{chosen.description} Personalise one custom cake topper with your wording, material, colour and size.</p><Link className="topper-event-hero__change" href="/winnie-cake-topper/#choose-event">← Choose another event</Link></div>
-            <div className="topper-event-hero__image"><Image src={chosen.imageSrc} alt={`Custom cake topper for a ${chosen.name.toLowerCase()} celebration`} fill sizes="(max-width: 800px) 100vw, 42vw" priority /><span>STYLE INSPIRATION · FINAL MOCK-UP TO CONFIRM</span></div>
+            <div className="topper-event-hero__image"><SiteImage contentKey={`event.${chosen.slug}Image`} alt={`Custom cake topper for a ${chosen.name.toLowerCase()} celebration`} fill sizes="(max-width: 800px) 100vw, 42vw" priority /><span>STYLE INSPIRATION · FINAL MOCK-UP TO CONFIRM</span></div>
           </div>
         </section>
         <section className="topper-line-products shell" aria-labelledby="topper-line-products-title">
@@ -54,7 +54,7 @@ export default async function TopperEventPage({ params }: Props) {
             <h2 id="topper-designs-title">Design ideas for {chosen.name.toLowerCase()}.</h2>
             <p>Choose a look you like, then personalise the wording, size, material and colour. We&apos;ll send you a mock-up to confirm before making it.</p>
             <div className="topper-designs__grid">{designs.map((design) => <article className="topper-designs__card" key={design.id}>
-              <div className="topper-designs__image"><Image src={design.imageSrc} alt={`${design.name} cake topper design inspiration`} fill sizes="(max-width: 650px) 48vw, (max-width: 1000px) 30vw, 22vw" /></div>
+              <div className="topper-designs__image"><SiteImage contentKey={`design.${design.id}Image`} alt={`${design.name} cake topper design inspiration`} fill sizes="(max-width: 650px) 48vw, (max-width: 1000px) 30vw, 22vw" /></div>
               <div className="topper-designs__caption"><span>{design.id}</span><h3>{design.name}</h3><Link href={`${topperProductHref(chosen.slug)}?design=${encodeURIComponent(design.id)}`}>Choose this style <span aria-hidden="true">→</span></Link></div>
             </article>)}</div>
           </section>}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { whatsappLink } from "@/lib/contact";
+import { SiteText } from "@/components/SiteContent";
 
 export function SiteFooter() {
   return (
@@ -20,7 +21,7 @@ export function SiteFooter() {
         </div>
         <div className="site-footer__contact">
           <span className="footer-label">Stay in touch</span>
-          <p>Questions about a design or an order? We&apos;re happy to help.</p>
+          <p><SiteText contentKey="footer.contact" /></p>
           <a href="https://www.instagram.com/udesign_projects/" target="_blank" rel="noopener noreferrer">Instagram</a>
           <a href="https://shopee.com.my/udesignprojectsstudio" target="_blank" rel="noopener noreferrer">Shopee</a>
         </div>

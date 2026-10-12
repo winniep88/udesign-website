@@ -7,6 +7,7 @@ import "./winnie-product.css";
 import "./custom-topper.css";
 import { CartProvider } from "@/components/CartProvider";
 import { AccountProvider } from "@/components/AccountProvider";
+import { SiteContentProvider } from "@/components/SiteContent";
 import "./account.css";
 
 const udesignSerif = Bodoni_Moda({
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={udesignSerif.variable}><AccountProvider><CartProvider>{children}</CartProvider></AccountProvider></body>
+      <body className={udesignSerif.variable}><SiteContentProvider><AccountProvider><CartProvider>{children}</CartProvider></AccountProvider></SiteContentProvider></body>
     </html>
   );
 }

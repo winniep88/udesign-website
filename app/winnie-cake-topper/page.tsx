@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { SiteImage, SiteText } from "@/components/SiteContent";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCatalog } from "@/components/ProductCatalog";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: "Choose an event, then personalise a custom cake topper with Winnie Cake Topper by UDESIGN.",
 };
 
-const featuredIdeas = topperEvents.map((event) => ({ event: event.name, href: topperEventHref(event.slug), image: event.imageSrc }));
+const featuredIdeas = topperEvents.map((event) => ({ event: event.name, href: topperEventHref(event.slug), slug: event.slug }));
 
 export default function WinniePage() {
   return (
@@ -27,12 +27,12 @@ export default function WinniePage() {
             <div className="winnie-hero__copy">
               <p className="eyebrow">WINNIE CAKE TOPPER BY UDESIGN</p>
               <span className="winnie-hero__brand">WINNIE CAKE TOPPER <small>by Udesign</small></span>
-              <h1>What are we<br /><em>celebrating?</em></h1>
-              <p>Choose your event first. Then personalise your custom cake topper with wording, font, material, colour and size.</p>
+              <h1><SiteText contentKey="winnie.heroLine1" /><br /><em><SiteText contentKey="winnie.heroLine2" /></em></h1>
+              <p><SiteText contentKey="winnie.heroLead" /></p>
               <TopperEventPicker />
               <a className="winnie-instagram-link" href="https://www.instagram.com/winniecaketopper/" target="_blank" rel="noopener noreferrer">See our real toppers on Instagram</a>
             </div>
-            <div className="winnie-hero__image"><Image src="/images/winnie-hero-geode.png" alt="Blush geode cake with gold floral custom cake topper" fill sizes="(max-width: 750px) 100vw, 50vw" priority /></div>
+            <div className="winnie-hero__image"><SiteImage contentKey="winnie.heroImage" alt="Winnie Cake Topper showcase" fill sizes="(max-width: 750px) 100vw, 50vw" priority /></div>
           </div>
         </section>
 
@@ -41,7 +41,7 @@ export default function WinniePage() {
           <a href="#choose-event">Choose your event <span aria-hidden="true">↑</span></a>
         </section>
 
-        <section className="winnie-ideas shell" aria-labelledby="winnie-ideas-title"><p className="eyebrow">CHOOSE AN OCCASION</p><h2 id="winnie-ideas-title">Find your starting point.</h2><p>Browse topper ideas for your celebration, or create one entirely your own.</p><div className="winnie-ideas__grid">{featuredIdeas.map((idea) => <Link key={idea.event} href={idea.href}><div><Image src={idea.image} alt={`${idea.event} cake topper design inspiration`} fill sizes="(max-width: 650px) 100vw, 30vw" /></div><span>{idea.event} <span aria-hidden="true">→</span></span></Link>)}</div></section>
+        <section className="winnie-ideas shell" aria-labelledby="winnie-ideas-title"><p className="eyebrow">CHOOSE AN OCCASION</p><h2 id="winnie-ideas-title">Find your starting point.</h2><p>Browse topper ideas for your celebration, or create one entirely your own.</p><div className="winnie-ideas__grid">{featuredIdeas.map((idea) => <Link key={idea.event} href={idea.href}><div><SiteImage contentKey={`event.${idea.slug}Image`} alt={`${idea.event} cake topper design inspiration`} fill sizes="(max-width: 650px) 100vw, 30vw" /></div><span>{idea.event} <span aria-hidden="true">→</span></span></Link>)}</div></section>
 
         <section className="winnie-collections shell" aria-labelledby="winnie-collections-title"><p className="eyebrow">MORE TO EXPLORE</p><h2 id="winnie-collections-title">Little pieces, big celebrations.</h2><p className="collection-note">Browse other listed pieces below, or start above with your event for a custom cake topper.</p><div className="winnie-grid"><article><span>01 / THE TOPPING</span><h3>Cake toppers</h3><p>Names, themes and joyful finishing touches for the cake at the centre of it all.</p><a className="collection-browse" href="#products">Browse toppers</a></article><article><span>02 / THE LITTLE EXTRAS</span><h3>Celebration pieces</h3><p>Personal details to make birthdays, parties and special days feel more like yours.</p><a className="collection-browse" href="#products">Browse pieces</a></article></div></section>
 

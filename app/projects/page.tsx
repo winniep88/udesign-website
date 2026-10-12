@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { SiteImage, SiteText } from "@/components/SiteContent";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ProductCatalog } from "@/components/ProductCatalog";
@@ -30,11 +30,11 @@ export default function ProjectsPage() {
             <div className="projects-hero__copy">
               <p className="eyebrow">01 / THE BOLD ONE</p>
               <p className="projects-hero__brand">UDESIGN <strong>PROJECTS</strong></p>
-              <h1>Make your<br /><em>mark.</em></h1>
-              <p>Signs and pieces that give your idea a place in the world. Custom made for your brand, business or space.</p>
+              <h1><SiteText contentKey="projects.heroLine1" /><br /><em><SiteText contentKey="projects.heroLine2" /></em></h1>
+              <p><SiteText contentKey="projects.heroLead" /></p>
               <a className="button button--orange" href="#products">Shop Projects <span aria-hidden="true">↓</span></a>
             </div>
-            <div className="projects-hero__image"><Image src="/images/projects.webp" alt="Concept image of a layered acrylic and wood sign" fill sizes="(max-width: 750px) 100vw, 50vw" priority /><span className="image-label">DESIGN CONCEPT / SIGNAGE</span></div>
+            <div className="projects-hero__image"><SiteImage contentKey="projects.heroImage" alt="UDESIGN Projects showcase" fill sizes="(max-width: 750px) 100vw, 50vw" priority /><span className="image-label">DESIGN CONCEPT / SIGNAGE</span></div>
           </div>
           <div className="projects-hero__rail shell"><span>LOGO</span><span>ACRYLIC</span><span>WOOD</span><span>PVC</span></div>
         </section>

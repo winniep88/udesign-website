@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import { useCart } from "@/components/CartProvider";
 import { useAccount } from "@/components/AccountProvider";
 import { whatsappLink } from "@/lib/contact";
+import { SiteText } from "@/components/SiteContent";
 
 type SiteHeaderProps = {
   active?: "home" | "projects" | "moments" | "winnie" | "about" | "cart";
@@ -31,7 +32,7 @@ export function SiteHeader({ active = "home", light = false, sectionPage = true 
   const brandHref = (brand: string, query: string) => `${brand === "winnie" ? "/winnie-cake-topper/" : `/${brand}/`}?q=${encodeURIComponent(query)}#products`;
   return (
     <header className={`site-header ${light ? "site-header--light" : ""}`}>
-      {enabled && <div className="promo-banner"><Link href="/account/">New here? Get RM10 off your first order of RM100+ when you sign in <span aria-hidden="true">→</span></Link></div>}
+      {enabled && <div className="promo-banner"><Link href="/account/"><SiteText contentKey="banner.message" /> <span aria-hidden="true">→</span></Link></div>}
       <div className="site-header__inner shell">
         <Link href="/" className="wordmark" aria-label="UDESIGN PROJECTS STUDIO, home">
           <span className="wordmark__main">UDesign<span className="wordmark__dot">.</span></span>
