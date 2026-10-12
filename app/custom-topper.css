@@ -3,8 +3,8 @@
 .custom-topper__visual { position:sticky; top:22px; }
 .custom-topper__image { position:relative; min-height:520px; overflow:hidden; background:#ffdbde; }
 .custom-topper__image img { object-fit:cover; }
-.custom-topper__image.custom-topper__image--design { width:min(100%,440px); min-height:0; aspect-ratio:1; background:#fff; }
-.custom-topper__image--design img { object-fit:contain; }
+.custom-topper__image.custom-topper__image--design { width:min(100%,440px); min-height:0; aspect-ratio:1; }
+.custom-topper__image--design img { object-fit:cover; }
 .custom-topper__image-caption { width:min(100%,440px); margin:10px 0 0!important; color:#652640; font-size:11px!important; font-weight:900; letter-spacing:.08em; }
 .custom-topper__image span { position:absolute; left:17px; bottom:17px; z-index:1; max-width:calc(100% - 34px); padding:9px 11px; background:#fffdf9; color:#652640; font-size:11px; font-weight:900; letter-spacing:.08em; }
 .custom-topper__visual > p { margin:13px 0 0; font-size:14px; line-height:1.5; }
