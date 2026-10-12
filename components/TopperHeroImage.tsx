@@ -13,7 +13,7 @@ export function TopperHeroImage({ eventSlug }: { eventSlug: TopperEventSlug }) {
   const design = designs.find((item) => item.id === selectedId);
   const displayImage = design?.imageSrc ?? topperEvent(eventSlug)?.imageSrc ?? "/images/winnie.webp";
   return <>
-    <div className="custom-topper__image custom-topper__image--design">
+    <div className={`custom-topper__image custom-topper__image--design${design ? "" : " custom-topper__image--event"}`}>
       <Image src={displayImage} alt={design ? `${design.name} cake topper design inspiration` : `Custom cake topper for a ${topperEvent(eventSlug)?.name.toLowerCase() ?? "special"} celebration`} fill sizes="(max-width: 900px) min(100vw, 440px), 440px" priority />
       {!design && <span>STYLE INSPIRATION · NOT A PRODUCT PHOTO</span>}
     </div>

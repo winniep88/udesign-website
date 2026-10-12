@@ -226,8 +226,8 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 .winnie-ideas__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
 .winnie-ideas__grid a { color:inherit; }
 .winnie-ideas__grid a > div { position:relative; aspect-ratio:4/5; overflow:hidden; background:#f9dbe4; }
-.winnie-ideas__grid img { object-fit:cover; transition:transform .3s ease; }
-.winnie-ideas__grid a:hover img { transform:scale(1.04); }
+.winnie-ideas__grid img { object-fit:cover; transform:scale(1.2); transform-origin:center 45%; transition:transform .3s ease; }
+.winnie-ideas__grid a:hover img { transform:scale(1.24); }
 .winnie-ideas__grid a > span { display:flex; align-items:center; justify-content:space-between; padding-top:16px; font-size:17px; font-weight:900; }
 .winnie-collections h2 { font-size:clamp(46px,5vw,80px); line-height:1.03; letter-spacing:-.075em; font-weight:900; margin:20px 0 50px; }
 .winnie-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
