@@ -3,6 +3,9 @@
 .custom-topper__visual { position:sticky; top:22px; }
 .custom-topper__image { position:relative; min-height:520px; overflow:hidden; background:#ffdbde; }
 .custom-topper__image img { object-fit:cover; }
+.custom-topper__image.custom-topper__image--design { width:min(100%,440px); min-height:0; aspect-ratio:1; background:#fff; }
+.custom-topper__image--design img { object-fit:contain; }
+.custom-topper__image-caption { width:min(100%,440px); margin:10px 0 0!important; color:#652640; font-size:11px!important; font-weight:900; letter-spacing:.08em; }
 .custom-topper__image span { position:absolute; left:17px; bottom:17px; z-index:1; max-width:calc(100% - 34px); padding:9px 11px; background:#fffdf9; color:#652640; font-size:11px; font-weight:900; letter-spacing:.08em; }
 .custom-topper__visual > p { margin:13px 0 0; font-size:14px; line-height:1.5; }
 .custom-topper__visual a { color:#a52a58; font-weight:800; text-decoration:underline; }
@@ -127,7 +130,7 @@
 .topper-designs__grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; }
 .topper-designs__card { overflow:hidden; background:#fff; border:1px solid #e9d9dc; }
 .topper-designs__image { position:relative; aspect-ratio:4/5; background:#f7e9ec; }
-.topper-designs__image img { object-fit:cover; }
+.topper-designs__image img { object-fit:contain; }
 .topper-designs__caption { padding:16px; }
 .topper-designs__caption > span { color:#a52a58; font-size:11px; font-weight:900; letter-spacing:.1em; }
 .topper-designs__caption h3 { margin:8px 0 16px; font-size:20px; line-height:1.2; }

@@ -35,7 +35,10 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const selectedDesign = topperEventDesigns[initialEventSlug].find((item) => item.id === selectedDesignId);
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("design") ?? "";
-    if (topperEventDesigns[initialEventSlug].some((item) => item.id === id)) setSelectedDesignId(id);
+    if (topperEventDesigns[initialEventSlug].some((item) => item.id === id)) {
+      setSelectedDesignId(id);
+      setFontFamily("");
+    } else setSelectedDesignId("");
   }, [initialEventSlug]);
   useEffect(() => {
     if (!fontDialogOpen) return;
@@ -131,7 +134,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
           finish,
           sizeCm,
           wording: wordingLines.map((line) => line.trim()),
-          ...(fontFamily ? { fontFamily } : {}),
+          ...(!selectedDesign && fontFamily ? { fontFamily } : {}),
           ...(selectedDesign || details.trim() ? { details: `${selectedDesign ? `Style ${selectedDesign.id}` : ""}${selectedDesign && details.trim() ? "; " : ""}${details.trim()}` } : {}),
         },
       });
@@ -173,7 +176,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
         {wordingError && <p className="custom-topper-form__error" role="alert">{wordingError}</p>}
       </fieldset>
 
-      <section className="custom-topper-form__fonts" aria-labelledby="topper-fonts-title">
+      {!selectedDesign && <section className="custom-topper-form__fonts" aria-labelledby="topper-fonts-title">
         <h2 id="topper-fonts-title">Choose your font style <span>(optional)</span></h2>
         <p>See your wording in all 34 UDESIGN font styles. You can also leave the style to us or upload your own design photo below.</p>
         {fontFamily && <div className="custom-topper-form__selected-font"><span>Selected: <strong>{fontFamily}</strong></span><button type="button" onClick={() => { setFontFamily(""); setAdded(false); }}>Leave font choice to UDESIGN</button></div>}
@@ -194,7 +197,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
             <p className="custom-topper-form__font-note">This is a font preview. We&apos;ll send a design mock-up for you to confirm before making the topper.</p>
           </div>
         </dialog>
-      </section>
+      </section>}
 
       <label className="custom-topper-form__field">3. Material Type
         <select required value={material} onChange={(event) => chooseMaterial(event.target.value as TopperMaterial)}>
@@ -217,7 +220,7 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
         <input type="number" min={1} max={99} required value={quantity} onChange={(event) => { setQuantity(Number(event.target.value)); setAdded(false); }} />
       </label>
       <label className="custom-topper-form__field">Special Request <span>Optional · {50 - details.length} characters remaining</span>
-        <textarea rows={3} maxLength={50} value={details} onChange={(event) => { setDetails(event.target.value); setAdded(false); }} placeholder="Theme, font style or other requests" />
+        <textarea rows={3} maxLength={50} value={details} onChange={(event) => { setDetails(event.target.value); setAdded(false); }} placeholder={selectedDesign ? "Any changes to the selected design?" : "Theme, font style or other requests"} />
       </label>
       <label className="custom-topper-form__field">Reference Photo, If Any <span>Optional · JPG, PNG or WebP · max 5 MB</span>
         <input ref={referenceInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseReference} />
