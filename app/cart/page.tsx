@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useCart, type CartItem } from "@/components/CartProvider";
 import { useAccount } from "@/components/AccountProvider";
-import { addressText, type SavedAddress, type WelcomeVoucher } from "@/lib/account";
+import { type SavedAddress, type WelcomeVoucher } from "@/lib/account";
 import { findVariant, formatRinggit, type CatalogProduct } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
 import { topperEvent, topperSelectionPriceSen, topperSizes, type TopperPricing } from "@/lib/topper";
@@ -18,6 +18,12 @@ const deliveryRegions = {
   singapore: { label: "Singapore", feeSen: 2000, transit: "4 business days" },
 } as const;
 type DeliveryRegion = keyof typeof deliveryRegions;
+const malaysiaStates = ["Johor", "Kedah", "Kelantan", "Kuala Lumpur", "Labuan", "Melaka", "Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Putrajaya", "Sabah", "Sarawak", "Selangor", "Terengganu"];
+
+function splitName(name: string) {
+  const [first = "", ...rest] = name.trim().split(/\s+/);
+  return { first, last: rest.join(" ") };
+}
 
 function regionForAddress(saved: SavedAddress): DeliveryRegion {
   if (saved.country === "SG") return "singapore";
@@ -57,9 +63,17 @@ function topperDetails(item: CartItem) {
 export default function CartPage() {
   const { items, catalog: liveCatalog, topperPrices, count, ready, setQuantity, setNotes, removeItem, clearCart } = useCart();
   const { enabled: accountEnabled, client: accountClient, user } = useAccount();
-  const [fulfilment, setFulfilment] = useState<Fulfilment>("pickup");
+  const [fulfilment, setFulfilment] = useState<Fulfilment>("delivery");
   const [deliveryRegion, setDeliveryRegion] = useState<DeliveryRegion | "">("");
-  const [address, setAddress] = useState("");
+  const [shipCountry, setShipCountry] = useState<"MY" | "SG">("MY");
+  const [shipFirstName, setShipFirstName] = useState("");
+  const [shipLastName, setShipLastName] = useState("");
+  const [shipCompany, setShipCompany] = useState("");
+  const [shipLine1, setShipLine1] = useState("");
+  const [shipLine2, setShipLine2] = useState("");
+  const [shipPostcode, setShipPostcode] = useState("");
+  const [shipCity, setShipCity] = useState("");
+  const [shipState, setShipState] = useState("");
   const [extraNotes, setExtraNotes] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const [paymentAvailable, setPaymentAvailable] = useState(false);
@@ -70,6 +84,7 @@ export default function CartPage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [saveShippingAddress, setSaveShippingAddress] = useState(false);
   const [welcomeVoucher, setWelcomeVoucher] = useState<WelcomeVoucher | null>(null);
   const [availablePoints, setAvailablePoints] = useState(0);
   const [useVoucher, setUseVoucher] = useState(false);
@@ -78,7 +93,7 @@ export default function CartPage() {
   const [whatsappOptIn, setWhatsappOptIn] = useState(false);
   const [addressError, setAddressError] = useState("");
   const [regionError, setRegionError] = useState("");
-  const addressRef = useRef<HTMLTextAreaElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
   const regionRef = useRef<HTMLSelectElement>(null);
   const summaryRef = useRef<HTMLTextAreaElement>(null);
 
@@ -90,7 +105,7 @@ export default function CartPage() {
     if (!accountClient || !user) {
       setSavedAddresses([]);
       setSelectedAddressId("");
-      setAddress("");
+      setSaveShippingAddress(false);
       setDeliveryRegion("");
       setWelcomeVoucher(null);
       setAvailablePoints(0);
@@ -113,7 +128,11 @@ export default function CartPage() {
     ]).then(([profile, saved, voucher, ledger, prefs]) => {
       if (!active) return;
       setCustomerEmail(user.email ?? "");
-      setCustomerName(profile.data?.full_name || "");
+      const profileName = profile.data?.full_name || "";
+      const nameParts = splitName(profileName);
+      setCustomerName(profileName);
+      setShipFirstName(nameParts.first);
+      setShipLastName(nameParts.last);
       setCustomerPhone(profile.data?.whatsapp_phone || "");
       const addressList = (saved.data ?? []) as SavedAddress[];
       setSavedAddresses(addressList);
@@ -133,6 +152,9 @@ export default function CartPage() {
     return result;
   }, { subtotalSen: 0, needsQuote: false }), [items, liveCatalog, topperPrices]);
   const cakeTopperOnly = items.length > 0 && items.every((item) => item.brand === "winnie");
+  const shippingName = `${shipFirstName.trim()} ${shipLastName.trim()}`.trim();
+  const checkoutName = fulfilment === "delivery" ? shippingName : customerName.trim();
+  const address = [shipCompany, shipLine1, shipLine2, shipPostcode, shipCity, shipState, shipCountry === "SG" ? "Singapore" : "Malaysia"].map((part) => part.trim()).filter(Boolean).join(", ");
   const region = deliveryRegion ? deliveryRegions[deliveryRegion] : null;
   const deliveryFeeSen = fulfilment === "delivery" && cakeTopperOnly && region ? region.feeSen : 0;
   const deliveryNeedsQuote = fulfilment === "delivery" && !cakeTopperOnly;
@@ -161,28 +183,30 @@ export default function CartPage() {
     lines.push("", `Item subtotal: ${itemSubtotalText}`);
     lines.push("", `Fulfilment: ${fulfilment === "pickup" ? "Pickup in Kuchai Lama, Kuala Lumpur" : "Delivery"}`);
     if (fulfilment === "delivery") {
+      lines.push(`Recipient: ${shippingName || "To be provided"}`);
+      lines.push(`Phone: ${customerPhone.trim() || "To be provided"}`);
       lines.push(`Delivery region: ${region?.label ?? "To be selected"}`);
       lines.push(`Delivery fee: ${cakeTopperOnly && region ? formatRinggit(region.feeSen) : "To confirm for this cart"}`);
       if (cakeTopperOnly && region) lines.push(`Estimated transit after dispatch: ${region.transit}`);
       lines.push(`Delivery address: ${address.trim() || "To be provided"}`);
-    }
+    } else if (cakeTopperOnly) lines.push("Pickup: cake toppers are usually ready about 3 hours after design confirmation, during collection hours. We will confirm the time on WhatsApp.");
     if (voucherDiscountSen) lines.push("Welcome voucher: -RM10.00 (subject to checkout confirmation)");
     if (appliedPoints) lines.push(`Points selected: ${appliedPoints} (subject to checkout confirmation)`);
     lines.push(`Estimated total: ${totalToConfirm ? "To confirm" : formatRinggit(checkoutTotalSen)}`);
     if (extraNotes.trim()) lines.push(`Other notes: ${extraNotes.trim()}`);
     lines.push("", "Please confirm the design, ready date, final total and payment instructions. Thank you!");
     return lines.join("\n");
-  }, [items, liveCatalog, topperPrices, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, address, extraNotes, voucherDiscountSen, appliedPoints, checkoutTotalSen]);
+  }, [items, liveCatalog, topperPrices, pricing, itemSubtotalText, fulfilment, region, cakeTopperOnly, totalToConfirm, shippingName, customerPhone, address, extraNotes, voucherDiscountSen, appliedPoints, checkoutTotalSen]);
 
   function validateRequest() {
     if (fulfilment === "delivery" && !deliveryRegion) {
-      setRegionError("Please choose a delivery region first.");
+      setRegionError("Please choose your state or territory.");
       regionRef.current?.focus();
       return false;
     }
     setRegionError("");
-    if (fulfilment === "delivery" && address.trim().length < 10) {
-      setAddressError("Please enter your full delivery address first.");
+    if (fulfilment === "delivery" && (!shipFirstName.trim() || !shipLastName.trim() || !shipLine1.trim() || !shipPostcode.trim() || !shipCity.trim() || !shipState.trim() || !customerPhone.trim() || address.length > 500)) {
+      setAddressError(address.length > 500 ? "Please shorten your delivery address." : "Please complete the recipient, phone and delivery address fields.");
       addressRef.current?.focus();
       return false;
     }
@@ -207,12 +231,22 @@ export default function CartPage() {
   async function payNow() {
     setPaymentError("");
     if (!validateRequest()) return;
-    if (!customerName.trim() || !customerEmail.trim() || !customerPhone.trim()) { setPaymentError("Please enter your name, email and WhatsApp number."); return; }
+    if (!checkoutName || !customerEmail.trim() || !customerPhone.trim()) { setPaymentError("Please enter your name, email and WhatsApp number."); return; }
     setPaying(true);
     try {
       const session = user ? (await accountClient?.auth.getSession())?.data.session : null;
       if (user && !session) throw new Error("Your sign-in has expired. Please sign in again to use rewards.");
-      const response = await fetch("/api/checkout/", { method: "POST", headers: { "content-type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) }, body: JSON.stringify({ items, fulfilment, region: deliveryRegion, address, extraNotes, customer: { name: customerName, email: customerEmail, phone: customerPhone }, marketing: { emailOptIn, whatsappOptIn }, ...(voucherDiscountSen && welcomeVoucher ? { voucherCode: welcomeVoucher.code } : {}), ...(appliedPoints ? { redeemPoints: appliedPoints } : {}) }) });
+      if (fulfilment === "delivery" && saveShippingAddress && !selectedAddressId && user && accountClient) {
+        const { data: saved, error: saveError } = await accountClient.from("customer_addresses").insert({
+          user_id: user.id, label: "Address", recipient_name: shippingName, phone: customerPhone.trim(),
+          line1: shipLine1.trim(), line2: [shipCompany.trim(), shipLine2.trim()].filter(Boolean).join(", ") || null,
+          postcode: shipPostcode.trim(), city: shipCity.trim(), state: shipState.trim(), country: shipCountry, is_default: false,
+        }).select("*").single();
+        if (saveError || !saved) throw new Error("We could not save this address. Please try again or untick ‘Save this address’ to continue.");
+        setSavedAddresses((current) => [saved as SavedAddress, ...current]);
+        setSelectedAddressId(saved.id);
+      }
+      const response = await fetch("/api/checkout/", { method: "POST", headers: { "content-type": "application/json", ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) }, body: JSON.stringify({ items, fulfilment, region: deliveryRegion, address, extraNotes, customer: { name: checkoutName, email: customerEmail, phone: customerPhone }, marketing: { emailOptIn, whatsappOptIn }, ...(voucherDiscountSen && welcomeVoucher ? { voucherCode: welcomeVoucher.code } : {}), ...(appliedPoints ? { redeemPoints: appliedPoints } : {}) }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Payment checkout is unavailable. Please try again.");
       if (typeof data.checkoutUrl !== "string" || new URL(data.checkoutUrl).hostname !== "gate.chip-in.asia") throw new Error("Payment checkout is unavailable. Please contact us.");
@@ -270,28 +304,37 @@ export default function CartPage() {
 
             <section className="cart-checkout" aria-labelledby="cart-checkout-title">
               <div className="cart-section-heading"><div><span>02 / HOW YOU&apos;LL RECEIVE IT</span><h2 id="cart-checkout-title">Delivery or pickup</h2></div></div>
-              <fieldset className="cart-fulfilment"><legend>Choose one</legend>
-                <label className={fulfilment === "pickup" ? "is-selected" : ""}><input type="radio" name="fulfilment" checked={fulfilment === "pickup"} onChange={() => { setFulfilment("pickup"); setAddressError(""); setRegionError(""); }} /><span><strong>Pickup in Kuchai Lama</strong><small>Kuala Lumpur · Exact collection details shared after confirmation</small></span></label>
-                <label className={fulfilment === "delivery" ? "is-selected" : ""}><input type="radio" name="fulfilment" checked={fulfilment === "delivery"} onChange={() => setFulfilment("delivery")} /><span><strong>Delivery</strong><small>Choose a region and enter your full address</small></span></label>
+              <fieldset className="cart-fulfilment"><legend>Choose Ship or Pickup</legend>
+                <label className={fulfilment === "delivery" ? "is-selected" : ""}><input type="radio" name="fulfilment" checked={fulfilment === "delivery"} onChange={() => setFulfilment("delivery")} /><span aria-hidden="true">▣</span><strong>Ship</strong></label>
+                <label className={fulfilment === "pickup" ? "is-selected" : ""}><input type="radio" name="fulfilment" checked={fulfilment === "pickup"} onChange={() => { setFulfilment("pickup"); setAddressError(""); setRegionError(""); }} /><span aria-hidden="true">⌖</span><strong>Pickup</strong></label>
               </fieldset>
-              <p className="cart-urgent">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I have an urgent order and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp ↗</a> Urgent orders are for pickup in Kuchai Lama, KL, once we confirm availability.</p>
               {fulfilment === "delivery" && <div className="cart-delivery-fields">
                 {user && savedAddresses.length > 0 && <label className="cart-field cart-field--full">Use a saved address
-                  <select value={selectedAddressId} onChange={(event) => { const id = event.target.value; setSelectedAddressId(id); const selected = savedAddresses.find((item) => item.id === id); if (selected) { setAddress(addressText(selected)); setDeliveryRegion(regionForAddress(selected)); setAddressError(""); setRegionError(""); } else setAddress(""); }}>
+                  <select value={selectedAddressId} onChange={(event) => { const id = event.target.value; setSelectedAddressId(id); setSaveShippingAddress(false); const selected = savedAddresses.find((item) => item.id === id); if (selected) { const name = splitName(selected.recipient_name); setShipFirstName(name.first); setShipLastName(name.last); setShipCountry(selected.country === "SG" ? "SG" : "MY"); setShipCompany(""); setShipLine1(selected.line1); setShipLine2(selected.line2 ?? ""); setShipPostcode(selected.postcode); setShipCity(selected.city); setShipState(selected.state); setCustomerPhone(selected.phone); setDeliveryRegion(regionForAddress(selected)); setAddressError(""); setRegionError(""); } else { setShipLine1(""); setShipLine2(""); setShipPostcode(""); setShipCity(""); setShipState(""); setDeliveryRegion(""); } }}>
                     <option value="">Enter a different address</option>
                     {savedAddresses.map((item) => <option key={item.id} value={item.id}>{item.label || "Address"}{item.is_default ? " (default)" : ""} — {item.line1}</option>)}
                   </select>
                 </label>}
-                <label className="cart-field cart-delivery-region">Delivery region
-                  <select ref={regionRef} value={deliveryRegion} required onChange={(event) => { setDeliveryRegion(event.target.value as DeliveryRegion | ""); setRegionError(""); }} aria-invalid={Boolean(regionError)} aria-describedby={regionError ? "cart-region-error" : undefined}>
-                    <option value="">Choose a region</option>
-                    {Object.entries(deliveryRegions).map(([key, option]) => <option value={key} key={key}>{option.label} — {cakeTopperOnly ? `${formatRinggit(option.feeSen)} · ${option.transit} after dispatch` : "delivery quote to confirm"}</option>)}
-                  </select>
-                  {regionError && <span className="cart-field__error" id="cart-region-error" role="alert">{regionError}</span>}
-                </label>
-                <label className="cart-field cart-field--full">Full delivery address<textarea ref={addressRef} rows={4} minLength={10} required placeholder={deliveryRegion === "singapore" ? "Street, building/unit and postal code, Singapore" : "Street, building/unit, postcode, city and state"} value={address} onChange={(event) => { setAddress(event.target.value); setAddressError(""); if (selectedAddressId) setSelectedAddressId(""); }} aria-invalid={Boolean(addressError)} aria-describedby={addressError ? "cart-address-error" : undefined} />{addressError && <span className="cart-field__error" id="cart-address-error" role="alert">{addressError}</span>}</label>
+                <div className={`cart-shipping-fields${shipCountry === "SG" ? " cart-shipping-fields--sg" : ""}`}>
+                  <label className="cart-field cart-shipping-fields__full">Country/Region<select value={shipCountry} onChange={(event) => { const country = event.target.value as "MY" | "SG"; setShipCountry(country); setShipState(country === "SG" ? "Singapore" : ""); setShipCity(country === "SG" ? "Singapore" : ""); setDeliveryRegion(country === "SG" ? "singapore" : ""); setSelectedAddressId(""); setRegionError(""); }}><option value="MY">Malaysia</option><option value="SG">Singapore</option></select></label>
+                  <label className="cart-field cart-shipping-fields__half">First name<input type="text" autoComplete="given-name" maxLength={50} required value={shipFirstName} onChange={(event) => setShipFirstName(event.target.value)} /></label>
+                  <label className="cart-field cart-shipping-fields__half">Last name<input type="text" autoComplete="family-name" maxLength={50} required value={shipLastName} onChange={(event) => setShipLastName(event.target.value)} /></label>
+                  <label className="cart-field cart-shipping-fields__full">Company <span>(optional)</span><input type="text" autoComplete="organization" maxLength={80} value={shipCompany} onChange={(event) => setShipCompany(event.target.value)} /></label>
+                  <label className="cart-field cart-shipping-fields__full">Address<input ref={addressRef} type="text" autoComplete="address-line1" maxLength={200} required value={shipLine1} onChange={(event) => { setShipLine1(event.target.value); setAddressError(""); setSelectedAddressId(""); }} aria-invalid={Boolean(addressError)} aria-describedby={addressError ? "cart-address-error" : undefined} />{addressError && <span className="cart-field__error" id="cart-address-error" role="alert">{addressError}</span>}</label>
+                  <label className="cart-field cart-shipping-fields__full">Apartment, suite, etc. <span>(optional)</span><input type="text" autoComplete="address-line2" maxLength={110} value={shipLine2} onChange={(event) => { setShipLine2(event.target.value); setSelectedAddressId(""); }} /></label>
+                  <label className="cart-field cart-shipping-fields__third">Postcode<input type="text" autoComplete="postal-code" maxLength={20} required value={shipPostcode} onChange={(event) => { setShipPostcode(event.target.value); setSelectedAddressId(""); }} /></label>
+                  <label className="cart-field cart-shipping-fields__third">City<input type="text" autoComplete="address-level2" maxLength={100} required value={shipCity} onChange={(event) => { setShipCity(event.target.value); setSelectedAddressId(""); }} /></label>
+                  {shipCountry === "MY" && <label className="cart-field cart-shipping-fields__third">State/territory<select ref={regionRef} autoComplete="address-level1" required value={shipState} onChange={(event) => { const state = event.target.value; setShipState(state); setDeliveryRegion(state ? /sabah|sarawak|labuan/i.test(state) ? "east" : "west" : ""); setSelectedAddressId(""); setRegionError(""); }} aria-invalid={Boolean(regionError)} aria-describedby={regionError ? "cart-region-error" : undefined}><option value="">Choose state</option>{shipState && !malaysiaStates.includes(shipState) && <option value={shipState}>{shipState}</option>}{malaysiaStates.map((state) => <option value={state} key={state}>{state}</option>)}</select>{regionError && <span className="cart-field__error" id="cart-region-error" role="alert">{regionError}</span>}</label>}
+                  <label className="cart-field cart-shipping-fields__full">Phone / WhatsApp number<input type="tel" autoComplete="tel" maxLength={30} required value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} /></label>
+                </div>
+                {user && paymentAvailable && !totalToConfirm && !selectedAddressId && <label className="cart-save-address"><input type="checkbox" checked={saveShippingAddress} onChange={(event) => setSaveShippingAddress(event.target.checked)} />Save this address in my account</label>}
+                {user && (!paymentAvailable || totalToConfirm) && <p className="cart-delivery-fields__note">You can save this address from <Link href="/account/">My account</Link> for future orders.</p>}
+                {!user && accountEnabled && <p className="cart-delivery-fields__note"><Link href="/account/">Sign in</Link> to save this address for future orders. Guest checkout is still available.</p>}
+                {region && <p className="cart-delivery-fields__note">{region.label}: {cakeTopperOnly ? `${formatRinggit(region.feeSen)} delivery · about ${region.transit} after dispatch.` : "We’ll confirm the delivery fee and timing before payment."}</p>}
                 <p className="cart-delivery-fields__note">{cakeTopperOnly ? "Delivery fees are for a cake topper order. Transit times are estimates after dispatch." : "This cart includes other products, so we&apos;ll confirm the delivery fee and timing on WhatsApp."}</p>
               </div>}
+              {fulfilment === "pickup" && <div className="cart-pickup-card"><p>1 pickup location for your order</p><div><h3>UDESIGN PROJECTS STUDIO · Kuchai Lama</h3><strong>FREE</strong></div><address>18, Jalan Rukun 1, Taman Continental, Kuchai Jaya, Kuchai Lama, 58200 Kuala Lumpur</address><p>Collection hours: Monday–Friday, 9:00 am–4:00 pm. We&apos;ll confirm your pickup time on WhatsApp.</p>{cakeTopperOnly && <p>Cake toppers are usually ready in about 3 hours after we confirm your design, during collection hours.</p>}</div>}
+              <p className="cart-urgent">Need it urgently? <a href={whatsappLink("Hi UDESIGN, I have an urgent order and can pick it up in Kuchai Lama, KL. Could you confirm if it is possible?")} target="_blank" rel="noopener noreferrer">Contact us on WhatsApp ↗</a> We&apos;ll confirm availability before you travel.</p>
               <div className="cart-checkout__extra"><label className="cart-field">Anything else? <span>(optional)</span><textarea rows={3} maxLength={500} placeholder="Any other request we should know" value={extraNotes} onChange={(event) => setExtraNotes(event.target.value)} /></label></div>
               <div className="cart-quote">
                 <div className="cart-quote__row"><h3>Item subtotal</h3><strong>{itemSubtotalText}</strong></div>
@@ -301,7 +344,7 @@ export default function CartPage() {
                 {voucherDiscountSen > 0 && <div className="cart-quote__row"><span>Welcome voucher</span><strong>−RM10.00</strong></div>}
                 {appliedPoints > 0 && <div className="cart-quote__row"><span>{appliedPoints} points</span><strong>−{formatRinggit(appliedPoints * 5)}</strong></div>}
                 <div className="cart-quote__row cart-quote__row--total"><span>Estimated total</span><strong>{totalToConfirm ? "To confirm" : formatRinggit(checkoutTotalSen)}</strong></div>
-                <p>{fulfilment === "delivery" && cakeTopperOnly && region ? `${region.label}: estimated ${region.transit} after dispatch. ` : fulfilment === "pickup" ? "Pickup in Kuchai Lama, Kuala Lumpur. " : "Delivery timing to confirm. "}We&apos;ll send a design confirmation on WhatsApp. If we need to change or cannot make an order, we&apos;ll contact you first and agree on a replacement or refund.</p>
+                <p>{fulfilment === "delivery" && cakeTopperOnly && region ? `${region.label}: estimated ${region.transit} after dispatch. ` : fulfilment === "pickup" ? "Pickup in Kuchai Lama, Kuala Lumpur; we'll confirm your collection time. " : "Delivery timing to confirm. "}We&apos;ll send a design confirmation on WhatsApp. If we need to change or cannot make an order, we&apos;ll contact you first and agree on a replacement or refund.</p>
               </div>
             </section>
 
@@ -309,9 +352,9 @@ export default function CartPage() {
               <div className="cart-section-heading"><div><span>03 / PLACE YOUR ORDER</span><h2 id="cart-request-title">Ready to order?</h2></div></div>
               {paymentAvailable && !totalToConfirm && <div className="cart-delivery-fields">
                 <p>Pay {formatRinggit(checkoutTotalSen)} now through CHIP. You&apos;ll enter payment details on CHIP&apos;s secure page. The final rewards amount is checked before payment opens.</p>
-                <label className="cart-field">Full name<input type="text" value={customerName} maxLength={100} autoComplete="name" onChange={(event) => setCustomerName(event.target.value)} /></label>
+                {fulfilment === "pickup" && <label className="cart-field">Full name<input type="text" value={customerName} maxLength={100} autoComplete="name" onChange={(event) => setCustomerName(event.target.value)} /></label>}
                 <label className="cart-field">Email<input type="email" value={customerEmail} maxLength={150} autoComplete="email" onChange={(event) => setCustomerEmail(event.target.value)} /></label>
-                <label className="cart-field">WhatsApp number<input type="tel" value={customerPhone} maxLength={30} autoComplete="tel" onChange={(event) => setCustomerPhone(event.target.value)} /></label>
+                {fulfilment === "pickup" && <label className="cart-field">WhatsApp number<input type="tel" value={customerPhone} maxLength={30} autoComplete="tel" onChange={(event) => setCustomerPhone(event.target.value)} /></label>}
                 <div className="cart-marketing"><p>Optional promotions</p><label><input type="checkbox" checked={emailOptIn} onChange={(event) => setEmailOptIn(event.target.checked)} /> Email me offers and news</label><label><input type="checkbox" checked={whatsappOptIn} onChange={(event) => setWhatsappOptIn(event.target.checked)} /> Send me offers on WhatsApp</label><small>We may still contact you about this order and your design.</small></div>
                 <button className="cart-request__whatsapp" type="button" disabled={paying} onClick={payNow}>{paying ? "Opening secure checkout…" : `Pay ${formatRinggit(checkoutTotalSen)} with CHIP ↗`}</button>
                 {paymentError && <p className="cart-field__error" role="alert">{paymentError}</p>}
