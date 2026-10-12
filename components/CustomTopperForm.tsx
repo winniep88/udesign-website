@@ -179,7 +179,11 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
       {!selectedDesign && <section className="custom-topper-form__fonts" aria-labelledby="topper-fonts-title">
         <h2 id="topper-fonts-title">Choose your font style <span>(optional)</span></h2>
         <p>See your wording in all 34 UDESIGN font styles. You can also leave the style to us or upload your own design photo below.</p>
-        {fontFamily && <div className="custom-topper-form__selected-font"><span>Selected: <strong>{fontFamily}</strong></span><button type="button" onClick={() => { setFontFamily(""); setAdded(false); }}>Leave font choice to UDESIGN</button></div>}
+        {fontFamily && <div className="custom-topper-form__selected-font">
+          <div className="custom-topper-form__selected-font-header"><span>Selected font: <strong>{fontFamily}</strong></span><button type="button" onClick={() => { setFontFamily(""); setAdded(false); }}>Leave font choice to UDESIGN</button></div>
+          <div className="custom-topper-form__selected-font-preview" style={{ fontFamily: `"${fontFamily}", cursive` }}>{wording}</div>
+          <p>Your wording in this font. Edit the wording above to update the preview.</p>
+        </div>}
         <button className="custom-topper-form__open-fonts" type="button" onClick={openFontDialog} disabled={!wording.trim()}>{fontFamily ? "Change font style" : "Choose your font style"} <span aria-hidden="true">↗</span></button>
         {!wording.trim() && <p className="custom-topper-form__font-note">Type your wording above to preview the font styles.</p>}
         <dialog className="custom-topper-form__font-dialog" ref={fontDialog} aria-labelledby="topper-font-dialog-title" onClose={() => setFontDialogOpen(false)}>

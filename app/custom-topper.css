@@ -65,7 +65,10 @@
 .custom-topper-form__font-card[aria-pressed=true] { border:2px solid #e93f78; background:#fff0f5; }
 .custom-topper-form__font-preview { display:grid; align-content:center; min-height:82px; overflow:hidden; font-size:25px; line-height:1.2; white-space:pre-line; overflow-wrap:anywhere; }
 .custom-topper-form__font-name { font-size:12px; font-weight:800; }
-.custom-topper-form__selected-font { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:11px 13px; background:#fff0f5; font-size:13px; }
+.custom-topper-form__selected-font { display:grid; gap:12px; padding:13px; background:#fff0f5; font-size:13px; }
+.custom-topper-form__selected-font-header { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px 12px; align-items:center; }
+.custom-topper-form__selected-font-preview { display:grid; align-content:center; min-height:110px; padding:16px; border:1px solid #e5cbd3; background:#fff; color:#432233; font-size:clamp(28px,4vw,40px); line-height:1.25; white-space:pre-wrap; overflow-wrap:anywhere; }
+.custom-topper-form__selected-font p { margin:0; color:#725d68; font-size:12px; line-height:1.5; }
 .custom-topper-form__selected-font button { border:0; background:none; color:#a12447; font:800 12px Arial,Helvetica,sans-serif; text-decoration:underline; cursor:pointer; }
 .custom-topper-form__font-note { font-size:12px!important; }
 .custom-topper-form__extra { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
