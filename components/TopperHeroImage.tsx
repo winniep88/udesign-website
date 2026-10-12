@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { topperEventDesigns, type TopperEventSlug } from "@/lib/topper";
+import { topperEvent, topperEventDesigns, type TopperEventSlug } from "@/lib/topper";
 
 export function TopperHeroImage({ eventSlug }: { eventSlug: TopperEventSlug }) {
   const designs = topperEventDesigns[eventSlug];
@@ -11,10 +11,10 @@ export function TopperHeroImage({ eventSlug }: { eventSlug: TopperEventSlug }) {
     setSelectedId(new URLSearchParams(window.location.search).get("design") ?? "");
   }, []);
   const design = designs.find((item) => item.id === selectedId);
-  const displayImage = design ?? designs[0];
+  const displayImage = design?.imageSrc ?? topperEvent(eventSlug)?.imageSrc ?? "/images/winnie.webp";
   return <>
-    <div className={`custom-topper__image${displayImage ? " custom-topper__image--design" : ""}`}>
-      <Image src={displayImage?.imageSrc ?? "/images/winnie.webp"} alt={design ? `${design.name} cake topper design inspiration` : "Cake topper style inspiration"} fill sizes={displayImage ? "(max-width: 900px) min(100vw, 440px), 440px" : "(max-width: 900px) 100vw, 42vw"} priority />
+    <div className="custom-topper__image custom-topper__image--design">
+      <Image src={displayImage} alt={design ? `${design.name} cake topper design inspiration` : `Custom cake topper for a ${topperEvent(eventSlug)?.name.toLowerCase() ?? "special"} celebration`} fill sizes="(max-width: 900px) min(100vw, 440px), 440px" priority />
       {!design && <span>STYLE INSPIRATION · NOT A PRODUCT PHOTO</span>}
     </div>
     {design && <p className="custom-topper__image-caption">{design.id} · DESIGN INSPIRATION</p>}

@@ -8,17 +8,14 @@ import { CustomRequest } from "@/components/CustomRequest";
 import { TopperEventPicker } from "@/components/TopperEventPicker";
 import { productsForBrand } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
+import { topperEventHref, topperEvents } from "@/lib/topper";
 
 export const metadata: Metadata = {
   title: "WINNIE CAKE TOPPER by Udesign — Celebration pieces",
   description: "Choose an event, then personalise a custom cake topper with Winnie Cake Topper by UDESIGN.",
 };
 
-const featuredIdeas = [
-  { event: "Birthday", href: "/winnie-cake-topper/event/birthday/#topper-designs-title", image: "/images/topper-designs/f001.jpeg" },
-  { event: "Wedding", href: "/winnie-cake-topper/event/wedding/#topper-designs-title", image: "/images/topper-designs/w001.jpeg" },
-  { event: "Baby Shower", href: "/winnie-cake-topper/event/baby-shower/#topper-designs-title", image: "/images/topper-designs/s003.jpeg" },
-] as const;
+const featuredIdeas = topperEvents.map((event) => ({ event: event.name, href: topperEventHref(event.slug), image: event.imageSrc }));
 
 export default function WinniePage() {
   return (

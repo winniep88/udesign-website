@@ -3,12 +3,12 @@ import topperFonts from "@/data/topper-fonts.json";
 export const topperFontStyles: readonly string[] = topperFonts;
 
 export const topperEvents = [
-  { slug: "birthday", name: "Birthday", description: "A cake topper made for their day." },
-  { slug: "wedding", name: "Wedding", description: "Names and words for your wedding cake." },
-  { slug: "baby-shower", name: "Baby Shower", description: "A sweet detail for a new arrival." },
-  { slug: "bridal-shower", name: "Bridal Shower", description: "A personal touch for the bride-to-be." },
-  { slug: "anniversary", name: "Anniversary", description: "Celebrate the years and the story." },
-  { slug: "celebration", name: "Celebration", description: "Something special for any occasion." },
+  { slug: "birthday", name: "Birthday", description: "A cake topper made for their day.", imageSrc: "/images/topper-events/birthday.jpeg" },
+  { slug: "wedding", name: "Wedding", description: "Names and words for your wedding cake.", imageSrc: "/images/topper-events/wedding.jpeg" },
+  { slug: "baby-shower", name: "Baby Shower", description: "A sweet detail for a new arrival.", imageSrc: "/images/topper-events/baby-shower.jpeg" },
+  { slug: "bridal-shower", name: "Bridal Shower", description: "A personal touch for the bride-to-be.", imageSrc: "/images/topper-events/bridal-shower.jpeg" },
+  { slug: "anniversary", name: "Anniversary", description: "Celebrate the years and the story.", imageSrc: "/images/topper-events/anniversary.jpeg" },
+  { slug: "celebration", name: "Celebration", description: "Something special for any occasion.", imageSrc: "/images/topper-events/celebration.jpeg" },
 ] as const;
 
 export type TopperEvent = (typeof topperEvents)[number];

@@ -329,8 +329,8 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
   .winnie-spark--two { right:-10px; font-size:70px; }
   .winnie-collections { padding-block:75px; }
   .winnie-ideas { padding-block:65px 15px; }
-  .winnie-ideas__grid { grid-template-columns:1fr; gap:35px; }
-  .winnie-ideas__grid a > div { aspect-ratio:4/3; }
+  .winnie-ideas__grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+  .winnie-ideas__grid a > div { aspect-ratio:3/4; }
   .site-footer__top { grid-template-columns:1fr 1fr; gap:38px; }
   .site-footer__contact { grid-column:1 / -1; justify-self:start; }
   .site-footer__wordmark { font-size:clamp(72px,16vw,160px); }

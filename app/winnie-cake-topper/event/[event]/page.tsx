@@ -31,7 +31,7 @@ export default async function TopperEventPage({ params }: Props) {
           <nav className="winnie-product__breadcrumbs" aria-label="Breadcrumb"><Link href="/winnie-cake-topper/">Winnie Cake Topper</Link><span aria-hidden="true">/</span><span>{chosen.name}</span></nav>
           <div className="topper-event-hero__grid">
             <div><p className="eyebrow">CHOOSE YOUR EVENT / {chosen.name.toUpperCase()}</p><h1>{chosen.name} cake toppers</h1><p>{chosen.description} Personalise one custom cake topper with your wording, material, colour and size.</p><Link className="topper-event-hero__change" href="/winnie-cake-topper/#choose-event">← Choose another event</Link></div>
-            <div className="topper-event-hero__image"><Image src={designs[0]?.imageSrc ?? "/images/winnie.webp"} alt={designs.length ? `${chosen.name} cake topper design inspiration` : "Cake topper style inspiration"} fill sizes="(max-width: 800px) 100vw, 42vw" priority /><span>DESIGN INSPIRATION · FINAL MOCK-UP TO CONFIRM</span></div>
+            <div className="topper-event-hero__image"><Image src={chosen.imageSrc} alt={`Custom cake topper for a ${chosen.name.toLowerCase()} celebration`} fill sizes="(max-width: 800px) 100vw, 42vw" priority /><span>STYLE INSPIRATION · FINAL MOCK-UP TO CONFIRM</span></div>
           </div>
         </section>
         <section className="topper-line-products shell" aria-labelledby="topper-line-products-title">
