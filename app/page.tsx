@@ -37,8 +37,8 @@ const brands = [
     categories: "BIRTHDAY · WEDDING · BABY SHOWER · CELEBRATIONS",
     cta: "Winnie Cake Topper — Find Your Perfect Topper",
     href: "/winnie-cake-topper/",
-    image: "/images/winnie.webp",
-    imageAlt: "Concept image of a colourful acrylic cake decoration",
+    image: "/images/winnie-home-pastel.jpg",
+    imageAlt: "Pastel cake with a gold acrylic Winnie name topper and rainbow decoration",
     className: "world-card--winnie",
   },
 ] as const;
@@ -67,7 +67,7 @@ export default function Home() {
               <span>MOMENTS <small>Gifts &amp; event décor</small></span>
             </Link>
             <Link href="/winnie-cake-topper/" className="hero-tile hero-tile--winnie">
-              <Image src="/images/winnie.webp" alt="Concept image of a cake decoration" fill sizes="(max-width: 750px) 40vw, 23vw" priority />
+              <Image src="/images/winnie-home-pastel.jpg" alt="Pastel cake with a gold acrylic Winnie name topper" fill sizes="(max-width: 750px) 40vw, 23vw" priority />
               <span>WINNIE <small>Cake toppers</small></span>
             </Link>
           </div>
