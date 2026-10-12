@@ -20,11 +20,6 @@ const deliveryRegions = {
 type DeliveryRegion = keyof typeof deliveryRegions;
 const malaysiaStates = ["Johor", "Kedah", "Kelantan", "Kuala Lumpur", "Labuan", "Melaka", "Negeri Sembilan", "Pahang", "Penang", "Perak", "Perlis", "Putrajaya", "Sabah", "Sarawak", "Selangor", "Terengganu"];
 
-function splitName(name: string) {
-  const [first = "", ...rest] = name.trim().split(/\s+/);
-  return { first, last: rest.join(" ") };
-}
-
 function regionForAddress(saved: SavedAddress): DeliveryRegion {
   if (saved.country === "SG") return "singapore";
   return /sabah|sarawak|labuan/i.test(saved.state) ? "east" : "west";
@@ -66,8 +61,7 @@ export default function CartPage() {
   const [fulfilment, setFulfilment] = useState<Fulfilment>("delivery");
   const [deliveryRegion, setDeliveryRegion] = useState<DeliveryRegion | "">("");
   const [shipCountry, setShipCountry] = useState<"MY" | "SG">("MY");
-  const [shipFirstName, setShipFirstName] = useState("");
-  const [shipLastName, setShipLastName] = useState("");
+  const [shipFullName, setShipFullName] = useState("");
   const [shipCompany, setShipCompany] = useState("");
   const [shipLine1, setShipLine1] = useState("");
   const [shipLine2, setShipLine2] = useState("");
@@ -91,8 +85,10 @@ export default function CartPage() {
   const [redeemPoints, setRedeemPoints] = useState(0);
   const [emailOptIn, setEmailOptIn] = useState(false);
   const [whatsappOptIn, setWhatsappOptIn] = useState(false);
+  const [shipNameError, setShipNameError] = useState("");
   const [addressError, setAddressError] = useState("");
   const [regionError, setRegionError] = useState("");
+  const shipNameRef = useRef<HTMLInputElement>(null);
   const addressRef = useRef<HTMLInputElement>(null);
   const regionRef = useRef<HTMLSelectElement>(null);
   const summaryRef = useRef<HTMLTextAreaElement>(null);
@@ -129,10 +125,8 @@ export default function CartPage() {
       if (!active) return;
       setCustomerEmail(user.email ?? "");
       const profileName = profile.data?.full_name || "";
-      const nameParts = splitName(profileName);
       setCustomerName(profileName);
-      setShipFirstName(nameParts.first);
-      setShipLastName(nameParts.last);
+      setShipFullName(profileName);
       setCustomerPhone(profile.data?.whatsapp_phone || "");
       const addressList = (saved.data ?? []) as SavedAddress[];
       setSavedAddresses(addressList);
@@ -152,7 +146,7 @@ export default function CartPage() {
     return result;
   }, { subtotalSen: 0, needsQuote: false }), [items, liveCatalog, topperPrices]);
   const cakeTopperOnly = items.length > 0 && items.every((item) => item.brand === "winnie");
-  const shippingName = `${shipFirstName.trim()} ${shipLastName.trim()}`.trim();
+  const shippingName = shipFullName.trim();
   const checkoutName = fulfilment === "delivery" ? shippingName : customerName.trim();
   const address = [shipCompany, shipLine1, shipLine2, shipPostcode, shipCity, shipState, shipCountry === "SG" ? "Singapore" : "Malaysia"].map((part) => part.trim()).filter(Boolean).join(", ");
   const region = deliveryRegion ? deliveryRegions[deliveryRegion] : null;
@@ -205,7 +199,13 @@ export default function CartPage() {
       return false;
     }
     setRegionError("");
-    if (fulfilment === "delivery" && (!shipFirstName.trim() || !shipLastName.trim() || !shipLine1.trim() || !shipPostcode.trim() || !shipCity.trim() || !shipState.trim() || !customerPhone.trim() || address.length > 500)) {
+    if (fulfilment === "delivery" && !shippingName) {
+      setShipNameError("Enter the recipient's full name first.");
+      shipNameRef.current?.focus();
+      return false;
+    }
+    setShipNameError("");
+    if (fulfilment === "delivery" && (!shipLine1.trim() || !shipPostcode.trim() || !shipCity.trim() || !shipState.trim() || !customerPhone.trim() || address.length > 500)) {
       setAddressError(address.length > 500 ? "Please shorten your delivery address." : "Please complete the recipient, phone and delivery address fields.");
       addressRef.current?.focus();
       return false;
@@ -310,15 +310,14 @@ export default function CartPage() {
               </fieldset>
               {fulfilment === "delivery" && <div className="cart-delivery-fields">
                 {user && savedAddresses.length > 0 && <label className="cart-field cart-field--full">Use a saved address
-                  <select value={selectedAddressId} onChange={(event) => { const id = event.target.value; setSelectedAddressId(id); setSaveShippingAddress(false); const selected = savedAddresses.find((item) => item.id === id); if (selected) { const name = splitName(selected.recipient_name); setShipFirstName(name.first); setShipLastName(name.last); setShipCountry(selected.country === "SG" ? "SG" : "MY"); setShipCompany(""); setShipLine1(selected.line1); setShipLine2(selected.line2 ?? ""); setShipPostcode(selected.postcode); setShipCity(selected.city); setShipState(selected.state); setCustomerPhone(selected.phone); setDeliveryRegion(regionForAddress(selected)); setAddressError(""); setRegionError(""); } else { setShipLine1(""); setShipLine2(""); setShipPostcode(""); setShipCity(""); setShipState(""); setDeliveryRegion(""); } }}>
+                  <select value={selectedAddressId} onChange={(event) => { const id = event.target.value; setSelectedAddressId(id); setSaveShippingAddress(false); const selected = savedAddresses.find((item) => item.id === id); if (selected) { setShipFullName(selected.recipient_name); setShipCountry(selected.country === "SG" ? "SG" : "MY"); setShipCompany(""); setShipLine1(selected.line1); setShipLine2(selected.line2 ?? ""); setShipPostcode(selected.postcode); setShipCity(selected.city); setShipState(selected.state); setCustomerPhone(selected.phone); setDeliveryRegion(regionForAddress(selected)); setAddressError(""); setRegionError(""); } else { setShipLine1(""); setShipLine2(""); setShipPostcode(""); setShipCity(""); setShipState(""); setDeliveryRegion(""); } }}>
                     <option value="">Enter a different address</option>
                     {savedAddresses.map((item) => <option key={item.id} value={item.id}>{item.label || "Address"}{item.is_default ? " (default)" : ""} — {item.line1}</option>)}
                   </select>
                 </label>}
                 <div className={`cart-shipping-fields${shipCountry === "SG" ? " cart-shipping-fields--sg" : ""}`}>
                   <label className="cart-field cart-shipping-fields__full">Country/Region<select value={shipCountry} onChange={(event) => { const country = event.target.value as "MY" | "SG"; setShipCountry(country); setShipState(country === "SG" ? "Singapore" : ""); setShipCity(country === "SG" ? "Singapore" : ""); setDeliveryRegion(country === "SG" ? "singapore" : ""); setSelectedAddressId(""); setRegionError(""); }}><option value="MY">Malaysia</option><option value="SG">Singapore</option></select></label>
-                  <label className="cart-field cart-shipping-fields__half">First name<input type="text" autoComplete="given-name" maxLength={50} required value={shipFirstName} onChange={(event) => setShipFirstName(event.target.value)} /></label>
-                  <label className="cart-field cart-shipping-fields__half">Last name<input type="text" autoComplete="family-name" maxLength={50} required value={shipLastName} onChange={(event) => setShipLastName(event.target.value)} /></label>
+                  <label className="cart-field cart-shipping-fields__full">Full name<input ref={shipNameRef} type="text" autoComplete="name" maxLength={100} required value={shipFullName} onChange={(event) => { setShipFullName(event.target.value); setShipNameError(""); }} aria-invalid={Boolean(shipNameError)} aria-describedby={shipNameError ? "cart-ship-name-error" : undefined} />{shipNameError && <span className="cart-field__error" id="cart-ship-name-error" role="alert">{shipNameError}</span>}</label>
                   <label className="cart-field cart-shipping-fields__full">Company <span>(optional)</span><input type="text" autoComplete="organization" maxLength={80} value={shipCompany} onChange={(event) => setShipCompany(event.target.value)} /></label>
                   <label className="cart-field cart-shipping-fields__full">Address<input ref={addressRef} type="text" autoComplete="address-line1" maxLength={200} required value={shipLine1} onChange={(event) => { setShipLine1(event.target.value); setAddressError(""); setSelectedAddressId(""); }} aria-invalid={Boolean(addressError)} aria-describedby={addressError ? "cart-address-error" : undefined} />{addressError && <span className="cart-field__error" id="cart-address-error" role="alert">{addressError}</span>}</label>
                   <label className="cart-field cart-shipping-fields__full">Apartment, suite, etc. <span>(optional)</span><input type="text" autoComplete="address-line2" maxLength={110} value={shipLine2} onChange={(event) => { setShipLine2(event.target.value); setSelectedAddressId(""); }} /></label>

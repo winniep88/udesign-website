@@ -14,6 +14,9 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   const [sizeCm, setSizeCm] = useState(0);
   const [wording, setWording] = useState("");
   const [wordingError, setWordingError] = useState("");
+  const [wordingAttempted, setWordingAttempted] = useState(false);
+  const [fontAttempted, setFontAttempted] = useState(false);
+  const [finishAttempted, setFinishAttempted] = useState(false);
   const [fontFamily, setFontFamily] = useState("");
   const [fontDialogOpen, setFontDialogOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -54,7 +57,11 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   }, [fontDialogOpen]);
 
   function openFontDialog() {
-    if (!wording.trim()) return;
+    if (!wording.trim()) {
+      setFontAttempted(true);
+      return;
+    }
+    setFontAttempted(false);
     setFontDialogOpen(true);
     fontDialog.current?.showModal();
   }
@@ -68,14 +75,23 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
   function chooseMaterial(value: TopperMaterial) {
     setMaterial(value);
     setFinish("");
+    setFinishAttempted(false);
     setAdded(false);
   }
 
   function changeWording(value: string) {
     const next = value.replace(/\r\n?/g, "\n");
-    if (next.replace(/\n/g, "").length > (characterLimit ?? 0) || next.split("\n").length > 5) return;
+    if (next.split("\n").length > 5) {
+      setWordingError("Use up to 5 lines. Remove a line before typing more.");
+      return;
+    }
+    if (next.replace(/\n/g, "").length > (characterLimit ?? 0)) {
+      setWordingError(`This size allows up to ${characterLimit ?? 0} characters. Shorten your wording or choose a larger size.`);
+      return;
+    }
     setWording(next);
     setWordingError("");
+    setFontAttempted(false);
     setAdded(false);
   }
 
@@ -155,10 +171,10 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
       </div>}
       <fieldset className="custom-topper-form__choices">
         <legend>1. Choose the topper size</legend>
-        <p className="custom-topper-form__intro">Choose a size, then enter your wording below.</p>
+        <p className="custom-topper-form__intro">Start here. Your size sets how much wording will fit.</p>
         <div className="custom-topper-form__size-grid">
           {topperSizes.map((size) => <label className={sizeCm === size.cm ? "is-selected" : ""} key={size.cm}>
-            <input type="radio" name="size" required checked={sizeCm === size.cm} onChange={() => { setSizeCm(size.cm); setWordingError(""); setAdded(false); }} />
+            <input type="radio" name="size" required checked={sizeCm === size.cm} onChange={() => { setSizeCm(size.cm); setWordingAttempted(false); setWordingError(""); setAdded(false); }} />
             <strong>{size.cm} cm</strong><small>{size.inch} inch</small>
           </label>)}
         </div>
@@ -166,10 +182,11 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
 
       <fieldset className="custom-topper-form__wording">
         <legend>2. Name / Phrase</legend>
-        <p className="custom-topper-form__intro" id="topper-wording-help">{sizeCm ? "Type the words exactly as you want them to appear. Press Enter for another line, up to 5 lines." : "Choose a topper size above, then enter your wording."}</p>
+        <p className="custom-topper-form__intro" id="topper-wording-help">{sizeCm ? "Type the words exactly as you want them to appear. Press Enter for another line, up to 5 lines." : "First choose a topper size in Step 1. Then you can type your wording here."}</p>
         <label className="custom-topper-form__field">Your wording
-          <textarea rows={5} required disabled={!sizeCm} value={wording} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={"e.g. Happy Birthday\nOlivia"} />
+          <textarea rows={5} required readOnly={!sizeCm} value={wording} onFocus={() => { if (!sizeCm) setWordingAttempted(true); }} onChange={(event) => changeWording(event.target.value)} aria-describedby="topper-wording-help" placeholder={sizeCm ? "e.g. Happy Birthday\nOlivia" : "Choose a topper size in Step 1 first"} />
         </label>
+        {wordingAttempted && !sizeCm && <p className="custom-topper-form__step-notice" role="status">Select a topper size in Step 1 first to unlock this box.</p>}
         {characterLimit && wordLimit && <p className="custom-topper-form__remaining" aria-live="polite">{sizeCm} cm: maximum {characterLimit} characters and {wordLimit} words · {characterLimit - wordingCharacters} characters and {wordLimit - wordCount} words remaining</p>}
         {characterLimit && wordingCharacters > characterLimit && <p className="custom-topper-form__error" role="alert">Your wording is too long for {sizeCm} cm. Choose a larger size or shorten it.</p>}
         {wordLimit && wordCount > wordLimit && <p className="custom-topper-form__error" role="alert">Your wording has too many words for {sizeCm} cm. Choose a larger size or shorten it.</p>}
@@ -184,8 +201,8 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
           <div className="custom-topper-form__selected-font-preview" style={{ fontFamily: `"${fontFamily}", cursive` }}>{wording}</div>
           <p>Your wording in this font. Edit the wording above to update the preview.</p>
         </div>}
-        <button className="custom-topper-form__open-fonts" type="button" onClick={openFontDialog} disabled={!wording.trim()}>{fontFamily ? "Change font style" : "Choose your font style"} <span aria-hidden="true">↗</span></button>
-        {!wording.trim() && <p className="custom-topper-form__font-note">Type your wording above to preview the font styles.</p>}
+        <button className="custom-topper-form__open-fonts" type="button" onClick={openFontDialog}>{fontFamily ? "Change font style" : "Choose your font style"} <span aria-hidden="true">↗</span></button>
+        {!wording.trim() && <p className={fontAttempted ? "custom-topper-form__step-notice" : "custom-topper-form__font-note"} role={fontAttempted ? "status" : undefined}>{sizeCm ? "First type your wording in Step 2 to preview the font styles." : "First choose a size in Step 1, then type your wording in Step 2 to preview fonts."}</p>}
         <dialog className="custom-topper-form__font-dialog" ref={fontDialog} aria-labelledby="topper-font-dialog-title" onClose={() => setFontDialogOpen(false)}>
           <div className="custom-topper-form__font-dialog-inner">
             <header className="custom-topper-form__font-dialog-header">
@@ -212,12 +229,14 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
         </select>
       </label>
 
-      <label className="custom-topper-form__field">4. {material === "wood" ? "Wood finish" : "Colour or finish"}
-        <select required value={finish} disabled={!material} onChange={(event) => { setFinish(event.target.value); setAdded(false); }}>
-          <option value="" disabled>{material ? "Choose a colour or finish" : "Choose a material first"}</option>
-          {material && topperFinishes[material].map((option) => <option key={option.name} value={option.name}>{option.name}{option.extraRm ? ` (+RM${option.extraRm})` : ""}</option>)}
-        </select>
-      </label>
+      <div className="custom-topper-form__field">
+        <label htmlFor="topper-finish">4. {material === "wood" ? "Wood finish" : "Colour or finish"}</label>
+        {material ? <select id="topper-finish" required value={finish} onChange={(event) => { setFinish(event.target.value); setAdded(false); }}>
+          <option value="" disabled>Choose a colour or finish</option>
+          {topperFinishes[material].map((option) => <option key={option.name} value={option.name}>{option.name}{option.extraRm ? ` (+RM${option.extraRm})` : ""}</option>)}
+        </select> : <button className="custom-topper-form__locked-choice" type="button" onClick={() => setFinishAttempted(true)}>Choose a material in Step 3 first</button>}
+        {!material && <span className={finishAttempted ? "custom-topper-form__step-notice" : "custom-topper-form__font-note"} role={finishAttempted ? "status" : undefined}>Select Cardstock, Acrylic or Wood in Step 3 to see the available colours and finishes.</span>}
+      </div>
       <p className="custom-topper-form__hint">The finishes change with your material. Your price updates when you change a choice.</p>
 
       <label className="custom-topper-form__field">Quantity
