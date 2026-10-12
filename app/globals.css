@@ -229,8 +229,7 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 .winnie-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 .winnie-grid article { min-height:340px; display:flex; flex-direction:column; padding:30px; background:#f9b8c9; }
 .winnie-grid article:nth-child(2) { background:#f8d77e; }
-.winnie-icon { font-size:55px; line-height:1; align-self:flex-end; }
-.winnie-grid article > span:nth-child(2) { margin-top:auto; font-size:11px; font-weight:900; letter-spacing:.18em; }
+.winnie-grid article > span:first-child { margin-top:auto; font-size:11px; font-weight:900; letter-spacing:.18em; }
 .winnie-grid h3 { font-size:clamp(35px,3.5vw,55px); font-weight:900; letter-spacing:-.07em; margin:15px 0 7px; }
 .winnie-grid p { max-width:450px; margin:0; font-size:16px; line-height:1.6; }
 .winnie-grid .collection-note { margin-inline:0; }
