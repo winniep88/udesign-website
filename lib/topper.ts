@@ -54,6 +54,7 @@ export const topperFinishes: Record<TopperMaterial, readonly { name: string; ext
     { name: "Green", extraRm: 0 },
     { name: "Grey", extraRm: 0 },
     { name: "Matte gold", extraRm: 0 },
+    { name: "Mirror Copper", extraRm: 0 },
     { name: "Mirror Gold", extraRm: 0 },
     { name: "Mirror Rose Gold", extraRm: 1 },
     { name: "Mirror Silver", extraRm: 0 },

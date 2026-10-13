@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useCart } from "@/components/CartProvider";
+import { TopperColourChart } from "@/components/TopperColourChart";
 import { formatRinggit } from "@/lib/catalog";
 import { whatsappLink } from "@/lib/contact";
 import { topperCharacterLimit, topperChoicePriceSen, topperEventDesigns, topperEventHref, topperFinishes, topperFontStyles, topperProductName, topperSizes, topperWordCount, topperWordLimit, type TopperEventSlug, type TopperLineCount, type TopperMaterial } from "@/lib/topper";
@@ -229,8 +230,10 @@ export function CustomTopperForm({ initialEventSlug }: { initialEventSlug: Toppe
         </select>
       </label>
 
+      {material && <TopperColourChart material={material} selectedFinish={finish} />}
+
       <div className="custom-topper-form__field">
-        <label htmlFor="topper-finish">4. {material === "wood" ? "Wood finish" : "Colour or finish"}</label>
+        <label htmlFor="topper-finish">4. Choose your {material === "wood" ? "wood finish" : "colour or finish"}</label>
         {material ? <select id="topper-finish" required value={finish} onChange={(event) => { setFinish(event.target.value); setAdded(false); }}>
           <option value="" disabled>Choose a colour or finish</option>
           {topperFinishes[material].map((option) => <option key={option.name} value={option.name}>{option.name}{option.extraRm ? ` (+RM${option.extraRm})` : ""}</option>)}
