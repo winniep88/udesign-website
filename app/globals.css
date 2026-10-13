@@ -103,6 +103,10 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
 .world-card--moments { background:#f0e9df; }
 .world-card--moments .world-card__image { order:2; }
 .world-card--winnie { background:#f7c4d4; color:#802344; }
+.world-card--winnie .world-card__image { min-height:620px; background:#f8f4f1; }
+.world-card__image-main { position:absolute; inset:0 0 39%; }
+.world-card__image-secondary { position:absolute; inset:49% 0 0; background:#f8f4f1; -webkit-mask-image:linear-gradient(to bottom,transparent,#000 24%,#000); mask-image:linear-gradient(to bottom,transparent,#000 24%,#000); }
+.world-card__image-secondary img { object-fit:contain; }
 .concept-note { margin-top:16px; color:#6a7174; font-size:11px; }
 .story-section { padding-block:100px 120px; display:grid; grid-template-columns:.9fr 1.1fr; gap:80px; border-top:1px solid var(--line); }
 .story-section h2 { margin:20px 0 0; font-size:clamp(43px,4.4vw,72px); line-height:1.02; letter-spacing:-.07em; font-weight:900; }
@@ -269,6 +273,7 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
   .home-hero__visual { min-height:460px; }
   .world-card { min-height:380px; }
   .world-card__image { min-height:380px; }
+  .world-card--winnie .world-card__image { min-height:560px; }
   .world-card__content { padding:35px; }
   .projects-grid,.moments-grid { grid-template-columns:repeat(2,1fr); }
   .projects-category,.moment-category { min-height:320px; }
@@ -298,6 +303,7 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
   .section-intro > p { margin-top:20px; }
   .world-card { display:flex; flex-direction:column; }
   .world-card__image,.world-card--moments .world-card__image { order:0; min-height:0; height:300px; }
+  .world-card--winnie .world-card__image { min-height:0; height:500px; }
   .world-card__content { min-height:345px; padding:32px; }
   .world-card h3 { margin-top:26px; font-size:clamp(42px,9vw,60px); }
   .story-section { grid-template-columns:1fr; gap:45px; padding-block:75px; }
@@ -340,6 +346,7 @@ button,a,summary { -webkit-tap-highlight-color:transparent; }
   .hero-tile span { font-size:10px; bottom:12px; left:12px; }
   .hero-tile small { font-size:9px; }
   .world-card__image { height:250px; }
+  .world-card--winnie .world-card__image { height:440px; }
   .world-card__content { padding:26px; min-height:370px; }
   .world-card h3 { font-size:40px; }
   .world-card__categories { font-size:10px; line-height:1.7; }

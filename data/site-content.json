@@ -6,6 +6,7 @@
   {"group":"Homepage","key":"home.projectsImage","label":"Projects photo","type":"image","default":"/images/projects.webp"},
   {"group":"Homepage","key":"home.momentsImage","label":"Moments photo","type":"image","default":"/images/moments.webp"},
   {"group":"Homepage","key":"home.winnieImage","label":"Winnie Cake Topper photo","type":"image","default":"/images/winnie-home-pastel.jpg"},
+  {"group":"Homepage","key":"home.winnieCollectionImage","label":"Winnie acrylic topper collection photo","type":"image","default":"/images/winnie-acrylic-name-collection.png"},
   {"group":"Homepage","key":"home.projectsText","label":"Projects description","type":"text","default":"Custom logos and signs for your business or space, made in acrylic, wood or PVC.","maxLength":240},
   {"group":"Homepage","key":"home.momentsText","label":"Moments description","type":"text","default":"Personalised decorations and keepsakes for weddings, celebrations, gifting and little ones.","maxLength":240},
   {"group":"Homepage","key":"home.winnieText","label":"Winnie description","type":"text","default":"Personalised cake toppers for birthdays, weddings and every reason to celebrate. Find us at @winniecaketopper.","maxLength":240},

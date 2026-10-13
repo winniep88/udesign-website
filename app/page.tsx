@@ -83,7 +83,10 @@ export default function Home() {
           <div className="shell world-list">
             {brands.map((brand) => (
               <Link key={brand.number} href={brand.href} className={`world-card ${brand.className}`}>
-                <div className="world-card__image"><SiteImage contentKey={brand.imageKey} alt={brand.imageAlt} fill sizes="(max-width: 750px) 100vw, 45vw" /></div>
+                <div className="world-card__image">{brand.number === "03" ? <>
+                  <div className="world-card__image-main"><SiteImage contentKey={brand.imageKey} alt={brand.imageAlt} fill sizes="(max-width: 750px) 100vw, 45vw" /></div>
+                  <div className="world-card__image-secondary"><SiteImage contentKey="home.winnieCollectionImage" alt="Acrylic name cake topper collection in gold and silver" fill sizes="(max-width: 750px) 100vw, 45vw" /></div>
+                </> : <SiteImage contentKey={brand.imageKey} alt={brand.imageAlt} fill sizes="(max-width: 750px) 100vw, 45vw" />}</div>
                 <div className="world-card__content">
                   <span className="world-card__number">{brand.number} / {brand.eyebrow}</span>
                   <h3>{brand.name}</h3>
