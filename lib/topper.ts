@@ -36,17 +36,19 @@ export const topperBasePricesRm: Record<TopperMaterial, Record<number, number>> 
 
 export const topperFinishes: Record<TopperMaterial, readonly { name: string; extraRm: number }[]> = {
   cardstock: [
-    { name: "Glitter Black", extraRm: 0 },
-    { name: "Glitter Dark Blue", extraRm: 0 },
-    { name: "Glitter Green", extraRm: 0 },
-    { name: "Glitter Gold", extraRm: 0 },
-    { name: "Glitter Pink", extraRm: 0 },
-    { name: "Glitter Purple", extraRm: 0 },
     { name: "Glitter Silver", extraRm: 0 },
+    { name: "Glitter Gold", extraRm: 0 },
+    { name: "Glitter Black", extraRm: 0 },
+    { name: "Glitter Pink", extraRm: 0 },
+    { name: "Glitter Light Pink", extraRm: 0 },
+    { name: "Glitter Red", extraRm: 0 },
+    { name: "Glitter Green", extraRm: 0 },
+    { name: "Glitter Dark Blue", extraRm: 0 },
+    { name: "Glitter Dark Purple", extraRm: 0 },
     { name: "Matte Black", extraRm: 0 },
+    { name: "Shiny Silver", extraRm: 0 },
     { name: "Shiny Gold", extraRm: 0 },
     { name: "Shiny Rose Gold", extraRm: 0 },
-    { name: "Shiny Silver", extraRm: 0 },
   ],
   acrylic: [
     { name: "Black", extraRm: 0 },
@@ -155,9 +157,10 @@ export function topperChoicePriceSen(lineCount: TopperLineCount, material: Toppe
   if (!topperLineCounts.includes(lineCount) || !topperSizes.some((size) => size.cm === sizeCm)) return undefined;
   const baseRm = topperBasePricesRm[material]?.[sizeCm];
   const baseSen = prices?.[material]?.[sizeCm] ?? (baseRm === undefined ? undefined : baseRm * 100);
-  const extraRm = topperFinishes[material]?.find((choice) => choice.name === finish)?.extraRm;
+  const currentFinish = material === "cardstock" && finish === "Glitter Purple" ? "Glitter Dark Purple" : finish;
+  const extraRm = topperFinishes[material]?.find((choice) => choice.name === currentFinish)?.extraRm;
   if (baseSen === undefined || extraRm === undefined) return undefined;
-  return baseSen + (prices?.finishExtras?.[finish] ?? extraRm * 100);
+  return baseSen + (prices?.finishExtras?.[currentFinish] ?? extraRm * 100);
 }
 
 export function normaliseTopperSelection(value: unknown): TopperCartSelection | undefined {
@@ -176,7 +179,7 @@ export function normaliseTopperSelection(value: unknown): TopperCartSelection | 
     eventSlug: item.eventSlug as TopperEventSlug,
     lineCount: item.lineCount,
     material: item.material,
-    finish: item.finish,
+    finish: item.material === "cardstock" && item.finish === "Glitter Purple" ? "Glitter Dark Purple" : item.finish,
     sizeCm: item.sizeCm,
     wording: item.wording.map((line) => line.replace(/\s+/g, " ").trim()),
     ...(item.fontFamily ? { fontFamily: item.fontFamily } : {}),

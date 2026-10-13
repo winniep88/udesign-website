@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import { topperFinishes, type TopperMaterial } from "@/lib/topper";
 
 type Swatch = { base: string; light: string; dark: string; effect: "glitter" | "matte" | "shiny" | "mirror" | "wood" };
@@ -10,7 +11,9 @@ const swatches: Record<TopperMaterial, Record<string, Swatch>> = {
     "Glitter Green": { base: "#227d62", light: "#8acbb4", dark: "#124b3e", effect: "glitter" },
     "Glitter Gold": { base: "#b69837", light: "#f8e4a0", dark: "#735617", effect: "glitter" },
     "Glitter Pink": { base: "#d85091", light: "#ffc0df", dark: "#892951", effect: "glitter" },
-    "Glitter Purple": { base: "#9b69b9", light: "#dfc4f1", dark: "#5a3578", effect: "glitter" },
+    "Glitter Light Pink": { base: "#dda0c8", light: "#ffe5f1", dark: "#a66391", effect: "glitter" },
+    "Glitter Red": { base: "#b12d48", light: "#f4a4ae", dark: "#78182d", effect: "glitter" },
+    "Glitter Dark Purple": { base: "#643575", light: "#bd87c9", dark: "#3e1d50", effect: "glitter" },
     "Glitter Silver": { base: "#a9aeb5", light: "#fbfdff", dark: "#626a77", effect: "glitter" },
     "Matte Black": { base: "#252327", light: "#514d54", dark: "#171519", effect: "matte" },
     "Shiny Gold": { base: "#c7a145", light: "#fff1ae", dark: "#805a16", effect: "shiny" },
@@ -40,6 +43,14 @@ const swatches: Record<TopperMaterial, Record<string, Swatch>> = {
 const materialNames: Record<TopperMaterial, string> = { cardstock: "Cardstock", acrylic: "Acrylic", wood: "Wood" };
 
 export function TopperColourChart({ material, selectedFinish }: { material: TopperMaterial; selectedFinish: string }) {
+  if (material === "cardstock") {
+    return <figure className="topper-colour-chart topper-colour-chart--image" aria-label="Cardstock colour chart">
+      <a href="/images/cardstock-colour-chart.png" target="_blank" rel="noopener noreferrer" aria-label="Open the cardstock colour chart at full size">
+        <Image className="topper-colour-chart__image" src="/images/cardstock-colour-chart.png" width={1400} height={1190} alt="Cardstock chart with realistic glitter and shiny finishes, including Glitter Dark Purple, Glitter Light Pink and Glitter Red" />
+      </a>
+      <figcaption>Tap the chart to enlarge it, then choose your cardstock colour below.</figcaption>
+    </figure>;
+  }
   return <figure className="topper-colour-chart" aria-label={`${materialNames[material]} colour chart`}>
     <div className="topper-colour-chart__heading">
       <span>Colour Chart</span>
