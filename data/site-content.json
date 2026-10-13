@@ -63,5 +63,7 @@
   {"group":"About us page","key":"about.story1","label":"Story, first paragraph","type":"text","default":"While pursuing her PhD, our founder wondered how else she could contribute to the world. She imagined gifts that make someone feel loved, decorations that brighten a celebration, and keepsakes that hold on to a precious memory. That idea became UDESIGN.","maxLength":800},
   {"group":"About us page","key":"about.story2","label":"Story, second paragraph","type":"text","default":"Today we bring those stories to life through thoughtful design, laser cutting and engraving. From wood and acrylic signage to personalised gifts and cake toppers, each piece is made for a person, a place or a moment worth celebrating.","maxLength":800},
   {"group":"About us page","key":"about.closing","label":"Closing message","type":"text","default":"A little creativity, a little thoughtfulness and a little more love, shared through the things we create.","maxLength":400},
-  {"group":"Footer","key":"footer.contact","label":"Contact message","type":"text","default":"Questions about a design or an order? We're happy to help.","maxLength":240}
+  {"group":"Footer","key":"footer.contact","label":"Contact message","type":"text","default":"Questions about a design or an order? We're happy to help.","maxLength":240},
+  {"group":"Footer","key":"footer.copyright","label":"Copyright line","type":"text","default":"© 2021 UDESIGN PROJECT STUDIO","maxLength":120},
+  {"group":"Footer","key":"footer.registration","label":"SSM registration number","type":"text","default":"NO. PENDAFTARAN: 202103205336 (TR0245609-D)","maxLength":120}
 ]

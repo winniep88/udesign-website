@@ -27,7 +27,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="shell site-footer__wordmark" aria-hidden="true">UDesign<span>.</span></div>
-      <div className="shell site-footer__bottom"><span>© {new Date().getFullYear()} UDESIGN PROJECTS STUDIO</span><span>Designed by you, made to be yours.</span><span>Made in Malaysia</span></div>
+      <div className="shell site-footer__bottom"><div className="site-footer__legal"><span><SiteText contentKey="footer.copyright" /></span><span><SiteText contentKey="footer.registration" /></span></div><span>Designed by you, made to be yours.</span><span>Made in Malaysia</span></div>
     </footer>
   );
 }
