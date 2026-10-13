@@ -66,5 +66,5 @@
   {"group":"About us page","key":"about.closing","label":"Closing message","type":"text","default":"A little creativity, a little thoughtfulness and a little more love, shared through the things we create.","maxLength":400},
   {"group":"Footer","key":"footer.contact","label":"Contact message","type":"text","default":"Questions about a design or an order? We're happy to help.","maxLength":240},
   {"group":"Footer","key":"footer.copyright","label":"Copyright line","type":"text","default":"© 2021 UDESIGN PROJECT STUDIO","maxLength":120},
-  {"group":"Footer","key":"footer.registration","label":"SSM registration number","type":"text","default":"NO. PENDAFTARAN: 202103205336 (TR0245609-D)","maxLength":120}
+  {"group":"Footer","key":"footer.registration","label":"SSM registration number","type":"text","default":"SSM Registered: 202103205336 (TR0245609-D)","maxLength":120}
 ]
